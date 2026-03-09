@@ -526,7 +526,8 @@ function aggregateToWeekly(dailyData){
       high:Math.max(...days.map(d=>d.high)),
       low:Math.min(...days.map(d=>d.low)),
       close:days[days.length-1].close,
-      dayCount:days.length
+      dayCount:days.length,
+      days:days.map(d=>({date:d.date,open:d.open,high:d.high,low:d.low,close:d.close,dow:new Date(d.date+'T12:00:00').getDay()}))
     });
   }
   candles.sort((a,b)=>b.weekKey.localeCompare(a.weekKey));
@@ -544,6 +545,33 @@ function classifyWeeklyAX(candles){
     else if(c0.high>c1.high) breakDir='break-high';
     else breakDir='break-low';
   }
+  // Manipulation agree/disagree
+  // A(AMDX)→Tue=manip(dow 2), X(XAMD)→Wed=manip(dow 3)
+  const manipDow=isA?2:3;
+  const manipDay=c0.days?c0.days.find(d=>d.dow===manipDow):null;
+  let manip=null;
+  if(!manipDay){
+    // Check if manipulation day hasn't happened yet
+    const today=new Date().getDay();
+    const manipPending=c0.days&&c0.days.length>0&&today<manipDow;
+    manip={status:manipPending?'pending':'none',day:isA?'Tue':'Wed',grabbed:null,agreed:null};
+  } else {
+    const pwh=c1.high, pwl=c1.low;
+    const grabbedLow=manipDay.low<pwl, grabbedHigh=manipDay.high>pwh;
+    let grabbed=null, agreed=null;
+    if(grabbedLow&&grabbedHigh){
+      // Outside — use close position
+      const mid=(pwh+pwl)/2;
+      if(manipDay.close<=mid){ grabbed='low'; agreed=manipDay.close<pwl; }
+      else{ grabbed='high'; agreed=manipDay.close>pwh; }
+    } else if(grabbedLow){
+      grabbed='low'; agreed=manipDay.close<pwl;
+    } else if(grabbedHigh){
+      grabbed='high'; agreed=manipDay.close>pwh;
+    }
+    manip={status:grabbed?'resolved':'none',day:isA?'Tue':'Wed',grabbed,agreed,
+      manipHigh:manipDay.high,manipLow:manipDay.low,manipClose:manipDay.close};
+  }
   return {
     ax:isA?'A':'X',
     c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
@@ -551,7 +579,8 @@ function classifyWeeklyAX(candles){
     currentWeek:c0.weekKey,
     priorWeek:c1.weekKey,
     dayCount:c0.dayCount,
-    breakDir
+    breakDir,
+    manip
   };
 }
 
@@ -564,13 +593,16 @@ function classifyMonthlyAX(candles){
   // First week of current month: earliest candle whose Monday is in current month
   const curMonthCandles=candles.filter(w=>w.mondayDate.getMonth()===curMonth && w.mondayDate.getFullYear()===curYear)
     .sort((a,b)=>a.weekKey.localeCompare(b.weekKey));
-  // Last week of prior month: latest candle whose Friday (Mon+4) is in prior month
+  // All weeks of prior month (for full PMH/PML)
   const priorMonthCandles=candles.filter(w=>{
     const fri=new Date(w.mondayDate);fri.setDate(fri.getDate()+4);
     return fri.getMonth()===priorMonth && fri.getFullYear()===priorYear;
   }).sort((a,b)=>b.weekKey.localeCompare(a.weekKey));
   if(!curMonthCandles.length||!priorMonthCandles.length) return null;
   const c0=curMonthCandles[0], c1=priorMonthCandles[0];
+  // Full prior month high/low across all weeks
+  const pmh=Math.max(...priorMonthCandles.map(w=>w.high));
+  const pml=Math.min(...priorMonthCandles.map(w=>w.low));
   const isA=c0.high<=c1.high && c0.low>=c1.low;
   let breakDir=null;
   if(!isA){
@@ -578,13 +610,37 @@ function classifyMonthlyAX(candles){
     else if(c0.high>c1.high) breakDir='break-high';
     else breakDir='break-low';
   }
+  // Manipulation agree/disagree
+  // A(AMDX)→W2=manip(index 1), X(XAMD)→W3=manip(index 2)
+  const manipIdx=isA?1:2;
+  const manipWeek=curMonthCandles[manipIdx]||null;
+  let manip=null;
+  if(!manipWeek){
+    manip={status:'pending',week:isA?'W2':'W3',grabbed:null,agreed:null};
+  } else {
+    const grabbedLow=manipWeek.low<pml, grabbedHigh=manipWeek.high>pmh;
+    let grabbed=null, agreed=null;
+    if(grabbedLow&&grabbedHigh){
+      const mid=(pmh+pml)/2;
+      if(manipWeek.close<=mid){ grabbed='low'; agreed=manipWeek.close<pml; }
+      else{ grabbed='high'; agreed=manipWeek.close>pmh; }
+    } else if(grabbedLow){
+      grabbed='low'; agreed=manipWeek.close<pml;
+    } else if(grabbedHigh){
+      grabbed='high'; agreed=manipWeek.close>pmh;
+    }
+    manip={status:grabbed?'resolved':'none',week:isA?'W2':'W3',grabbed,agreed,
+      manipHigh:manipWeek.high,manipLow:manipWeek.low,manipClose:manipWeek.close};
+  }
   return {
     ax:isA?'A':'X',
     c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
     c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
+    pmh,pml,
     label:`${MONTHS[curMonth]} W1 vs ${MONTHS[priorMonth]} last week`,
     dayCount:c0.dayCount,
-    breakDir
+    breakDir,
+    manip
   };
 }
 
@@ -997,6 +1053,21 @@ function renderHero(dr,wr,mr,qr,lr){
 }
 
 
+function buildManipBadge(manip){
+  if(!manip||manip.status==='none') return '<span style="color:var(--text-muted)">—</span>';
+  if(manip.status==='pending') return `<span class="badge b-muted">${manip.day||manip.week} Pending</span>`;
+  // resolved — grabbed high or low
+  const dir=manip.grabbed==='high'?'↑':'↓';
+  if(manip.agreed){
+    // Agreed: confirmed the move — ↑ = bullish (sage), ↓ = bearish (burgundy)
+    const cls=manip.grabbed==='high'?'b-sage':'b-burgundy';
+    return `<span class="badge ${cls}">Agreed ${dir}</span>`;
+  } else {
+    // Disagreed: rejected the move — ↓ rejected = bullish (sage), ↑ rejected = bearish (burgundy)
+    const cls=manip.grabbed==='low'?'b-sage':'b-burgundy';
+    return `<span class="badge ${cls}">Disagreed ${dir}</span>`;
+  }
+}
 function buildTableRow(sym,data){
   const isA=data.ax==='A';
   const range=data.c0.close?((data.c0.high-data.c0.low)/data.c0.close*100).toFixed(1):'—';
@@ -1007,8 +1078,10 @@ function buildTableRow(sym,data){
     const bLabel=data.breakDir==='break-high'?'↑ High':data.breakDir==='break-low'?'↓ Low':'↕ Outside';
     breakHtml=`<span class="badge ${bCls}">${bLabel}</span>`;
   }
+  const manipHtml=buildManipBadge(data.manip);
+  const manipAttr=data.manip?data.manip.status==='resolved'?(data.manip.agreed?'agreed':'disagreed'):data.manip.status:'none';
   const partial=data.dayCount<5?` <span class="badge b-muted" title="${data.dayCount} days">partial</span>`:'';
-  return `<tr class="row-${data.ax.toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}">
+  return `<tr class="row-${data.ax.toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}" data-manip="${manipAttr}">
     <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong>${partial}</div></td>
     <td><span class="badge ${badgeCls}">${data.ax}</span></td>
     <td class="mono sensitive">$${data.c0.high.toFixed(2)}</td>
@@ -1017,6 +1090,7 @@ function buildTableRow(sym,data){
     <td class="mono" style="color:var(--text-sec)">$${data.c1.low.toFixed(2)}</td>
     <td class="mono">${range}%</td>
     <td>${breakHtml}</td>
+    <td>${manipHtml}</td>
   </tr>`;
 }
 
@@ -1315,13 +1389,13 @@ const VIEW_CONFIG={
   },
   weekly:{
     title:'Weekly A/X', subtitle:'Inside bar — current week vs prior week',
-    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th></tr>`,
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th><th>Manip</th></tr>`,
     filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'}],
     render:renderWeeklyView
   },
   monthly:{
     title:'Monthly A/X', subtitle:'First week of current month vs last week of prior month',
-    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th></tr>`,
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th><th>Manip</th></tr>`,
     filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'}],
     render:renderMonthlyView
   },
