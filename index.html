@@ -343,6 +343,10 @@ tr.futures-row:hover td{background:rgba(196,169,122,0.06)!important}
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="9" height="9" rx="1.5"/><path d="M4 10H2.5A1.5 1.5 0 0 1 1 8.5v-6A1.5 1.5 0 0 1 2.5 1h6A1.5 1.5 0 0 1 10 2.5V4"/></svg>
         <span id="snapshotLabel">Snapshot</span>
       </button>
+      <button class="snapshot-btn" onclick="reportBug()" title="Report a bug via GitHub Issues" style="color:var(--text-muted)">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="6"/><path d="M7 4v4"/><circle cx="7" cy="10" r=".5" fill="currentColor"/></svg>
+        <span>Report Bug</span>
+      </button>
     </div>
     <div class="table-wrap">
       <table>
@@ -1635,6 +1639,18 @@ function clipAndFlash(text){
     lbl.textContent='Copied!';
     setTimeout(()=>{ btn.classList.remove('copied'); lbl.textContent='Snapshot'; },1500);
   });
+}
+
+// ── Report Bug ──
+function reportBug(){
+  const desc=prompt('Describe the bug:');
+  if(!desc) return;
+  const ua=navigator.userAgent;
+  const view=currentView;
+  const tickers=Object.keys(dailyResults).length;
+  const body=`**Bug Report**\n\n${desc}\n\n---\n**Context**\n- View: ${view}\n- Tickers loaded: ${tickers}\n- Time: ${new Date().toISOString()}\n- UA: ${ua}`;
+  const url=`https://github.com/the-slowtrader/amdx-scanner/issues/new?labels=bug&title=${encodeURIComponent(desc.slice(0,80))}&body=${encodeURIComponent(body)}`;
+  window.open(url,'_blank');
 }
 
 // ── Privacy ──
