@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMDX Scanner — Zim's Trading</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f0ebe4;
+  --card:#ffffff;
+  --card-alt:#faf8f5;
+  --border:rgba(90,70,50,0.06);
+  --text:#1a1714;
+  --text-sec:#706a62;
+  --text-muted:#a09890;
+  --sage:#6d7e5e;
+  --burgundy:#8b4049;
+  --taupe:#a6957f;
+  --terracotta:#b57652;
+  --camel:#c4a97a;
+  --dusty-rose:#b08a83;
+  --warm-brown:#8a6f5c;
+  --charcoal:#2a2420;
+  --green:#5a8a60;
+  --green-bg:rgba(90,138,96,0.1);
+  --red:#a15252;
+  --red-bg:rgba(161,82,82,0.08);
+  --radius:24px;
+  --radius-md:16px;
+  --radius-sm:12px;
+  --radius-xs:8px;
+  --shadow:0 1px 3px rgba(30,25,20,0.04), 0 4px 12px rgba(30,25,20,0.03);
+  --shadow-md:0 2px 8px rgba(30,25,20,0.05), 0 8px 24px rgba(30,25,20,0.04);
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --serif:'Lora',Georgia,serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;font-size:14px}
+
+/* Top Navigation */
+.topnav{display:flex;align-items:center;gap:20px;padding:16px 40px;position:sticky;top:0;z-index:100;background:rgba(240,235,228,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.logo{width:42px;height:42px;border-radius:14px;background:var(--charcoal);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;letter-spacing:-0.5px}
+.nav-info{flex-shrink:0}
+.nav-info h1{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.nav-info p{font-size:12px;color:var(--text-sec)}
+.nav-links{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.nav-link{padding:7px 14px;border-radius:var(--radius-xs);font-size:12px;font-weight:600;color:var(--text-sec);cursor:pointer;transition:all .2s;text-decoration:none;border:none;background:none;font-family:var(--sans)}
+.nav-link:hover{background:rgba(90,70,50,0.06);color:var(--text)}
+.nav-link.active{background:var(--charcoal);color:white}
+.nav-link.back{color:var(--sage)}
+.nav-link.back:hover{background:rgba(109,126,94,0.08)}
+.search-wrap{flex:1;max-width:380px;position:relative}
+.search-wrap input{width:100%;padding:10px 16px 10px 38px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card);font-family:var(--sans);font-size:13px;color:var(--text);outline:none;transition:all .2s}
+.search-wrap input:focus{border-color:rgba(109,126,94,0.3);box-shadow:0 0 0 3px rgba(109,126,94,0.08)}
+.search-wrap input::placeholder{color:var(--text-muted)}
+.search-wrap .s-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+.nav-right{display:flex;align-items:center;gap:12px;margin-left:auto;flex-shrink:0}
+.privacy-btn{display:flex;align-items:center;gap:7px;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sans);font-size:11px;font-weight:600;color:var(--text-sec);cursor:pointer;transition:all .2s;flex-shrink:0}
+.privacy-btn:hover{background:rgba(90,70,50,0.06);color:var(--text)}
+.privacy-btn.active{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+.privacy-btn svg{flex-shrink:0}
+body.privacy-mode .sensitive{filter:blur(8px);-webkit-filter:blur(8px);user-select:none;transition:filter .3s}
+body.privacy-mode .sensitive:hover{filter:blur(4px)}
+
+.container{padding:0 40px 40px;max-width:1440px;margin:0 auto}
+@media(max-width:768px){.topnav{padding:12px 16px;gap:10px;flex-wrap:wrap}.container{padding:0 16px 16px}.search-wrap{max-width:100%;order:10;width:100%}}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:20px}
+.hero-left{padding:44px 40px;display:flex;flex-direction:column;justify-content:center}
+.hero-title{font-size:40px;font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:20px;color:var(--charcoal)}
+.hero-verse{font-family:var(--serif);font-style:italic;font-size:15px;line-height:1.7;color:var(--text-sec);margin-bottom:8px}
+.hero-ref{font-size:10px;font-weight:600;color:var(--taupe);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px}
+.hero-tagline{font-size:13px;color:var(--sage);font-weight:600}
+.hero-right{background:var(--charcoal);padding:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-content:center}
+.hero-stat{background:rgba(255,255,255,0.06);border-radius:var(--radius-md);padding:18px;border:1px solid rgba(255,255,255,0.05)}
+.hs-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,0.35);margin-bottom:8px}
+.hs-num{font-size:28px;font-weight:800;color:rgba(255,255,255,0.95);letter-spacing:-.5px;line-height:1.1}
+.hs-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;font-weight:500}
+@media(max-width:1024px){.hero{grid-template-columns:1fr}.hero-right{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.hero-right{grid-template-columns:1fr}.hero-left{padding:28px 24px}}
+
+/* Control Bar */
+.control-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.control-left{display:flex;align-items:center;gap:16px}
+.control-right{display:flex;align-items:center;gap:16px}
+.refresh-btn{display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--charcoal);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.refresh-btn:hover{opacity:.85}
+.refresh-btn:disabled{opacity:.4;cursor:not-allowed}
+.refresh-btn svg{transition:transform .3s}
+.refresh-btn.spinning svg{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.last-updated{font-size:12px;color:var(--text-sec)}
+.scan-progress{display:flex;align-items:center;gap:12px}
+.progress-text{font-size:12px;font-weight:600;color:var(--text-sec);white-space:nowrap}
+.progress-bar-wrap{width:200px;height:6px;background:rgba(90,70,50,0.06);border-radius:3px;overflow:hidden}
+.progress-bar-fill{height:100%;border-radius:3px;background:var(--sage);transition:width .3s ease}
+.ticker-count{font-size:12px;color:var(--text-muted);font-weight:500}
+
+/* Table Card */
+.table-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:20px;overflow:hidden}
+.table-top{padding:24px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.table-top-left h3{font-size:17px;font-weight:700;letter-spacing:-.2px}
+.table-top-left p{font-size:12px;color:var(--text-sec);margin-top:2px}
+.tabs{display:flex;gap:2px;padding:3px;background:var(--bg);border-radius:var(--radius-xs)}
+.tab{padding:7px 14px;font-size:12px;font-weight:500;color:var(--text-sec);border-radius:7px;cursor:pointer;border:none;background:none;transition:all .2s;font-family:var(--sans);white-space:nowrap}
+.tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06);font-weight:600}
+.tab:hover:not(.active){color:var(--text)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:separate;border-spacing:0}
+th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);padding:14px 20px;text-align:left;background:var(--card-alt);border-bottom:1px solid var(--border)}
+th.sortable{cursor:pointer;user-select:none;transition:color .2s}
+th.sortable:hover{color:var(--charcoal)}
+th.sortable::after{content:'⇅';margin-left:5px;opacity:.3;font-size:9px}
+th.sortable.sort-asc::after{content:'▲';opacity:.6}
+th.sortable.sort-desc::after{content:'▼';opacity:.6}
+td{padding:12px 20px;font-size:13px;border-bottom:1px solid rgba(90,70,50,0.04)}
+tr:hover td{background:rgba(90,70,50,0.015)}
+tr:last-child td{border-bottom:none}
+.mono{font-family:'SF Mono','Fira Code','Consolas',monospace;font-size:12px}
+.ticker-cell{display:flex;align-items:center;gap:10px}
+.ticker-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:9px;color:white;flex-shrink:0;overflow:hidden;position:relative}
+.ticker-icon img{width:100%;height:100%;object-fit:contain;border-radius:7px}
+.ticker-icon .ti-fallback{display:none}
+.ticker-icon img.errored{display:none}
+.ticker-icon img.errored+.ti-fallback{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:7px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.3px}
+.b-sage{background:rgba(109,126,94,0.1);color:#4a5940}
+.b-terracotta{background:rgba(181,118,82,0.1);color:#7a4f36}
+.b-burgundy{background:rgba(139,64,73,0.08);color:#7c3a42}
+.b-camel{background:rgba(196,169,122,0.1);color:#6b5730}
+.b-taupe{background:rgba(166,149,127,0.1);color:#6b5d50}
+.b-muted{background:rgba(90,70,50,0.06);color:var(--text-muted)}
+tr.row-a td{background:rgba(109,126,94,0.025)}
+tr.row-a:hover td{background:rgba(109,126,94,0.06)}
+tr.row-x td{background:rgba(181,118,82,0.015)}
+tr.row-x:hover td{background:rgba(181,118,82,0.04)}
+tr.row-amdx td{background:rgba(109,126,94,0.025)}
+tr.row-amdx:hover td{background:rgba(109,126,94,0.06)}
+tr.row-xamd td{background:rgba(181,118,82,0.015)}
+tr.row-xamd:hover td{background:rgba(181,118,82,0.04)}
+tr.row-reclaimed td{background:rgba(90,138,96,0.03)}
+tr.row-reclaimed:hover td{background:rgba(90,138,96,0.06)}
+tr.row-swept td{background:rgba(161,82,82,0.03)}
+tr.row-swept:hover td{background:rgba(161,82,82,0.06)}
+.empty-state{padding:60px 40px;text-align:center;color:var(--text-muted)}
+.empty-state h4{font-size:16px;font-weight:700;color:var(--text-sec);margin-bottom:8px}
+.empty-state p{font-size:13px}
+
+/* Quarterly Phase Sequence */
+.phase-seq{display:flex;align-items:center;gap:4px;font-size:12px;font-family:'SF Mono','Fira Code','Consolas',monospace}
+.phase-seq .ps-item{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;font-size:10px;font-weight:700}
+.phase-seq .ps-a{background:rgba(109,126,94,0.12);color:#4a5940}
+.phase-seq .ps-x{background:rgba(181,118,82,0.12);color:#7a4f36}
+.phase-seq .ps-m{background:rgba(196,169,122,0.12);color:#6b5730}
+.phase-seq .ps-d{background:rgba(139,64,73,0.1);color:#7c3a42}
+.phase-seq .ps-na{background:rgba(90,70,50,0.05);color:var(--text-muted)}
+.phase-seq .ps-future{background:transparent;color:var(--text-muted);border:1px dashed rgba(90,70,50,0.15)}
+.phase-seq .ps-arrow{color:var(--text-muted);font-size:9px}
+.phase-seq .ps-item.ps-current{box-shadow:0 0 0 2px var(--charcoal)}
+.phase-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:11px;font-weight:700;background:var(--charcoal);color:white}
+
+/* Main View Tabs */
+.main-tabs{display:flex;gap:2px;padding:3px;background:var(--charcoal);border-radius:var(--radius-sm)}
+.main-tab{padding:8px 16px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);border-radius:9px;cursor:pointer;border:none;background:none;transition:all .2s;font-family:var(--sans);white-space:nowrap}
+.main-tab:hover:not(.active){color:rgba(255,255,255,0.75)}
+.main-tab.active{background:rgba(255,255,255,0.12);color:white;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+
+/* Hero Percentage */
+.hs-pct{font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);margin-top:2px}
+
+/* Futures Separator */
+tr.futures-separator td{padding:0;height:2px;background:linear-gradient(90deg,transparent,var(--taupe),transparent);border-bottom:none}
+tr.futures-row td{background:rgba(196,169,122,0.03)}
+tr.futures-row:hover td{background:rgba(196,169,122,0.06)!important}
+
+/* Confluence Table */
+.conf-cell{display:flex;align-items:center;gap:6px}
+.conf-badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:.2px}
+.conf-score{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.conf-score.high{color:var(--sage)}
+.conf-score.mid{color:var(--camel)}
+.conf-score.low{color:var(--text-muted)}
+
+/* Snapshot Button */
+.snapshot-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xs);font-family:var(--sans);font-size:11px;font-weight:600;color:var(--text-sec);cursor:pointer;transition:all .2s;flex-shrink:0}
+.snapshot-btn:hover{background:rgba(90,70,50,0.06);color:var(--text)}
+.snapshot-btn.copied{background:var(--sage);color:white;border-color:var(--sage)}
+
+/* Footer */
+.footer{text-align:center;padding:32px 0 24px;font-size:11px;color:var(--text-muted);letter-spacing:.3px}
+.footer a{color:var(--sage);text-decoration:none;font-weight:600}
+
+/* Responsive */
+@media(max-width:768px){.main-tabs{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="topnav">
+  <div class="logo">AX</div>
+  <div class="nav-info">
+    <h1>AMDX Scanner</h1>
+    <p>AMDX Cycle — Weekly, Monthly, Quarterly &amp; LEAP Hunter</p>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link active" href="#top" onclick="smoothNav(event,'top')">Summary</a>
+    <a class="nav-link" href="#dataSection" onclick="navToView(event,'daily')">Daily</a>
+    <a class="nav-link" href="#dataSection" onclick="navToView(event,'weekly')">Weekly</a>
+    <a class="nav-link" href="#dataSection" onclick="navToView(event,'monthly')">Monthly</a>
+    <a class="nav-link" href="#dataSection" onclick="navToView(event,'quarterly')">Quarterly</a>
+    <a class="nav-link" href="#dataSection" onclick="navToView(event,'leap')">LEAP Hunter</a>
+    <a class="nav-link" href="#dataSection" onclick="navToView(event,'confluence')">Confluence</a>
+    <a class="nav-link back" href="dashboard.html">&larr; Dashboard</a>
+  </div>
+  <div class="search-wrap">
+    <svg class="s-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="5.5"/><path d="M11 11l3.5 3.5"/></svg>
+    <input type="text" id="searchInput" placeholder="Search tickers..." oninput="searchFilter(this.value)">
+  </div>
+  <div class="nav-right">
+    <button class="privacy-btn" id="privacyToggle" onclick="togglePrivacy()">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 7.5s2.5-5 6.5-5 6.5 5 6.5 5-2.5 5-6.5 5S1 7.5 1 7.5z"/><circle cx="7.5" cy="7.5" r="2"/></svg> Privacy
+    </button>
+  </div>
+</nav>
+
+<div class="container" id="top">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-title">Read the<br>Candle.</div>
+      <div class="hero-verse" id="heroVerse">Patience is better than power, and controlling one's emotions, than capturing a city.</div>
+      <div class="hero-ref" id="heroRef">Proverbs 16:32</div>
+      <div class="hero-tagline">AMDX = Accumulation → Manipulation → Distribution → Expansion</div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-stat">
+        <div class="hs-label">Weekly A (Inside)</div>
+        <div class="hs-num sensitive" id="heroWeeklyA">&mdash;</div>
+        <div class="hs-pct sensitive" id="heroWeeklyAPct"></div>
+        <div class="hs-sub" id="heroWeeklyASub">tickers accumulating</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">Weekly X (Expanding)</div>
+        <div class="hs-num sensitive" id="heroWeeklyX">&mdash;</div>
+        <div class="hs-pct sensitive" id="heroWeeklyXPct"></div>
+        <div class="hs-sub" id="heroWeeklyXSub">tickers expanding</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">Monthly A (Inside)</div>
+        <div class="hs-num sensitive" id="heroMonthlyA">&mdash;</div>
+        <div class="hs-pct sensitive" id="heroMonthlyAPct"></div>
+        <div class="hs-sub" id="heroMonthlyASub">tickers accumulating</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">Monthly X (Expanding)</div>
+        <div class="hs-num sensitive" id="heroMonthlyX">&mdash;</div>
+        <div class="hs-pct sensitive" id="heroMonthlyXPct"></div>
+        <div class="hs-sub" id="heroMonthlyXSub">tickers expanding</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">Daily AMDX</div>
+        <div class="hs-num sensitive" id="heroDailyA">&mdash;</div>
+        <div class="hs-pct sensitive" id="heroDailyAPct"></div>
+        <div class="hs-sub" id="heroDailyASub">AMDX cycle</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">Daily XAMD</div>
+        <div class="hs-num sensitive" id="heroDailyX">&mdash;</div>
+        <div class="hs-pct sensitive" id="heroDailyXPct"></div>
+        <div class="hs-sub" id="heroDailyXSub">XAMD cycle</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">Quarterly AMDX</div>
+        <div class="hs-num sensitive" id="heroQuarterlyA">&mdash;</div>
+        <div class="hs-pct sensitive" id="heroQuarterlyAPct"></div>
+        <div class="hs-sub" id="heroQuarterlyASub">AMDX cycle</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">Quarterly XAMD</div>
+        <div class="hs-num sensitive" id="heroQuarterlyX">&mdash;</div>
+        <div class="hs-pct sensitive" id="heroQuarterlyXPct"></div>
+        <div class="hs-sub" id="heroQuarterlyXSub">XAMD cycle</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">LEAP Hunter</div>
+        <div class="hs-num sensitive" id="heroLeapCount">&mdash;</div>
+        <div class="hs-pct sensitive" id="heroLeapPct"></div>
+        <div class="hs-sub" id="heroLeapSub">swept &amp; reclaimed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Bar -->
+  <div class="control-bar">
+    <div class="control-left">
+      <button class="refresh-btn" id="refreshBtn" onclick="forceRefresh()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1v5h5"/><path d="M3.5 10a6 6 0 1 0 1-5.2L1 8"/></svg>
+        Refresh Scan
+      </button>
+      <span class="last-updated" id="lastUpdated">Last scan: &mdash;</span>
+    </div>
+    <div class="control-right">
+      <div class="scan-progress" id="scanProgress" style="display:none">
+        <span class="progress-text" id="progressText">Scanning...</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+      <span class="ticker-count" id="tickerCount">&mdash;</span>
+    </div>
+  </div>
+
+  <!-- Hidden label holders for date context -->
+  <span id="dailyLabel" style="display:none"></span>
+  <span id="weeklyWeekLabel" style="display:none"></span>
+  <span id="monthlyLabel" style="display:none"></span>
+  <span id="quarterlyLabel" style="display:none"></span>
+  <span id="leapLabel" style="display:none"></span>
+
+  <!-- Unified Tabbed Data Area -->
+  <div class="table-card" id="dataSection">
+    <div class="table-top">
+      <div class="table-top-left">
+        <h3 id="dataTitle">Daily AMDX</h3>
+        <p id="dataSubtitle">Intraday phases — 4H candles (equities) / 6H candles (index ETFs)</p>
+      </div>
+      <div class="main-tabs" id="mainTabs">
+        <button class="main-tab active" data-view="daily" onclick="switchView('daily',this)">Daily</button>
+        <button class="main-tab" data-view="weekly" onclick="switchView('weekly',this)">Weekly</button>
+        <button class="main-tab" data-view="monthly" onclick="switchView('monthly',this)">Monthly</button>
+        <button class="main-tab" data-view="quarterly" onclick="switchView('quarterly',this)">Quarterly</button>
+        <button class="main-tab" data-view="leap" onclick="switchView('leap',this)">LEAP</button>
+        <button class="main-tab" data-view="confluence" onclick="switchView('confluence',this)">Confluence</button>
+      </div>
+      <div class="tabs" id="subFilterTabs">
+        <button class="tab active" onclick="filterCurrentView('all',this)">All</button>
+        <button class="tab" onclick="filterCurrentView('AMDX',this)">AMDX</button>
+        <button class="tab" onclick="filterCurrentView('XAMD',this)">XAMD</button>
+      </div>
+      <button class="snapshot-btn" onclick="copySnapshot()" title="Copy accumulating tickers to clipboard">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="9" height="9" rx="1.5"/><path d="M4 10H2.5A1.5 1.5 0 0 1 1 8.5v-6A1.5 1.5 0 0 1 2.5 1h6A1.5 1.5 0 0 1 10 2.5V4"/></svg>
+        <span id="snapshotLabel">Snapshot</span>
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead id="dataTableHead">
+          <tr>
+            <th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th>
+            <th class="sortable" onclick="sortCurrentView('phase',this)">Phase</th>
+            <th>Sequence</th>
+            <th class="sortable" onclick="sortCurrentView('ax',this)">Cycle / Stage</th>
+            <th class="sortable" onclick="sortCurrentView('c0h',this)">Phase H</th>
+            <th class="sortable" onclick="sortCurrentView('c0l',this)">Phase L</th>
+            <th class="sortable" onclick="sortCurrentView('range',this)">Range %</th>
+            <th>Break</th>
+          </tr>
+        </thead>
+        <tbody id="dataTableBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="dataEmpty" style="display:none">
+      <h4>No data yet</h4>
+      <p>Click "Refresh Scan" to fetch data for all tickers.</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    AMDX Scanner &mdash; <a href="dashboard.html">Back to Dashboard</a> &mdash; Data via FMP
+  </div>
+
+</div>
+
+<script>
+// ── Constants ──
+const FMP_KEY = '9ZZSogafEDXEw5Z3NQnbK4i0NRuQz8yZ';
+const BATCH_SIZE = 5;
+const FETCH_DELAY = 300;
+const LOOKBACK_DAYS = 500;
+
+const WATCHLIST = [
+  // Tech / Growth
+  'AMDL','NFXL','MSFL','CRWV','INTC','AAPL','KHC','AFRM','AVGO','MNST',
+  'APP','NVDA','TSLA','EVGO','ZS','HOOD','DLO','SOUN','CSCO','META',
+  'MARA','SBUX','PYPL','SMCI','ASML','SRPT','FANG','LULU','RCAT','NEON',
+  'IBKR','MDLZ','AEVA','NBIS','IBIT','PANW','AMAT','ARM','MCHP','SBET',
+  'ABNB','MU','INTU','XRPT','QRVO','AVAV','IREN','CIFR','MRVL','COIN',
+  'COST','FIVE','OPEN','TLN','CEG','MSFT','EYE','ALAB','DPRO','SLNH',
+  'LYTS','DUOL','FSLR','FTNT','JD','PLTR','MKTX','ABAT','USLM','RIVN',
+  'RXRX','RGTI','FRHC','LSCC','ENPH','SOFI','KTOS','DOMO','MSTR','DOCU',
+  'CRWD','DKNG','MDLN','ZM','TEM','RIOT','GOOGL','DAVE','AXTI','LCID',
+  'EOSE','AMD','NFLX','DNTH','USAR','CELH','TTWO','MSTX','POOL','SNDK',
+  'HIVE','MELI','DDOG','CLSK','ASTS','MSFU','ORCX','AAPU',
+  // Financial / Healthcare / Industrial
+  'JPM','HD','PFE','LLY','TGT','XOM','UPS','NVO','HIMS','PATH',
+  'KLAR','CAT','AXP','MIR','CHWY','MCD','UNH','KBH','DIS','NKE',
+  'LUMN','MA','CRM','BA','MET','CI','FUBO','LMND','PLD','OXY',
+  'DEO','ONTO','NIO','U','FN','AIG','TDOC','CMG','FLR','TSM',
+  'TWLO','DELL','NU','HLT','SG','FIG','BBY','GNRC','DHI','PRIM',
+  'SNOW','FDX','DE','RGR','ORCL','AI','CVX','W','JOBY','GS',
+  'VST','AON','CVNA','WRBY','BP','BBAI','LMT','AES','SNAP','CRCL',
+  'MP','WELL','SPOT','ABBV','TOST','BIRK','JNJ','GLW','OKLO','UI',
+  'IOT','NOW','CAVA','IONQ','OSCR','DRI','CNC','M','RBLX','HAL',
+  'RCL','NET','WFC','KO','DG','RDDT','COP','EOG','UBER',
+  // ETFs
+  'SPY','QQQ','DIA','IWM','UVXY','SQQQ','TQQQ','SOXL','BULL',
+  'XLV','XLP','XLE','XLF','XLU','XLY','XLI','XLK','XLRE',
+  'NVOX','UUUU','TGEN','GDX','SMH','TLT','TSLL',
+  // Commodities
+  'GLD','SLV','LIT','USO',
+  // Crypto ETFs
+  'ETHU','ETHA','IBIT',
+  // Futures (daily intraday only)
+  'ES=F','NQ=F','YM=F','RTY=F'
+];
+
+// BRK.B needs special handling for FMP
+const FMP_MAP = {'BRK.B':'BRK-B'};
+function fmpSym(s){ return FMP_MAP[s]||s; }
+function displaySym(s){ for(const[k,v]of Object.entries(FMP_MAP)) if(v===s) return k; return s; }
+
+const tickerColors={TSLA:'#c62828',RIVN:'#558b2f',XOM:'#e65100',SPY:'#1565c0',NVDA:'#76b900',AMD:'#ed1c24',AAPL:'#555',MSFT:'#00a4ef',UPS:'#351c15',AMZN:'#ff9900',LULU:'#d42020',JNJ:'#d51920',JPM:'#003d79',AVGO:'#cc092f',NKE:'#111',DIS:'#006e99',PFE:'#0093d0',GLD:'#c4a97a',IWM:'#6d7e5e',NVOX:'#8b4049',SG:'#2c5e1a',CNC:'#0071c5',MCD:'#ffc72c',PG:'#003da5',TGT:'#cc0000',KHC:'#b30838',OPEN:'#7b61ff',UNH:'#002677',PATH:'#fa4616',ORCL:'#c74634',META:'#0668E1',GOOGL:'#4285F4',NFLX:'#E50914',PLTR:'#1a1a2e',COIN:'#0052FF',COST:'#e31837',HD:'#f96302',BA:'#0039a6',CAT:'#FFCD11',LLY:'#d52b1e',CVX:'#0066b2',CRM:'#00A1E0',ABBV:'#071D49',SNOW:'#29B5E8'};
+function gc(t){
+  if(tickerColors[t]) return tickerColors[t];
+  let h=0; for(let i=0;i<t.length;i++) h=t.charCodeAt(i)+((h<<5)-h);
+  const hue=((h%360)+360)%360;
+  return `hsl(${hue},45%,42%)`;
+}
+function tickerIcon(sym){
+  const bg=gc(sym), letters=sym.slice(0,2);
+  return `<div class="ticker-icon"><img src="https://financialmodelingprep.com/image-stock/${fmpSym(sym)}.png" alt="${sym}" onerror="this.classList.add('errored')"><span class="ti-fallback" style="background:${bg}">${letters}</span></div>`;
+}
+
+// ── Date Utilities ──
+function getISOWeekKey(d){
+  const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  date.setUTCDate(date.getUTCDate()+4-(date.getUTCDay()||7));
+  const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  const weekNum=Math.ceil((((date-yearStart)/86400000)+1)/7);
+  return date.getUTCFullYear()+'-W'+String(weekNum).padStart(2,'0');
+}
+function getMonday(d){
+  const dt=new Date(d);
+  const day=dt.getDay();
+  const diff=dt.getDate()-day+(day===0?-6:1);
+  return new Date(dt.getFullYear(),dt.getMonth(),diff);
+}
+function dateStr(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d; }
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── Quarter Utilities ──
+function getQuarterBounds(date){
+  const y=date.getFullYear(), m=date.getMonth();
+  const q=Math.floor(m/3)+1;
+  const startMonth=(q-1)*3;
+  return {quarter:q, year:y, label:`Q${q} ${y}`,
+    start:new Date(y,startMonth,1), end:new Date(y,startMonth+3,0)};
+}
+function getPriorQuarterBounds(date){
+  const cur=getQuarterBounds(date);
+  const prev=new Date(cur.start); prev.setMonth(prev.getMonth()-1);
+  return getQuarterBounds(prev);
+}
+
+// ── FMP Data Fetching ──
+// Uses /stable/historical-price-eod/full — single symbol per request
+async function fetchSingle(sym, from, to){
+  const url=`https://financialmodelingprep.com/stable/historical-price-eod/full?symbol=${fmpSym(sym)}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function fetchAllTickers(tickers, from, to, onProgress){
+  const results={};
+  // Run in parallel batches of BATCH_SIZE to speed up
+  for(let i=0;i<tickers.length;i+=BATCH_SIZE){
+    const batch=tickers.slice(i,i+BATCH_SIZE);
+    const promises=batch.map(async sym=>{
+      try{
+        const data=await fetchSingle(sym,from,to);
+        // Response is array of {symbol,date,open,high,low,close,volume,...}
+        if(Array.isArray(data)&&data.length) results[sym]=data;
+        else results[sym]=null;
+      }catch(e){
+        console.warn(`Fetch failed: ${sym}`,e.message);
+        results[sym]=null;
+      }
+    });
+    await Promise.all(promises);
+    const done=Math.min(i+BATCH_SIZE,tickers.length);
+    if(onProgress) onProgress(done,tickers.length);
+    // Small delay between parallel batches
+    if(i+BATCH_SIZE<tickers.length)
+      await new Promise(r=>setTimeout(r,FETCH_DELAY));
+  }
+  return results;
+}
+
+// ── Weekly Aggregation ──
+function aggregateToWeekly(dailyData){
+  if(!dailyData||!dailyData.length) return [];
+  const weeks={};
+  dailyData.forEach(day=>{
+    const d=new Date(day.date+'T12:00:00');
+    const wk=getISOWeekKey(d);
+    if(!weeks[wk]) weeks[wk]={weekKey:wk,mondayDate:getMonday(d),days:[]};
+    weeks[wk].days.push(day);
+  });
+  const candles=[];
+  for(const[key,week] of Object.entries(weeks)){
+    const days=week.days.sort((a,b)=>a.date.localeCompare(b.date));
+    if(!days.length) continue;
+    candles.push({
+      weekKey:key,
+      mondayDate:week.mondayDate,
+      open:days[0].open,
+      high:Math.max(...days.map(d=>d.high)),
+      low:Math.min(...days.map(d=>d.low)),
+      close:days[days.length-1].close,
+      dayCount:days.length
+    });
+  }
+  candles.sort((a,b)=>b.weekKey.localeCompare(a.weekKey));
+  return candles;
+}
+
+// ── A/X Classification ──
+function classifyWeeklyAX(candles){
+  if(candles.length<2) return null;
+  const c0=candles[0], c1=candles[1];
+  const isA=c0.high<=c1.high && c0.low>=c1.low;
+  let breakDir=null;
+  if(!isA){
+    if(c0.high>c1.high && c0.low<c1.low) breakDir='outside';
+    else if(c0.high>c1.high) breakDir='break-high';
+    else breakDir='break-low';
+  }
+  return {
+    ax:isA?'A':'X',
+    c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
+    c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
+    currentWeek:c0.weekKey,
+    priorWeek:c1.weekKey,
+    dayCount:c0.dayCount,
+    breakDir
+  };
+}
+
+function classifyMonthlyAX(candles){
+  if(candles.length<3) return null;
+  const now=new Date();
+  const curMonth=now.getMonth(), curYear=now.getFullYear();
+  const priorMonth=curMonth===0?11:curMonth-1;
+  const priorYear=curMonth===0?curYear-1:curYear;
+  // First week of current month: earliest candle whose Monday is in current month
+  const curMonthCandles=candles.filter(w=>w.mondayDate.getMonth()===curMonth && w.mondayDate.getFullYear()===curYear)
+    .sort((a,b)=>a.weekKey.localeCompare(b.weekKey));
+  // Last week of prior month: latest candle whose Friday (Mon+4) is in prior month
+  const priorMonthCandles=candles.filter(w=>{
+    const fri=new Date(w.mondayDate);fri.setDate(fri.getDate()+4);
+    return fri.getMonth()===priorMonth && fri.getFullYear()===priorYear;
+  }).sort((a,b)=>b.weekKey.localeCompare(a.weekKey));
+  if(!curMonthCandles.length||!priorMonthCandles.length) return null;
+  const c0=curMonthCandles[0], c1=priorMonthCandles[0];
+  const isA=c0.high<=c1.high && c0.low>=c1.low;
+  let breakDir=null;
+  if(!isA){
+    if(c0.high>c1.high && c0.low<c1.low) breakDir='outside';
+    else if(c0.high>c1.high) breakDir='break-high';
+    else breakDir='break-low';
+  }
+  return {
+    ax:isA?'A':'X',
+    c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
+    c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
+    label:`${MONTHS[curMonth]} W1 vs ${MONTHS[priorMonth]} last week`,
+    dayCount:c0.dayCount,
+    breakDir
+  };
+}
+
+// ── Quarterly Phase Aggregation ──
+function buildPhaseCandle(days){
+  if(!days.length) return null;
+  return {
+    open:days[0].open,
+    high:Math.max(...days.map(d=>d.high)),
+    low:Math.min(...days.map(d=>d.low)),
+    close:days[days.length-1].close,
+    dayCount:days.length,
+    startDate:days[0].date,
+    endDate:days[days.length-1].date
+  };
+}
+
+function aggregateToQuarterlyPhases(dailyData){
+  if(!dailyData||dailyData.length<20) return null;
+  const now=new Date();
+  const curQ=getQuarterBounds(now), priorQ=getPriorQuarterBounds(now);
+  // Filter and sort daily data
+  const sorted=[...dailyData].sort((a,b)=>a.date.localeCompare(b.date));
+  const curDays=sorted.filter(d=>d.date>=dateStr(curQ.start)&&d.date<=dateStr(curQ.end));
+  const priorDays=sorted.filter(d=>d.date>=dateStr(priorQ.start)&&d.date<=dateStr(priorQ.end));
+  if(curDays.length<4) return null; // need at least 1 day per phase
+  // Split current quarter into 4 equal phases
+  const n=curDays.length;
+  const base=Math.floor(n/4);
+  const remainder=n%4;
+  const phases=[];
+  let idx=0;
+  for(let p=0;p<4;p++){
+    const size=base+(p===3?remainder:0); // last phase absorbs remainder
+    if(idx>=n) break;
+    const chunk=curDays.slice(idx,idx+size);
+    if(chunk.length) phases.push(buildPhaseCandle(chunk));
+    idx+=size;
+  }
+  // Build prior quarter's last phase (last 25% of prior quarter)
+  let priorLastPhase=null;
+  if(priorDays.length>=4){
+    const pBase=Math.floor(priorDays.length/4);
+    const pRem=priorDays.length%4;
+    const lastStart=priorDays.length-(pBase+pRem);
+    priorLastPhase=buildPhaseCandle(priorDays.slice(lastStart));
+  }
+  // Determine current phase (which phase are we in?)
+  const today=dateStr(now);
+  let currentPhase=phases.length; // default to last populated phase
+  for(let i=0;i<phases.length;i++){
+    if(phases[i]&&today<=phases[i].endDate){ currentPhase=i+1; break; }
+  }
+  return {
+    quarter:curQ.label, phases, priorLastPhase, currentPhase,
+    totalTradingDays:n, daysPerPhase:base
+  };
+}
+
+function classifyQuarterlyAX(phaseData){
+  if(!phaseData||!phaseData.phases.length) return null;
+  const {phases, priorLastPhase, currentPhase, quarter}=phaseData;
+  // Compute A/X per phase to determine Phase 1 classification
+  const sequence=[];
+  for(let i=0;i<phases.length;i++){
+    const cur=phases[i];
+    if(!cur){ sequence.push(null); continue; }
+    const prior=i===0?priorLastPhase:phases[i-1];
+    if(!prior){ sequence.push('N/A'); continue; }
+    const isA=cur.high<=prior.high && cur.low>=prior.low;
+    sequence.push(isA?'A':'X');
+  }
+  // Determine cycle from Phase 1's classification
+  let cycleType='N/A', cycle=[null,null,null,null];
+  if(sequence[0]==='A'){
+    cycleType='AMDX';
+    cycle=['A','M','D','X'];
+  } else if(sequence[0]==='X'){
+    cycleType='XAMD';
+    cycle=['X','A','M','D'];
+  }
+  // Current phase info
+  const cpIdx=currentPhase-1;
+  const stage=cpIdx>=0&&cpIdx<cycle.length&&cycle[cpIdx]?cycle[cpIdx]:'—';
+  const curCandle=cpIdx>=0&&cpIdx<phases.length?phases[cpIdx]:null;
+  const priorCandle=cpIdx===0?priorLastPhase:(cpIdx>0&&cpIdx<phases.length?phases[cpIdx-1]:null);
+  let breakDir=null;
+  if(curCandle&&priorCandle&&sequence[cpIdx]==='X'){
+    if(curCandle.high>priorCandle.high && curCandle.low<priorCandle.low) breakDir='outside';
+    else if(curCandle.high>priorCandle.high) breakDir='break-high';
+    else breakDir='break-low';
+  }
+  return {
+    ax:cycleType, stage, cycle, sequence, currentPhase, quarterLabel:quarter, breakDir,
+    c0:curCandle?{high:curCandle.high,low:curCandle.low,open:curCandle.open,close:curCandle.close}:{high:0,low:0,open:0,close:0},
+    c1:priorCandle?{high:priorCandle.high,low:priorCandle.low,open:priorCandle.open,close:priorCandle.close}:{high:0,low:0,open:0,close:0},
+    dayCount:curCandle?curCandle.dayCount:0
+  };
+}
+
+// ── LEAP Hunter Classification ──
+function classifyLeapHunter(dailyData){
+  if(!dailyData||dailyData.length<30) return null;
+  const now=new Date();
+  const priorYear=now.getFullYear()-1;
+  const curYear=now.getFullYear();
+  const sorted=[...dailyData].sort((a,b)=>a.date.localeCompare(b.date));
+  // Get prior year data
+  const priorYearDays=sorted.filter(d=>d.date.startsWith(String(priorYear)));
+  if(priorYearDays.length<10) return null;
+  const priorYearLow=Math.min(...priorYearDays.map(d=>d.low));
+  // Get Q1 current year data
+  const q1Start=`${curYear}-01-01`, q1End=`${curYear}-03-31`;
+  const q1Days=sorted.filter(d=>d.date>=q1Start&&d.date<=q1End);
+  if(!q1Days.length) return null;
+  const q1Low=Math.min(...q1Days.map(d=>d.low));
+  const swept=q1Low<priorYearLow;
+  if(!swept) return null; // Only return data for swept tickers
+  const latestDay=sorted[sorted.length-1];
+  const currentPrice=latestDay.close;
+  const reclaimed=currentPrice>priorYearLow;
+  const sweepDepth=((priorYearLow-q1Low)/priorYearLow*100);
+  const recovery=((currentPrice-q1Low)/q1Low*100);
+  const distFromPYL=((currentPrice-priorYearLow)/priorYearLow*100);
+  return {
+    status:reclaimed?'reclaimed':'swept',
+    priorYearLow, q1Low, currentPrice, sweepDepth, recovery, distFromPYL,
+    priorYear, latestDate:latestDay.date
+  };
+}
+
+// ── Daily Intraday ──
+const INDEX_ETFS=['SPY','QQQ','DIA','IWM'];
+const FUTURES_MAP={'ES=F':'SPY','NQ=F':'QQQ','YM=F':'DIA','RTY=F':'IWM'};
+const FUTURES=Object.keys(FUTURES_MAP);
+const DAILY_ONLY=new Set(FUTURES);
+
+async function fetchIntraday(sym,timeframe,from,to){
+  const url=`https://financialmodelingprep.com/stable/historical-chart/${timeframe}?symbol=${fmpSym(sym)}&from=${from}&to=${to}&extended=true&apikey=${FMP_KEY}`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+function aggregateTo6H(hourlyBars,targetDate){
+  // Group 1H bars into 4 × 6H windows for a single day
+  const windows=[[],[],[],[]]; // 00-05, 06-11, 12-17, 18-23
+  hourlyBars.forEach(bar=>{
+    const dt=new Date(bar.date);
+    const dateStr=bar.date.slice(0,10);
+    if(dateStr!==targetDate) return;
+    const hour=dt.getHours();
+    const winIdx=Math.floor(hour/6);
+    if(winIdx>=0&&winIdx<4) windows[winIdx].push(bar);
+  });
+  return windows.map((bars,i)=>{
+    if(!bars.length) return null;
+    bars.sort((a,b)=>a.date.localeCompare(b.date));
+    return {
+      open:bars[0].open,
+      high:Math.max(...bars.map(b=>b.high)),
+      low:Math.min(...bars.map(b=>b.low)),
+      close:bars[bars.length-1].close,
+      barCount:bars.length,
+      phase:i+1
+    };
+  });
+}
+
+function aggregateFutures6H(hourlyBars,targetDate){
+  // Futures session: 18:00 prior day → 17:59 target day
+  // Phase 1: prior day 18:00-23:59, Phase 2: 00:00-05:59, Phase 3: 06:00-11:59, Phase 4: 12:00-17:59
+  const td=new Date(targetDate+'T00:00:00');
+  const priorDay=new Date(td); priorDay.setDate(priorDay.getDate()-1);
+  const priorStr=priorDay.getFullYear()+'-'+String(priorDay.getMonth()+1).padStart(2,'0')+'-'+String(priorDay.getDate()).padStart(2,'0');
+  const windows=[[],[],[],[]];
+  hourlyBars.forEach(bar=>{
+    const ds=bar.date.slice(0,10);
+    const hour=new Date(bar.date).getHours();
+    if(ds===priorStr&&hour>=18) windows[0].push(bar);       // Phase 1: prior day 18-23
+    else if(ds===targetDate&&hour<6) windows[1].push(bar);   // Phase 2: 00-05
+    else if(ds===targetDate&&hour<12) windows[2].push(bar);  // Phase 3: 06-11
+    else if(ds===targetDate&&hour<18) windows[3].push(bar);  // Phase 4: 12-17
+  });
+  return windows.map((bars,i)=>{
+    if(!bars.length) return null;
+    bars.sort((a,b)=>a.date.localeCompare(b.date));
+    return {
+      open:bars[0].open,
+      high:Math.max(...bars.map(b=>b.high)),
+      low:Math.min(...bars.map(b=>b.low)),
+      close:bars[bars.length-1].close,
+      barCount:bars.length,
+      phase:i+1
+    };
+  });
+}
+
+function group4HByDay(bars4h,targetDate){
+  // Group 4H bars for a single day
+  const dayBars=bars4h.filter(b=>b.date.slice(0,10)===targetDate)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  // Pad to 4 phases
+  const phases=[];
+  for(let i=0;i<4;i++){
+    if(i<dayBars.length){
+      const b=dayBars[i];
+      phases.push({open:b.open,high:b.high,low:b.low,close:b.close,barCount:1,phase:i+1});
+    } else {
+      phases.push(null);
+    }
+  }
+  return phases;
+}
+
+function classifyDailyAMDX(todayPhases,priorLastPhase,isFutures){
+  // Futures: Phase 1 (Asian/overnight) vs prior Phase 4 (NY PM)
+  //   No overlap (gap away) = A (accumulation)
+  //   Overlap/touch = X (expansion)
+  // Equities: inside bar logic (Phase 1 within prior range = A)
+  const sequence=[];
+  for(let i=0;i<todayPhases.length;i++){
+    const cur=todayPhases[i];
+    if(!cur){ sequence.push(null); continue; }
+    const prior=i===0?priorLastPhase:todayPhases[i-1];
+    if(!prior){ sequence.push('N/A'); continue; }
+    if(isFutures&&i===0){
+      // Futures Phase 1: gap away from prior PM = A, touch/overlap = X
+      const noOverlap=cur.low>prior.high||cur.high<prior.low;
+      sequence.push(noOverlap?'A':'X');
+    } else {
+      const isA=cur.high<=prior.high && cur.low>=prior.low;
+      sequence.push(isA?'A':'X');
+    }
+  }
+  let cycleType='N/A', cycle=[null,null,null,null];
+  if(sequence[0]==='A'){ cycleType='AMDX'; cycle=['A','M','D','X']; }
+  else if(sequence[0]==='X'){ cycleType='XAMD'; cycle=['X','A','M','D']; }
+  // Find current phase (last non-null phase)
+  let currentPhase=1;
+  for(let i=todayPhases.length-1;i>=0;i--){
+    if(todayPhases[i]){ currentPhase=i+1; break; }
+  }
+  const cpIdx=currentPhase-1;
+  const stage=cpIdx>=0&&cpIdx<cycle.length&&cycle[cpIdx]?cycle[cpIdx]:'—';
+  const curCandle=cpIdx>=0&&cpIdx<todayPhases.length?todayPhases[cpIdx]:null;
+  const priorCandle=cpIdx===0?priorLastPhase:(cpIdx>0?todayPhases[cpIdx-1]:null);
+  let breakDir=null;
+  if(curCandle&&priorCandle&&sequence[cpIdx]==='X'){
+    if(curCandle.high>priorCandle.high&&curCandle.low<priorCandle.low) breakDir='outside';
+    else if(curCandle.high>priorCandle.high) breakDir='break-high';
+    else breakDir='break-low';
+  }
+  return {
+    ax:cycleType, stage, cycle, sequence, currentPhase, breakDir,
+    c0:curCandle?{high:curCandle.high,low:curCandle.low,open:curCandle.open,close:curCandle.close}:{high:0,low:0,open:0,close:0},
+    c1:priorCandle?{high:priorCandle.high,low:priorCandle.low,open:priorCandle.open,close:priorCandle.close}:{high:0,low:0,open:0,close:0}
+  };
+}
+
+async function fetchDailyIntraday(tickers,onProgress){
+  const results={};
+  const now=new Date();
+  const today=dateStr(now);
+  // Fetch yesterday too for prior day's last phase
+  const yesterday=dateStr(daysAgo(1));
+  const twoDaysAgo=dateStr(daysAgo(5)); // buffer for weekends/holidays
+  for(let i=0;i<tickers.length;i+=BATCH_SIZE){
+    const batch=tickers.slice(i,i+BATCH_SIZE);
+    const promises=batch.map(async sym=>{
+      try{
+        const isIndex=INDEX_ETFS.includes(sym)||FUTURES.includes(sym);
+        const tf=isIndex?'1hour':'4hour';
+        const bars=await fetchIntraday(sym,tf,twoDaysAgo,today);
+        if(!Array.isArray(bars)||!bars.length){ results[sym]=null; return; }
+        // Sort chronologically
+        bars.sort((a,b)=>a.date.localeCompare(b.date));
+        // Get unique trading dates
+        const isFut=FUTURES.includes(sym);
+        let dates,latestDate,priorDate;
+        if(isFut){
+          // Futures: bars with hour>=18 belong to next calendar day's session
+          const tradingDates=new Set();
+          bars.forEach(bar=>{
+            const ds=bar.date.slice(0,10);
+            const hour=new Date(bar.date).getHours();
+            if(hour>=18){
+              const nd=new Date(ds+'T00:00:00'); nd.setDate(nd.getDate()+1);
+              tradingDates.add(nd.getFullYear()+'-'+String(nd.getMonth()+1).padStart(2,'0')+'-'+String(nd.getDate()).padStart(2,'0'));
+            } else {
+              tradingDates.add(ds);
+            }
+          });
+          dates=[...tradingDates].sort();
+        } else {
+          dates=[...new Set(bars.map(b=>b.date.slice(0,10)))].sort();
+        }
+        if(dates.length<1){ results[sym]=null; return; }
+        latestDate=dates[dates.length-1];
+        priorDate=dates.length>=2?dates[dates.length-2]:null;
+        // Build today's phases
+        let todayPhases, priorLastPhase=null;
+        if(isFut){
+          todayPhases=aggregateFutures6H(bars,latestDate);
+          if(priorDate){
+            const priorPhases=aggregateFutures6H(bars,priorDate);
+            for(let p=3;p>=0;p--){ if(priorPhases[p]){ priorLastPhase=priorPhases[p]; break; } }
+          }
+        } else if(isIndex){
+          todayPhases=aggregateTo6H(bars,latestDate);
+          if(priorDate){
+            const priorPhases=aggregateTo6H(bars,priorDate);
+            // Last non-null phase of prior day
+            for(let p=3;p>=0;p--){ if(priorPhases[p]){ priorLastPhase=priorPhases[p]; break; } }
+          }
+        } else {
+          todayPhases=group4HByDay(bars,latestDate);
+          if(priorDate){
+            const priorPhases=group4HByDay(bars,priorDate);
+            for(let p=3;p>=0;p--){ if(priorPhases[p]){ priorLastPhase=priorPhases[p]; break; } }
+          }
+        }
+        // Need at least 1 phase
+        const hasPhases=todayPhases.some(p=>p!==null);
+        if(!hasPhases){ results[sym]=null; return; }
+        const classified=classifyDailyAMDX(todayPhases,priorLastPhase,isFut);
+        classified.tradingDate=latestDate;
+        classified.isIndex=isIndex;
+        classified.isFutures=isFut;
+        results[sym]=classified;
+      }catch(e){
+        console.warn(`Intraday fetch failed: ${sym}`,e.message);
+        results[sym]=null;
+      }
+    });
+    await Promise.all(promises);
+    if(onProgress) onProgress(Math.min(i+BATCH_SIZE,tickers.length),tickers.length);
+    if(i+BATCH_SIZE<tickers.length) await new Promise(r=>setTimeout(r,FETCH_DELAY));
+  }
+  return results;
+}
+
+// ── Cache ──
+function loadCache(key){
+  try{ const v=localStorage.getItem(key); return v?JSON.parse(v):null; }catch(e){ return null; }
+}
+function saveCache(key,data){
+  try{ localStorage.setItem(key,JSON.stringify({timestamp:Date.now(),data})); }catch(e){ console.warn('Cache save failed:',e); }
+}
+function isCacheFresh(key){
+  const cached=loadCache(key);
+  if(!cached) return false;
+  const age=Date.now()-cached.timestamp;
+  // Stale after 6 hours — user can refresh manually for latest
+  return age < 6*60*60*1000;
+}
+
+// ── State ──
+let dailyResults={}, weeklyResults={}, monthlyResults={}, quarterlyResults={}, leapResults={};
+let currentDailyFilter='all', currentWeeklyFilter='all', currentMonthlyFilter='all', currentQuarterlyFilter='all', currentLeapFilter='all';
+let dailySort={col:'ax',dir:'asc'}, weeklySort={col:'ax',dir:'asc'}, monthlySort={col:'ax',dir:'asc'}, quarterlySort={col:'ax',dir:'asc'}, leapSort={col:'status',dir:'asc'};
+let currentView='daily';
+let currentConfluenceFilter='all';
+let confluenceSort={col:'score',dir:'desc'};
+
+// ── Render Functions ──
+function renderHero(dr,wr,mr,qr,lr){
+  const da=Object.values(dr).filter(d=>d&&d.ax==='AMDX').length;
+  const dx=Object.values(dr).filter(d=>d&&d.ax==='XAMD').length;
+  const dt=da+dx||1;
+  const wa=Object.values(wr).filter(d=>d&&d.ax==='A').length;
+  const wx=Object.values(wr).filter(d=>d&&d.ax==='X').length;
+  const wt=wa+wx||1;
+  const ma=Object.values(mr).filter(d=>d&&d.ax==='A').length;
+  const mx=Object.values(mr).filter(d=>d&&d.ax==='X').length;
+  const mt=ma+mx||1;
+  const qa=Object.values(qr).filter(d=>d&&d.ax==='AMDX').length;
+  const qx=Object.values(qr).filter(d=>d&&d.ax==='XAMD').length;
+  const qt=qa+qx||1;
+  const lReclaimed=Object.values(lr).filter(d=>d&&d.status==='reclaimed').length;
+  const lSwept=Object.values(lr).filter(d=>d&&d.status==='swept').length;
+  const lt=lReclaimed+lSwept||1;
+  document.getElementById('heroDailyA').textContent=da;
+  document.getElementById('heroDailyASub').textContent=`of ${da+dx} tickers`;
+  document.getElementById('heroDailyAPct').textContent=`${((da/dt)*100).toFixed(0)}%`;
+  document.getElementById('heroDailyX').textContent=dx;
+  document.getElementById('heroDailyXSub').textContent=`of ${da+dx} tickers`;
+  document.getElementById('heroDailyXPct').textContent=`${((dx/dt)*100).toFixed(0)}%`;
+  document.getElementById('heroWeeklyA').textContent=wa;
+  document.getElementById('heroWeeklyASub').textContent=`of ${wa+wx} tickers`;
+  document.getElementById('heroWeeklyAPct').textContent=`${((wa/wt)*100).toFixed(0)}%`;
+  document.getElementById('heroWeeklyX').textContent=wx;
+  document.getElementById('heroWeeklyXSub').textContent=`of ${wa+wx} tickers`;
+  document.getElementById('heroWeeklyXPct').textContent=`${((wx/wt)*100).toFixed(0)}%`;
+  document.getElementById('heroMonthlyA').textContent=ma;
+  document.getElementById('heroMonthlyASub').textContent=`of ${ma+mx} tickers`;
+  document.getElementById('heroMonthlyAPct').textContent=`${((ma/mt)*100).toFixed(0)}%`;
+  document.getElementById('heroMonthlyX').textContent=mx;
+  document.getElementById('heroMonthlyXSub').textContent=`of ${ma+mx} tickers`;
+  document.getElementById('heroMonthlyXPct').textContent=`${((mx/mt)*100).toFixed(0)}%`;
+  document.getElementById('heroQuarterlyA').textContent=qa;
+  document.getElementById('heroQuarterlyASub').textContent=`of ${qa+qx} tickers`;
+  document.getElementById('heroQuarterlyAPct').textContent=`${((qa/qt)*100).toFixed(0)}%`;
+  document.getElementById('heroQuarterlyX').textContent=qx;
+  document.getElementById('heroQuarterlyXSub').textContent=`of ${qa+qx} tickers`;
+  document.getElementById('heroQuarterlyXPct').textContent=`${((qx/qt)*100).toFixed(0)}%`;
+  document.getElementById('heroLeapCount').textContent=lReclaimed;
+  document.getElementById('heroLeapSub').textContent=`of ${lReclaimed+lSwept} swept`;
+  document.getElementById('heroLeapPct').textContent=`${((lReclaimed/lt)*100).toFixed(0)}%`;
+}
+
+
+function buildTableRow(sym,data){
+  const isA=data.ax==='A';
+  const range=data.c0.close?((data.c0.high-data.c0.low)/data.c0.close*100).toFixed(1):'—';
+  const badgeCls=isA?'b-sage':'b-terracotta';
+  let breakHtml='<span style="color:var(--text-muted)">—</span>';
+  if(data.breakDir){
+    const bCls=data.breakDir==='break-high'?'b-sage':data.breakDir==='break-low'?'b-burgundy':'b-camel';
+    const bLabel=data.breakDir==='break-high'?'↑ High':data.breakDir==='break-low'?'↓ Low':'↕ Outside';
+    breakHtml=`<span class="badge ${bCls}">${bLabel}</span>`;
+  }
+  const partial=data.dayCount<5?` <span class="badge b-muted" title="${data.dayCount} days">partial</span>`:'';
+  return `<tr class="row-${data.ax.toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}">
+    <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong>${partial}</div></td>
+    <td><span class="badge ${badgeCls}">${data.ax}</span></td>
+    <td class="mono sensitive">$${data.c0.high.toFixed(2)}</td>
+    <td class="mono sensitive">$${data.c0.low.toFixed(2)}</td>
+    <td class="mono" style="color:var(--text-sec)">$${data.c1.high.toFixed(2)}</td>
+    <td class="mono" style="color:var(--text-sec)">$${data.c1.low.toFixed(2)}</td>
+    <td class="mono">${range}%</td>
+    <td>${breakHtml}</td>
+  </tr>`;
+}
+
+function getSortedEntries(results,sort){
+  const entries=Object.entries(results).filter(([s,d])=>d&&d.ax);
+  entries.sort((a,b)=>{
+    let va,vb;
+    switch(sort.col){
+      case 'ticker': va=a[0]; vb=b[0]; break;
+      case 'ax': va=a[1].ax; vb=b[1].ax; break;
+      case 'c0h': va=a[1].c0.high; vb=b[1].c0.high; break;
+      case 'c0l': va=a[1].c0.low; vb=b[1].c0.low; break;
+      case 'range': va=(a[1].c0.high-a[1].c0.low)/(a[1].c0.close||1); vb=(b[1].c0.high-b[1].c0.low)/(b[1].c0.close||1); break;
+      case 'phase': va=a[1].currentPhase||0; vb=b[1].currentPhase||0; break;
+      default: va=a[1].ax; vb=b[1].ax;
+    }
+    if(typeof va==='string'){
+      const cmp=va.localeCompare(vb);
+      if(cmp!==0) return sort.dir==='asc'?cmp:-cmp;
+      return a[0].localeCompare(b[0]);
+    }
+    const cmp=va-vb;
+    if(cmp!==0) return sort.dir==='asc'?cmp:-cmp;
+    return a[0].localeCompare(b[0]);
+  });
+  return entries;
+}
+
+
+// ── Quarterly Rendering ──
+const STAGE_NAMES={A:'Accumulation',M:'Manipulation',D:'Distribution',X:'Expansion'};
+function buildSequenceHtml(cycle,currentPhase){
+  let html='<div class="phase-seq">';
+  for(let i=0;i<4;i++){
+    if(i>0) html+='<span class="ps-arrow">→</span>';
+    const letter=cycle&&cycle[i]?cycle[i]:null;
+    const isCurrent=i===(currentPhase-1);
+    const isFuture=i>(currentPhase-1);
+    let cls='ps-item';
+    if(!letter){ cls+=' ps-na'; }
+    else if(isFuture){ cls+=' ps-future'; }
+    else if(letter==='A'){ cls+=' ps-a'; }
+    else if(letter==='M'){ cls+=' ps-m'; }
+    else if(letter==='D'){ cls+=' ps-d'; }
+    else if(letter==='X'){ cls+=' ps-x'; }
+    if(isCurrent) cls+=' ps-current';
+    const label=letter||'—';
+    const tooltip=letter?`Phase ${i+1}: ${STAGE_NAMES[letter]||letter}`:`Phase ${i+1}`;
+    html+=`<span class="${cls}" title="${tooltip}">${label}</span>`;
+  }
+  html+='</div>';
+  return html;
+}
+
+function buildQuarterlyTableRow(sym,data){
+  const range=data.c0.close?((data.c0.high-data.c0.low)/data.c0.close*100).toFixed(1):'—';
+  const cycleCls=data.ax==='AMDX'?'b-sage':data.ax==='XAMD'?'b-terracotta':'b-muted';
+  const stageCls=data.stage==='A'?'b-sage':data.stage==='M'?'b-camel':data.stage==='D'?'b-burgundy':data.stage==='X'?'b-terracotta':'b-muted';
+  const stageLabel=data.stage&&STAGE_NAMES[data.stage]?STAGE_NAMES[data.stage]:'—';
+  let breakHtml='<span style="color:var(--text-muted)">—</span>';
+  if(data.breakDir){
+    const bCls=data.breakDir==='break-high'?'b-sage':data.breakDir==='break-low'?'b-burgundy':'b-camel';
+    const bLabel=data.breakDir==='break-high'?'↑ High':data.breakDir==='break-low'?'↓ Low':'↕ Outside';
+    breakHtml=`<span class="badge ${bCls}">${bLabel}</span>`;
+  }
+  const partial=data.dayCount<10?` <span class="badge b-muted" title="${data.dayCount} days">partial</span>`:'';
+  return `<tr class="row-${(data.ax||'na').toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}">
+    <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong>${partial}</div></td>
+    <td><span class="phase-badge">${data.currentPhase}</span></td>
+    <td>${buildSequenceHtml(data.cycle,data.currentPhase)}</td>
+    <td><span class="badge ${cycleCls}" style="margin-right:4px">${data.ax}</span><span class="badge ${stageCls}" title="${stageLabel}">${data.stage}</span></td>
+    <td class="mono sensitive">$${data.c0.high.toFixed(2)}</td>
+    <td class="mono sensitive">$${data.c0.low.toFixed(2)}</td>
+    <td class="mono">${range}%</td>
+    <td>${breakHtml}</td>
+  </tr>`;
+}
+
+
+// ── Daily Rendering ──
+function buildDailyTableRow(sym,data){
+  const range=data.c0.close?((data.c0.high-data.c0.low)/data.c0.close*100).toFixed(1):'—';
+  const cycleCls=data.ax==='AMDX'?'b-sage':data.ax==='XAMD'?'b-terracotta':'b-muted';
+  const stageCls=data.stage==='A'?'b-sage':data.stage==='M'?'b-camel':data.stage==='D'?'b-burgundy':data.stage==='X'?'b-terracotta':'b-muted';
+  const stageLabel=data.stage&&STAGE_NAMES[data.stage]?STAGE_NAMES[data.stage]:'—';
+  const tfLabel=data.isIndex?'6H':'4H';
+  const corrETF=FUTURES_MAP[sym];
+  const corrHtml=corrETF?` <span style="color:var(--text-muted);font-size:9px">→${corrETF}</span>`:'';
+  let breakHtml='<span style="color:var(--text-muted)">—</span>';
+  if(data.breakDir){
+    const bCls=data.breakDir==='break-high'?'b-sage':data.breakDir==='break-low'?'b-burgundy':'b-camel';
+    const bLabel=data.breakDir==='break-high'?'↑ High':data.breakDir==='break-low'?'↓ Low':'↕ Outside';
+    breakHtml=`<span class="badge ${bCls}">${bLabel}</span>`;
+  }
+  return `<tr class="row-${(data.ax||'na').toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}">
+    <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong>${corrHtml} <span class="badge b-muted" style="font-size:9px">${tfLabel}</span></div></td>
+    <td><span class="phase-badge">${data.currentPhase}</span></td>
+    <td>${buildSequenceHtml(data.cycle,data.currentPhase)}</td>
+    <td><span class="badge ${cycleCls}" style="margin-right:4px">${data.ax}</span><span class="badge ${stageCls}" title="${stageLabel}">${data.stage}</span></td>
+    <td class="mono sensitive">$${data.c0.high.toFixed(2)}</td>
+    <td class="mono sensitive">$${data.c0.low.toFixed(2)}</td>
+    <td class="mono">${range}%</td>
+    <td>${breakHtml}</td>
+  </tr>`;
+}
+
+
+// ── LEAP Hunter Rendering ──
+function buildLeapTableRow(sym,data){
+  const isReclaimed=data.status==='reclaimed';
+  const statusCls=isReclaimed?'b-sage':'b-burgundy';
+  const statusLabel=isReclaimed?'Reclaimed':'Below';
+  const sweepPct=data.sweepDepth.toFixed(1);
+  const vsPyl=data.distFromPYL>=0?`+${data.distFromPYL.toFixed(1)}%`:`${data.distFromPYL.toFixed(1)}%`;
+  const vsPylColor=data.distFromPYL>=0?'var(--green)':'var(--red)';
+  const recoveryPct=data.recovery.toFixed(1);
+  return `<tr class="row-${data.status} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.status}">
+    <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong></div></td>
+    <td><span class="badge ${statusCls}">${statusLabel}</span></td>
+    <td class="mono sensitive">$${data.priorYearLow.toFixed(2)}</td>
+    <td class="mono sensitive">$${data.q1Low.toFixed(2)}</td>
+    <td class="mono" style="color:var(--red)">-${sweepPct}%</td>
+    <td class="mono sensitive">$${data.currentPrice.toFixed(2)}</td>
+    <td class="mono" style="color:${vsPylColor}">${vsPyl}</td>
+    <td class="mono" style="color:var(--green)">+${recoveryPct}%</td>
+  </tr>`;
+}
+
+function getSortedLeapEntries(results,sort){
+  const entries=Object.entries(results).filter(([s,d])=>d&&d.status);
+  entries.sort((a,b)=>{
+    let va,vb;
+    switch(sort.col){
+      case 'ticker': va=a[0]; vb=b[0]; break;
+      case 'status': va=a[1].status; vb=b[1].status; break;
+      case 'pyl': va=a[1].priorYearLow; vb=b[1].priorYearLow; break;
+      case 'q1low': va=a[1].q1Low; vb=b[1].q1Low; break;
+      case 'sweep': va=a[1].sweepDepth; vb=b[1].sweepDepth; break;
+      case 'price': va=a[1].currentPrice; vb=b[1].currentPrice; break;
+      case 'vspyl': va=a[1].distFromPYL; vb=b[1].distFromPYL; break;
+      case 'recovery': va=a[1].recovery; vb=b[1].recovery; break;
+      default: va=a[1].status; vb=b[1].status;
+    }
+    if(typeof va==='string'){
+      const cmp=va.localeCompare(vb);
+      if(cmp!==0) return sort.dir==='asc'?cmp:-cmp;
+      return a[0].localeCompare(b[0]);
+    }
+    const cmp=va-vb;
+    if(cmp!==0) return sort.dir==='asc'?cmp:-cmp;
+    return a[0].localeCompare(b[0]);
+  });
+  return entries;
+}
+
+
+// ── View Render Functions ──
+function applyAllFilters(){
+  applyRowFilter(getViewFilter(currentView));
+  searchFilter(document.getElementById('searchInput').value);
+}
+
+function renderDailyView(){
+  const tbody=document.getElementById('dataTableBody');
+  const empty=document.getElementById('dataEmpty');
+  const allEntries=getSortedEntries(dailyResults,dailySort);
+  if(!allEntries.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const futures=allEntries.filter(([sym])=>FUTURES.includes(sym));
+  const regular=allEntries.filter(([sym])=>!FUTURES.includes(sym));
+  let html='';
+  if(futures.length){
+    futures.forEach(([sym,data])=>{
+      html+=buildDailyTableRow(sym,data).replace('<tr class="','<tr class="futures-row ');
+    });
+    html+=`<tr class="futures-separator"><td colspan="8"></td></tr>`;
+  }
+  html+=regular.map(([sym,data])=>buildDailyTableRow(sym,data)).join('');
+  tbody.innerHTML=html;
+  applyAllFilters();
+}
+
+function renderWeeklyView(){
+  const tbody=document.getElementById('dataTableBody');
+  const empty=document.getElementById('dataEmpty');
+  const entries=getSortedEntries(weeklyResults,weeklySort);
+  if(!entries.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=entries.map(([sym,data])=>buildTableRow(sym,data)).join('');
+  applyAllFilters();
+}
+
+function renderMonthlyView(){
+  const tbody=document.getElementById('dataTableBody');
+  const empty=document.getElementById('dataEmpty');
+  const entries=getSortedEntries(monthlyResults,monthlySort);
+  if(!entries.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=entries.map(([sym,data])=>buildTableRow(sym,data)).join('');
+  applyAllFilters();
+}
+
+function renderQuarterlyView(){
+  const tbody=document.getElementById('dataTableBody');
+  const empty=document.getElementById('dataEmpty');
+  const entries=getSortedEntries(quarterlyResults,quarterlySort);
+  if(!entries.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=entries.map(([sym,data])=>buildQuarterlyTableRow(sym,data)).join('');
+  applyAllFilters();
+}
+
+function renderLeapView(){
+  const tbody=document.getElementById('dataTableBody');
+  const empty=document.getElementById('dataEmpty');
+  const entries=getSortedLeapEntries(leapResults,leapSort);
+  if(!entries.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=entries.map(([sym,data])=>buildLeapTableRow(sym,data)).join('');
+  applyAllFilters();
+}
+
+// ── Confluence ──
+function buildConfluenceData(){
+  const allTickers=new Set();
+  for(const sym of Object.keys(dailyResults)) if(!FUTURES.includes(sym)) allTickers.add(sym);
+  for(const sym of Object.keys(weeklyResults)) allTickers.add(sym);
+  for(const sym of Object.keys(monthlyResults)) allTickers.add(sym);
+  for(const sym of Object.keys(quarterlyResults)) allTickers.add(sym);
+  for(const sym of Object.keys(leapResults)) allTickers.add(sym);
+  const rows=[];
+  for(const sym of allTickers){
+    const d=dailyResults[sym], w=weeklyResults[sym], m=monthlyResults[sym], q=quarterlyResults[sym], l=leapResults[sym];
+    let score=0;
+    const dAcc=d&&d.ax==='AMDX', wAcc=w&&w.ax==='A', mAcc=m&&m.ax==='A', qAcc=q&&q.ax==='AMDX', lRec=l&&l.status==='reclaimed';
+    if(dAcc) score++; if(wAcc) score++; if(mAcc) score++; if(qAcc) score++; if(lRec) score++;
+    rows.push({sym, d, w, m, q, l, score, dAcc, wAcc, mAcc, qAcc, lRec});
+  }
+  return rows;
+}
+
+function buildConfluenceTableRow(row){
+  const {sym, score}=row;
+  function badge(label,isAcc){
+    if(!label) return '<span style="color:var(--text-muted)">—</span>';
+    const cls=isAcc?'b-sage':'b-terracotta';
+    return `<span class="conf-badge badge ${cls}">${label}</span>`;
+  }
+  const dLabel=row.d?(row.d.ax==='AMDX'?'AMDX':'XAMD'):null;
+  const wLabel=row.w?(row.w.ax==='A'?'A':'X'):null;
+  const mLabel=row.m?(row.m.ax==='A'?'A':'X'):null;
+  const qLabel=row.q?(row.q.ax==='AMDX'?'AMDX':'XAMD'):null;
+  const lLabel=row.l?(row.l.status==='reclaimed'?'Reclaimed':'Below'):null;
+  const scoreCls=score>=4?'high':score>=2?'mid':'low';
+  return `<tr class="ax-row" data-ticker="${sym.toLowerCase()}" data-ax="all" data-score="${score}">
+    <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong></div></td>
+    <td>${badge(dLabel,row.dAcc)}</td>
+    <td>${badge(wLabel,row.wAcc)}</td>
+    <td>${badge(mLabel,row.mAcc)}</td>
+    <td>${badge(qLabel,row.qAcc)}</td>
+    <td>${badge(lLabel,row.lRec)}</td>
+    <td><span class="conf-score ${scoreCls}">${score}</span></td>
+  </tr>`;
+}
+
+function renderConfluenceView(){
+  const tbody=document.getElementById('dataTableBody');
+  const empty=document.getElementById('dataEmpty');
+  let rows=buildConfluenceData();
+  rows.sort((a,b)=>{
+    let va,vb;
+    switch(confluenceSort.col){
+      case 'ticker': va=a.sym; vb=b.sym; break;
+      case 'score': default: va=a.score; vb=b.score; break;
+    }
+    if(typeof va==='string'){
+      const cmp=va.localeCompare(vb);
+      return cmp!==0?(confluenceSort.dir==='asc'?cmp:-cmp):a.sym.localeCompare(b.sym);
+    }
+    const cmp=va-vb;
+    return cmp!==0?(confluenceSort.dir==='asc'?cmp:-cmp):a.sym.localeCompare(b.sym);
+  });
+  if(!rows.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=rows.map(r=>buildConfluenceTableRow(r)).join('');
+  applyAllFilters();
+}
+
+// ── VIEW_CONFIG ──
+const VIEW_CONFIG={
+  daily:{
+    title:'Daily AMDX', subtitle:'Intraday phases — 4H candles (equities) / 6H candles (index ETFs)',
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('phase',this)">Phase</th><th>Sequence</th><th class="sortable" onclick="sortCurrentView('ax',this)">Cycle / Stage</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Phase H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Phase L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th></tr>`,
+    filterTabs:[{v:'all',l:'All'},{v:'AMDX',l:'AMDX'},{v:'XAMD',l:'XAMD'}],
+    render:renderDailyView
+  },
+  weekly:{
+    title:'Weekly A/X', subtitle:'Inside bar — current week vs prior week',
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th></tr>`,
+    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'}],
+    render:renderWeeklyView
+  },
+  monthly:{
+    title:'Monthly A/X', subtitle:'First week of current month vs last week of prior month',
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th></tr>`,
+    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'}],
+    render:renderMonthlyView
+  },
+  quarterly:{
+    title:'Quarterly AMDX', subtitle:'Quarter divided into 4 phases — current quarter vs prior',
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('phase',this)">Phase</th><th>Sequence</th><th class="sortable" onclick="sortCurrentView('ax',this)">Cycle / Stage</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Phase H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Phase L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th></tr>`,
+    filterTabs:[{v:'all',l:'All'},{v:'AMDX',l:'AMDX'},{v:'XAMD',l:'XAMD'}],
+    render:renderQuarterlyView
+  },
+  leap:{
+    title:'LEAP Hunter', subtitle:'Prior year low sweep & reclaim tracker',
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('status',this)">Status</th><th class="sortable" onclick="sortCurrentView('pyl',this)">Prior Yr Low</th><th class="sortable" onclick="sortCurrentView('q1low',this)">Q1 Low</th><th class="sortable" onclick="sortCurrentView('sweep',this)">Sweep %</th><th class="sortable" onclick="sortCurrentView('price',this)">Price</th><th class="sortable" onclick="sortCurrentView('vspyl',this)">vs PYL</th><th class="sortable" onclick="sortCurrentView('recovery',this)">Recovery</th></tr>`,
+    filterTabs:[{v:'all',l:'All'},{v:'reclaimed',l:'Reclaimed'},{v:'swept',l:'Below'}],
+    render:renderLeapView
+  },
+  confluence:{
+    title:'Confluence', subtitle:'Cross-timeframe alignment — accumulation score',
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th>Daily</th><th>Weekly</th><th>Monthly</th><th>Quarterly</th><th>LEAP</th><th class="sortable" onclick="sortCurrentView('score',this)">Score</th></tr>`,
+    filterTabs:[{v:'all',l:'All'},{v:'3+',l:'3+ Aligned'},{v:'5',l:'All Accumulating'}],
+    render:renderConfluenceView
+  }
+};
+
+// ── View Switching ──
+function getViewFilter(view){
+  switch(view){
+    case 'daily': return currentDailyFilter;
+    case 'weekly': return currentWeeklyFilter;
+    case 'monthly': return currentMonthlyFilter;
+    case 'quarterly': return currentQuarterlyFilter;
+    case 'leap': return currentLeapFilter;
+    case 'confluence': return currentConfluenceFilter;
+    default: return 'all';
+  }
+}
+function setViewFilter(view,val){
+  switch(view){
+    case 'daily': currentDailyFilter=val; break;
+    case 'weekly': currentWeeklyFilter=val; break;
+    case 'monthly': currentMonthlyFilter=val; break;
+    case 'quarterly': currentQuarterlyFilter=val; break;
+    case 'leap': currentLeapFilter=val; break;
+    case 'confluence': currentConfluenceFilter=val; break;
+  }
+}
+
+function switchView(view,btn){
+  currentView=view;
+  const cfg=VIEW_CONFIG[view];
+  if(!cfg) return;
+  // Update main tab active state
+  document.querySelectorAll('#mainTabs .main-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===view));
+  // Update title with date context
+  const labelMap={daily:'dailyLabel',weekly:'weeklyWeekLabel',monthly:'monthlyLabel',quarterly:'quarterlyLabel',leap:'leapLabel'};
+  const dateEl=document.getElementById(labelMap[view]||'');
+  const dateText=dateEl?dateEl.textContent:'';
+  document.getElementById('dataTitle').textContent=cfg.title+(dateText?' '+dateText:'');
+  document.getElementById('dataSubtitle').textContent=cfg.subtitle;
+  // Swap thead
+  document.getElementById('dataTableHead').innerHTML=cfg.thead;
+  // Rebuild sub-filter tabs
+  const filterContainer=document.getElementById('subFilterTabs');
+  const curFilter=getViewFilter(view);
+  filterContainer.innerHTML=cfg.filterTabs.map(f=>{
+    const active=f.v===curFilter?' active':'';
+    return `<button class="tab${active}" onclick="filterCurrentView('${f.v}',this)">${f.l}</button>`;
+  }).join('');
+  // Render
+  cfg.render();
+  // Update nav link active state
+  document.querySelectorAll('.nav-link:not(.back)').forEach(l=>l.classList.remove('active'));
+  const navIdx={daily:1,weekly:2,monthly:3,quarterly:4,leap:5,confluence:6};
+  const links=document.querySelectorAll('.nav-link:not(.back)');
+  if(links[navIdx[view]]) links[navIdx[view]].classList.add('active');
+}
+
+function navToView(e,view){
+  e.preventDefault();
+  switchView(view);
+  document.getElementById('dataSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── Filtering ──
+function filterCurrentView(ax,btn){
+  setViewFilter(currentView,ax);
+  if(btn){
+    btn.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  applyRowFilter(ax);
+  searchFilter(document.getElementById('searchInput').value);
+}
+
+function applyRowFilter(ax){
+  const tbody=document.getElementById('dataTableBody');
+  tbody.querySelectorAll('tr.ax-row').forEach(tr=>{
+    if(ax==='all') tr.style.display='';
+    else if(ax==='3+'){
+      tr.style.display=(parseInt(tr.dataset.score)||0)>=3?'':'none';
+    } else if(ax==='5'){
+      tr.style.display=(parseInt(tr.dataset.score)||0)===5?'':'none';
+    } else {
+      tr.style.display=tr.dataset.ax===ax?'':'none';
+    }
+  });
+  // Handle futures separator visibility
+  const sep=tbody.querySelector('tr.futures-separator');
+  if(sep){
+    const vis=tbody.querySelectorAll('tr.futures-row:not([style*="display: none"])');
+    sep.style.display=vis.length?'':'none';
+  }
+}
+
+function searchFilter(query){
+  const q=query.trim().toLowerCase();
+  document.querySelectorAll('tr.ax-row').forEach(tr=>{
+    if(!q){ tr.classList.remove('search-hide'); return; }
+    tr.classList.toggle('search-hide',!tr.dataset.ticker.includes(q));
+  });
+  applySearchFilter();
+}
+
+function applySearchFilter(){
+  document.querySelectorAll('tr.ax-row.search-hide').forEach(tr=>tr.style.display='none');
+}
+
+// ── Sorting ──
+function sortCurrentView(col,th){
+  const sortMap={daily:dailySort,weekly:weeklySort,monthly:monthlySort,quarterly:quarterlySort,leap:leapSort,confluence:confluenceSort};
+  const sort=sortMap[currentView];
+  if(!sort) return;
+  if(sort.col===col) sort.dir=sort.dir==='asc'?'desc':'asc';
+  else{ sort.col=col; sort.dir='asc'; }
+  th.closest('thead').querySelectorAll('th.sortable').forEach(h=>{
+    h.classList.remove('sort-asc','sort-desc');
+  });
+  th.classList.add(sort.dir==='asc'?'sort-asc':'sort-desc');
+  VIEW_CONFIG[currentView].render();
+}
+
+// ── Progress ──
+function showProgress(show){
+  document.getElementById('scanProgress').style.display=show?'flex':'none';
+  document.getElementById('refreshBtn').disabled=show;
+  if(show) document.getElementById('refreshBtn').classList.add('spinning');
+  else document.getElementById('refreshBtn').classList.remove('spinning');
+}
+function updateProgress(done,total){
+  const pct=Math.round((done/total)*100);
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressText').textContent=`Scanning ${done}/${total}...`;
+  document.getElementById('tickerCount').textContent=`${done} / ${total} tickers`;
+}
+function showLastUpdated(ts){
+  const d=new Date(ts);
+  const timeStr=d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true});
+  document.getElementById('lastUpdated').textContent=`Last scan: ${timeStr}`;
+}
+
+// ── Main Scan ──
+async function runScan(force){
+  const now=new Date();
+  const wk=getISOWeekKey(now);
+  const mo=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const qBounds=getQuarterBounds(now);
+  const dKey='amdx_daily_'+dateStr(now);
+  const wKey='amdx_weekly_'+wk;
+  const mKey='amdx_monthly_'+mo;
+  const qKey='amdx_quarterly_'+qBounds.label.replace(' ','_');
+  const lKey='amdx_leap_'+now.getFullYear();
+  // Check caches independently — EOD and daily can be cached separately
+  const wc=!force&&loadCache(wKey), mc=!force&&loadCache(mKey), qc=!force&&loadCache(qKey), lc=!force&&loadCache(lKey);
+  const eodCached=wc&&mc&&qc&&lc&&isCacheFresh(wKey)&&isCacheFresh(mKey)&&isCacheFresh(qKey)&&isCacheFresh(lKey);
+  const dc=!force&&loadCache(dKey);
+  const dailyCached=dc&&(Date.now()-dc.timestamp)<30*60*1000;
+  if(eodCached&&dailyCached){
+    weeklyResults=wc.data; monthlyResults=mc.data; quarterlyResults=qc.data; leapResults=lc.data; dailyResults=dc.data;
+    renderAll();
+    showLastUpdated(wc.timestamp);
+    const total=Object.keys(weeklyResults).length;
+    document.getElementById('tickerCount').textContent=`${total} tickers scanned`;
+    document.getElementById('dailyLabel').textContent=`(${dateStr(now)})`;
+    document.getElementById('weeklyWeekLabel').textContent=`(${wk})`;
+    document.getElementById('monthlyLabel').textContent=`(${MONTHS[now.getMonth()]} ${now.getFullYear()})`;
+    document.getElementById('quarterlyLabel').textContent=`(${qBounds.label})`;
+    document.getElementById('leapLabel').textContent=`(Q1 ${now.getFullYear()} vs ${now.getFullYear()-1} Low)`;
+    return;
+  }
+  showProgress(true);
+  // Phase 1: EOD data — use cache if valid, otherwise fetch
+  let processed=0;
+  if(eodCached){
+    weeklyResults=wc.data; monthlyResults=mc.data; quarterlyResults=qc.data; leapResults=lc.data;
+    processed=Object.keys(weeklyResults).length;
+  } else {
+    const from=dateStr(daysAgo(LOOKBACK_DAYS));
+    const to=dateStr(now);
+    const eodTickers=WATCHLIST.filter(s=>!DAILY_ONLY.has(s));
+    document.getElementById('progressText').textContent='Fetching EOD data...';
+    const rawDaily=await fetchAllTickers(eodTickers,from,to,updateProgress);
+    weeklyResults={}; monthlyResults={}; quarterlyResults={}; leapResults={};
+    for(const[sym,daily] of Object.entries(rawDaily)){
+      if(!daily||daily.length<10) continue;
+      const weekly=aggregateToWeekly(daily);
+      const wAX=classifyWeeklyAX(weekly);
+      if(wAX) weeklyResults[sym]=wAX;
+      const mAX=classifyMonthlyAX(weekly);
+      if(mAX) monthlyResults[sym]=mAX;
+      const phases=aggregateToQuarterlyPhases(daily);
+      const qAX=classifyQuarterlyAX(phases);
+      if(qAX) quarterlyResults[sym]=qAX;
+      const leap=classifyLeapHunter(daily);
+      if(leap) leapResults[sym]=leap;
+      processed++;
+    }
+    saveCache(wKey,weeklyResults);
+    saveCache(mKey,monthlyResults);
+    saveCache(qKey,quarterlyResults);
+    saveCache(lKey,leapResults);
+  }
+  // Phase 2: Fetch intraday data for daily AMDX
+  document.getElementById('progressText').textContent='Fetching intraday data...';
+  document.getElementById('progressFill').style.width='0%';
+  dailyResults=await fetchDailyIntraday(WATCHLIST,(done,total)=>{
+    const pct=Math.round((done/total)*100);
+    document.getElementById('progressFill').style.width=pct+'%';
+    document.getElementById('progressText').textContent=`Intraday ${done}/${total}...`;
+  });
+  // Filter null results
+  for(const sym of Object.keys(dailyResults)){
+    if(!dailyResults[sym]) delete dailyResults[sym];
+  }
+  saveCache(dKey,dailyResults);
+  showProgress(false);
+  showLastUpdated(Date.now());
+  document.getElementById('tickerCount').textContent=`${processed} tickers scanned`;
+  document.getElementById('dailyLabel').textContent=`(${dateStr(now)})`;
+  document.getElementById('weeklyWeekLabel').textContent=`(${wk})`;
+  document.getElementById('monthlyLabel').textContent=`(${MONTHS[now.getMonth()]} ${now.getFullYear()})`;
+  document.getElementById('quarterlyLabel').textContent=`(${qBounds.label})`;
+  document.getElementById('leapLabel').textContent=`(Q1 ${now.getFullYear()} vs ${now.getFullYear()-1} Low)`;
+  renderAll();
+}
+
+function renderAll(){
+  renderHero(dailyResults,weeklyResults,monthlyResults,quarterlyResults,leapResults);
+  switchView(currentView);
+}
+
+function forceRefresh(){
+  // Clear all amdx caches
+  for(let i=localStorage.length-1;i>=0;i--){
+    const k=localStorage.key(i);
+    if(k&&(k.startsWith('amdx_daily_')||k.startsWith('amdx_weekly_')||k.startsWith('amdx_monthly_')||k.startsWith('amdx_quarterly_')||k.startsWith('amdx_leap_'))) localStorage.removeItem(k);
+  }
+  runScan(true);
+}
+
+// ── Nav ──
+function smoothNav(e,id){
+  e.preventDefault();
+  document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.nav-link:not(.back)').forEach(l=>l.classList.remove('active'));
+  e.target.classList.add('active');
+}
+window.addEventListener('scroll',()=>{
+  const dataEl=document.getElementById('dataSection');
+  const inData=dataEl&&scrollY>=dataEl.offsetTop-100;
+  const summaryLink=document.querySelector('.nav-link[href="#top"]');
+  if(summaryLink) summaryLink.classList.toggle('active',!inData);
+});
+
+// ── Snapshot ──
+function copySnapshot(){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  const timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  let tickers=[];
+  let label='';
+  if(currentView==='daily'){
+    label='Daily AMDX';
+    tickers=Object.entries(dailyResults).filter(([,d])=>d&&d.ax==='AMDX').map(([s])=>s).sort();
+  } else if(currentView==='weekly'){
+    label='Weekly A (Inside)';
+    tickers=Object.entries(weeklyResults).filter(([,d])=>d&&d.ax==='A').map(([s])=>s).sort();
+  } else if(currentView==='monthly'){
+    label='Monthly A (Inside)';
+    tickers=Object.entries(monthlyResults).filter(([,d])=>d&&d.ax==='A').map(([s])=>s).sort();
+  } else if(currentView==='quarterly'){
+    label='Quarterly AMDX';
+    tickers=Object.entries(quarterlyResults).filter(([,d])=>d&&d.ax==='AMDX').map(([s])=>s).sort();
+  } else if(currentView==='leap'){
+    label='LEAP Reclaimed';
+    tickers=Object.entries(leapResults).filter(([,d])=>d&&d.status==='reclaimed').map(([s])=>s).sort();
+  } else if(currentView==='confluence'){
+    const rows=buildConfluenceData();
+    const grouped={};
+    rows.forEach(r=>{ if(!grouped[r.score]) grouped[r.score]=[]; grouped[r.score].push(r.sym); });
+    let lines=[`AMDX Confluence — ${dateStr} ${timeStr}`,``];
+    for(let s=5;s>=0;s--){
+      if(!grouped[s]||!grouped[s].length) continue;
+      grouped[s].sort();
+      lines.push(`Score ${s}/5 (${grouped[s].length}): ${grouped[s].join(', ')}`);
+    }
+    return clipAndFlash(lines.join('\n'));
+  }
+  const text=[`${label} — ${dateStr} ${timeStr}`,``,`${tickers.length} tickers:`,tickers.join(', ')].join('\n');
+  clipAndFlash(text);
+}
+function clipAndFlash(text){
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.querySelector('.snapshot-btn');
+    const lbl=document.getElementById('snapshotLabel');
+    btn.classList.add('copied');
+    lbl.textContent='Copied!';
+    setTimeout(()=>{ btn.classList.remove('copied'); lbl.textContent='Snapshot'; },1500);
+  });
+}
+
+// ── Privacy ──
+function togglePrivacy(){
+  document.body.classList.toggle('privacy-mode');
+  const btn=document.getElementById('privacyToggle');
+  const active=document.body.classList.contains('privacy-mode');
+  btn.classList.toggle('active',active);
+  btn.innerHTML=active
+    ?'<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 7.5s2.5-5 6.5-5 6.5 5 6.5 5-2.5 5-6.5 5S1 7.5 1 7.5z"/><path d="M2 2l11 11"/></svg> Private'
+    :'<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 7.5s2.5-5 6.5-5 6.5 5 6.5 5-2.5 5-6.5 5S1 7.5 1 7.5z"/><circle cx="7.5" cy="7.5" r="2"/></svg> Privacy';
+  localStorage.setItem('amdx_privacyMode',active?'on':'off');
+}
+if(localStorage.getItem('amdx_privacyMode')==='on') togglePrivacy();
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded',()=>{ runScan(false); });
+</script>
+</body>
+</html>
