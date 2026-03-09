@@ -1390,13 +1390,13 @@ const VIEW_CONFIG={
   weekly:{
     title:'Weekly A/X', subtitle:'Inside bar — current week vs prior week',
     thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th><th>Manip</th></tr>`,
-    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'}],
+    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed',l:'Agreed'},{v:'disagreed',l:'Disagreed'}],
     render:renderWeeklyView
   },
   monthly:{
     title:'Monthly A/X', subtitle:'First week of current month vs last week of prior month',
     thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th><th>Manip</th></tr>`,
-    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'}],
+    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed',l:'Agreed'},{v:'disagreed',l:'Disagreed'}],
     render:renderMonthlyView
   },
   quarterly:{
@@ -1497,6 +1497,8 @@ function applyRowFilter(ax){
       tr.style.display=(parseInt(tr.dataset.score)||0)>=3?'':'none';
     } else if(ax==='5'){
       tr.style.display=(parseInt(tr.dataset.score)||0)===5?'':'none';
+    } else if(ax==='agreed'||ax==='disagreed'){
+      tr.style.display=tr.dataset.manip===ax?'':'none';
     } else {
       tr.style.display=tr.dataset.ax===ax?'':'none';
     }
