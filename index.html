@@ -723,13 +723,16 @@ function classifyMonthlyAX(candles){
         manipHigh:manipWeek.high,manipLow:manipWeek.low,manipClose:manipWeek.close};
     }
   }
+  // Full current month high/low (for swept detection across all weeks, not just W1)
+  const cmh=Math.max(...curMonthCandles.map(w=>w.high));
+  const cml=Math.min(...curMonthCandles.map(w=>w.low));
   // If W1 week still forming, mark as pending
   if(w1Incomplete){
     return {
       ax:'pending',
       c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
       c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
-      pmh,pml,
+      pmh,pml,cmh,cml,
       label:`${MONTHS[curMonth]} W1 vs ${MONTHS[priorMonth]} last week`,
       dayCount:c0.dayCount,breakDir:null,
       manip:{status:'pending',week:'—',grabbed:null,agreed:null}
@@ -739,7 +742,7 @@ function classifyMonthlyAX(candles){
     ax:isA?'A':'X',
     c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
     c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
-    pmh,pml,
+    pmh,pml,cmh,cml,
     label:`${MONTHS[curMonth]} W1 vs ${MONTHS[priorMonth]} last week`,
     dayCount:c0.dayCount,
     breakDir,
@@ -1177,6 +1180,35 @@ function buildTableRow(sym,data){
   const range=data.c0.close?((data.c0.high-data.c0.low)/data.c0.close*100).toFixed(1):'—';
   const badgeCls=isPending?'b-muted':isA?'b-sage':'b-terracotta';
   const axLabel=isPending?'Pending':data.ax;
+  // UI transparency: tooltip shows which candles were compared for A/X classification
+  let axTooltip='';
+  if(data.monday&&data.friday){
+    axTooltip=`Mon H:$${data.monday.high.toFixed(2)} L:$${data.monday.low.toFixed(2)} vs Fri H:$${data.friday.high.toFixed(2)} L:$${data.friday.low.toFixed(2)}`;
+  } else {
+    axTooltip=`W1 H:$${data.c0.high.toFixed(2)} L:$${data.c0.low.toFixed(2)} vs PrW H:$${data.c1.high.toFixed(2)} L:$${data.c1.low.toFixed(2)}`;
+  }
+  // Swept: has current period taken out prior period's H or L?
+  const isMonthly=data.pmh!==undefined;
+  const curH=isMonthly&&data.cmh!==undefined?data.cmh:data.c0.high;
+  const curL=isMonthly&&data.cml!==undefined?data.cml:data.c0.low;
+  const refH=isMonthly?data.pmh:data.c1.high;
+  const refL=isMonthly?data.pml:data.c1.low;
+  const sweptHigh=curH>refH;
+  const sweptLow=curL<refL;
+  const hLabel=isMonthly?'PMH':'PWH';
+  const lLabel=isMonthly?'PML':'PWL';
+  let sweptHtml='<span style="color:var(--text-muted)">—</span>';
+  let sweptAttr='none';
+  if(sweptHigh&&sweptLow){
+    sweptHtml='<span class="badge b-camel">Both</span>';
+    sweptAttr='both';
+  } else if(sweptHigh){
+    sweptHtml=`<span class="badge b-burgundy">${hLabel} ✓</span>`;
+    sweptAttr='high';
+  } else if(sweptLow){
+    sweptHtml=`<span class="badge b-sage">${lLabel} ✓</span>`;
+    sweptAttr='low';
+  }
   const manipHtml=buildManipBadge(data.manip);
   // Granular manip attr: agreed-high, agreed-low, disagreed-high, disagreed-low, pending, none
   let manipAttr='none';
@@ -1184,14 +1216,15 @@ function buildTableRow(sym,data){
     if(data.manip.status==='resolved') manipAttr=(data.manip.agreed?'agreed':'disagreed')+'-'+data.manip.grabbed;
     else if(data.manip.status==='pending') manipAttr='pending';
   }
-  return `<tr class="row-${data.ax.toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}" data-manip="${manipAttr}">
+  return `<tr class="row-${data.ax.toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}" data-manip="${manipAttr}" data-swept="${sweptAttr}">
     <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong></div></td>
-    <td><span class="badge ${badgeCls}">${axLabel}</span></td>
+    <td><span class="badge ${badgeCls}" title="${axTooltip}">${axLabel}</span></td>
     <td class="mono sensitive">$${data.c0.high.toFixed(2)}</td>
     <td class="mono sensitive">$${data.c0.low.toFixed(2)}</td>
     <td class="mono" style="color:var(--text-sec)">$${data.c1.high.toFixed(2)}</td>
     <td class="mono" style="color:var(--text-sec)">$${data.c1.low.toFixed(2)}</td>
     <td class="mono">${range}%</td>
+    <td>${sweptHtml}</td>
     <td>${manipHtml}</td>
   </tr>`;
 }
@@ -1490,13 +1523,13 @@ const VIEW_CONFIG={
   },
   weekly:{
     title:'Weekly A/X', subtitle:'Inside bar — current week vs prior week',
-    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Manip</th></tr>`,
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Swept</th><th>Manip</th></tr>`,
     filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
     render:renderWeeklyView
   },
   monthly:{
     title:'Monthly A/X', subtitle:'First week of current month vs last week of prior month',
-    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Manip</th></tr>`,
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Swept</th><th>Manip</th></tr>`,
     filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
     render:renderMonthlyView
   },
