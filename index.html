@@ -1072,14 +1072,13 @@ function buildTableRow(sym,data){
   const isA=data.ax==='A';
   const range=data.c0.close?((data.c0.high-data.c0.low)/data.c0.close*100).toFixed(1):'—';
   const badgeCls=isA?'b-sage':'b-terracotta';
-  let breakHtml='<span style="color:var(--text-muted)">—</span>';
-  if(data.breakDir){
-    const bCls=data.breakDir==='break-high'?'b-sage':data.breakDir==='break-low'?'b-burgundy':'b-camel';
-    const bLabel=data.breakDir==='break-high'?'↑ High':data.breakDir==='break-low'?'↓ Low':'↕ Outside';
-    breakHtml=`<span class="badge ${bCls}">${bLabel}</span>`;
-  }
   const manipHtml=buildManipBadge(data.manip);
-  const manipAttr=data.manip?data.manip.status==='resolved'?(data.manip.agreed?'agreed':'disagreed'):data.manip.status:'none';
+  // Granular manip attr: agreed-high, agreed-low, disagreed-high, disagreed-low, pending, none
+  let manipAttr='none';
+  if(data.manip){
+    if(data.manip.status==='resolved') manipAttr=(data.manip.agreed?'agreed':'disagreed')+'-'+data.manip.grabbed;
+    else if(data.manip.status==='pending') manipAttr='pending';
+  }
   const partial=data.dayCount<5?` <span class="badge b-muted" title="${data.dayCount} days">partial</span>`:'';
   return `<tr class="row-${data.ax.toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}" data-manip="${manipAttr}">
     <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong>${partial}</div></td>
@@ -1089,7 +1088,6 @@ function buildTableRow(sym,data){
     <td class="mono" style="color:var(--text-sec)">$${data.c1.high.toFixed(2)}</td>
     <td class="mono" style="color:var(--text-sec)">$${data.c1.low.toFixed(2)}</td>
     <td class="mono">${range}%</td>
-    <td>${breakHtml}</td>
     <td>${manipHtml}</td>
   </tr>`;
 }
@@ -1389,14 +1387,14 @@ const VIEW_CONFIG={
   },
   weekly:{
     title:'Weekly A/X', subtitle:'Inside bar — current week vs prior week',
-    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th><th>Manip</th></tr>`,
-    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed',l:'Agreed'},{v:'disagreed',l:'Disagreed'}],
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Manip</th></tr>`,
+    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
     render:renderWeeklyView
   },
   monthly:{
     title:'Monthly A/X', subtitle:'First week of current month vs last week of prior month',
-    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Break</th><th>Manip</th></tr>`,
-    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed',l:'Agreed'},{v:'disagreed',l:'Disagreed'}],
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Manip</th></tr>`,
+    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
     render:renderMonthlyView
   },
   quarterly:{
@@ -1497,8 +1495,12 @@ function applyRowFilter(ax){
       tr.style.display=(parseInt(tr.dataset.score)||0)>=3?'':'none';
     } else if(ax==='5'){
       tr.style.display=(parseInt(tr.dataset.score)||0)===5?'':'none';
-    } else if(ax==='agreed'||ax==='disagreed'){
+    } else if(ax.startsWith('agreed-')||ax.startsWith('disagreed-')){
+      // Exact match: agreed-high, agreed-low, disagreed-high, disagreed-low
       tr.style.display=tr.dataset.manip===ax?'':'none';
+    } else if(ax==='agreed'||ax==='disagreed'){
+      // Broad match: any agreed or any disagreed
+      tr.style.display=tr.dataset.manip.startsWith(ax)?'':'none';
     } else {
       tr.style.display=tr.dataset.ax===ax?'':'none';
     }
