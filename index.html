@@ -538,15 +538,19 @@ function aggregateToWeekly(dailyData){
 function classifyWeeklyAX(candles){
   if(candles.length<2) return null;
   const c0=candles[0], c1=candles[1];
-  // A/X determined by Monday vs Friday (Q1 vs prior session), NOT full week vs full week
-  const monday=c0.days&&c0.days.length?c0.days[0]:null;
-  const friday=c1.days&&c1.days.length?c1.days[c1.days.length-1]:null;
-  if(!monday||!friday) return null;
-  const isA=monday.high<=friday.high && monday.low>=friday.low;
+  // A/X determined by Monday vs Friday (Q1 vs prior session)
+  // Find actual Monday (dow=1) in current week, Friday (dow=5) in prior week
+  const monday=c0.days?c0.days.find(d=>d.dow===1):null;
+  const friday=c1.days?c1.days.find(d=>d.dow===5):null;
+  // Fallback: if Monday missing use first day, if Friday missing use last day
+  const monCandle=monday||(c0.days&&c0.days.length?c0.days[0]:null);
+  const friCandle=friday||(c1.days&&c1.days.length?c1.days[c1.days.length-1]:null);
+  if(!monCandle||!friCandle) return null;
+  const isA=monCandle.high<=friCandle.high && monCandle.low>=friCandle.low;
   let breakDir=null;
   if(!isA){
-    if(monday.high>friday.high && monday.low<friday.low) breakDir='outside';
-    else if(monday.high>friday.high) breakDir='break-high';
+    if(monCandle.high>friCandle.high && monCandle.low<friCandle.low) breakDir='outside';
+    else if(monCandle.high>friCandle.high) breakDir='break-high';
     else breakDir='break-low';
   }
   // Manipulation agree/disagree — PWH/PWL = full prior week range (where liquidity sits)
@@ -578,8 +582,8 @@ function classifyWeeklyAX(candles){
     ax:isA?'A':'X',
     c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
     c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
-    monday:{high:monday.high,low:monday.low,open:monday.open,close:monday.close},
-    friday:{high:friday.high,low:friday.low,open:friday.open,close:friday.close},
+    monday:{high:monCandle.high,low:monCandle.low,open:monCandle.open,close:monCandle.close},
+    friday:{high:friCandle.high,low:friCandle.low,open:friCandle.open,close:friCandle.close},
     currentWeek:c0.weekKey,
     priorWeek:c1.weekKey,
     dayCount:c0.dayCount,
@@ -608,8 +612,11 @@ function classifyMonthlyAX(candles){
   const pmh=Math.max(...priorMonthCandles.map(w=>w.high));
   const pml=Math.min(...priorMonthCandles.map(w=>w.low));
   // A/X determined by W1's Monday vs prior month last week's Friday
-  const w1Monday=c0.days&&c0.days.length?c0.days[0]:null;
-  const pmLastFriday=c1.days&&c1.days.length?c1.days[c1.days.length-1]:null;
+  // Find actual Monday (dow=1) and Friday (dow=5) by day-of-week
+  const w1Mon=c0.days?c0.days.find(d=>d.dow===1):null;
+  const pmFri=c1.days?c1.days.find(d=>d.dow===5):null;
+  const w1Monday=w1Mon||(c0.days&&c0.days.length?c0.days[0]:null);
+  const pmLastFriday=pmFri||(c1.days&&c1.days.length?c1.days[c1.days.length-1]:null);
   if(!w1Monday||!pmLastFriday) return null;
   const isA=w1Monday.high<=pmLastFriday.high && w1Monday.low>=pmLastFriday.low;
   let breakDir=null;
