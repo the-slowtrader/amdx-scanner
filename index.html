@@ -64,7 +64,7 @@ body.privacy-mode .sensitive{filter:blur(8px);-webkit-filter:blur(8px);user-sele
 body.privacy-mode .sensitive:hover{filter:blur(4px)}
 
 .container{padding:0 40px 40px;max-width:1440px;margin:0 auto}
-@media(max-width:768px){.topnav{padding:12px 16px;gap:10px;flex-wrap:wrap}.container{padding:0 16px 16px}.search-wrap{max-width:100%;order:10;width:100%}}
+@media(max-width:768px){.topnav{padding:12px 16px;gap:10px;flex-wrap:wrap}.container{padding:0 16px 16px}.search-wrap{max-width:100%;order:10;width:100%}.nav-links{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;order:5}.nav-links::-webkit-scrollbar{display:none}}
 
 /* Hero */
 .hero{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:20px}
@@ -193,7 +193,7 @@ tr.futures-row:hover td{background:rgba(196,169,122,0.06)!important}
 .footer a{color:var(--sage);text-decoration:none;font-weight:600}
 
 /* Responsive */
-@media(max-width:768px){.main-tabs{flex-wrap:wrap}}
+@media(max-width:768px){.main-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.main-tabs::-webkit-scrollbar{display:none}.tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap}.tabs::-webkit-scrollbar{display:none}.tab{white-space:nowrap;flex-shrink:0}table{font-size:11px}.hero{grid-template-columns:1fr}.hero-right{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -435,7 +435,8 @@ function gc(t){
 }
 function tickerIcon(sym){
   const bg=gc(sym), letters=sym.slice(0,2);
-  return `<div class="ticker-icon"><img src="https://financialmodelingprep.com/image-stock/${fmpSym(sym)}.png" alt="${sym}" onerror="this.classList.add('errored')"><span class="ti-fallback" style="background:${bg}">${letters}</span></div>`;
+  // Try multiple icon sources with progressive fallback
+  return `<div class="ticker-icon"><img src="https://assets.parqet.com/logos/symbol/${sym}" alt="${sym}" onerror="this.src='https://financialmodelingprep.com/image-stock/${fmpSym(sym)}.png';this.onerror=function(){this.classList.add('errored')}"><span class="ti-fallback" style="background:${bg}">${letters}</span></div>`;
 }
 
 // ── Date Utilities ──
@@ -471,57 +472,16 @@ function getPriorQuarterBounds(date){
 }
 
 // ── FMP Data Fetching ──
-// EOD for bulk history, then overlay 1H extended (4am-8pm ET) for recent 2 weeks
+// Regular session EOD only — extended hours data from FMP includes spurious
+// low-volume pre/post-market prices that distort candle ranges and cause
+// incorrect A/X classifications (verified against TradingView 24H candles).
 async function fetchSingle(sym, from, to){
-  // 1) Fetch EOD for full history (regular session — reliable, no truncation)
   const eodUrl=`https://financialmodelingprep.com/stable/historical-price-eod/full?symbol=${fmpSym(sym)}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
   const eodR=await fetch(eodUrl);
   if(!eodR.ok) throw new Error(`HTTP ${eodR.status}`);
   const eodData=await eodR.json();
   if(!Array.isArray(eodData)||!eodData.length) return [];
-  // 2) Fetch 1H extended for last 15 days to get full-session OHLC
-  const extFrom=dateStr(daysAgo(15));
-  const extUrl=`https://financialmodelingprep.com/stable/historical-chart/1hour?symbol=${fmpSym(sym)}&from=${extFrom}&to=${to}&extended=true&apikey=${FMP_KEY}`;
-  let extDaily={};
-  try{
-    const extR=await fetch(extUrl);
-    if(extR.ok){
-      const bars=await extR.json();
-      if(Array.isArray(bars)&&bars.length){
-        const byDate={};
-        bars.forEach(b=>{
-          const ds=b.date.slice(0,10);
-          if(!byDate[ds]) byDate[ds]=[];
-          byDate[ds].push(b);
-        });
-        for(const[date,hrs] of Object.entries(byDate)){
-          hrs.sort((a,b)=>a.date.localeCompare(b.date));
-          extDaily[date]={
-            date,
-            open:hrs[0].open,
-            high:Math.max(...hrs.map(h=>h.high)),
-            low:Math.min(...hrs.map(h=>h.low)),
-            close:hrs[hrs.length-1].close,
-            volume:hrs.reduce((s,h)=>s+(h.volume||0),0)
-          };
-        }
-      }
-    }
-  }catch(e){ console.warn(`Extended fetch failed: ${sym}`,e.message); }
-  // 3) Merge: overlay extended-hours daily candles onto EOD data for recent days
-  return eodData.map(d=>{
-    const ext=extDaily[d.date];
-    if(ext){
-      return {
-        ...d,
-        high:Math.max(d.high,ext.high),
-        low:Math.min(d.low,ext.low),
-        open:ext.open, // extended session opens earlier
-        close:ext.close // extended session closes later
-      };
-    }
-    return d;
-  });
+  return eodData;
 }
 
 async function fetchAllTickers(tickers, from, to, onProgress){
@@ -1177,24 +1137,26 @@ function buildManipBadge(manip){
 function buildTableRow(sym,data){
   const isA=data.ax==='A';
   const isPending=data.ax==='pending';
-  const range=data.c0.close?((data.c0.high-data.c0.low)/data.c0.close*100).toFixed(1):'—';
   const badgeCls=isPending?'b-muted':isA?'b-sage':'b-terracotta';
   const axLabel=isPending?'Pending':data.ax;
-  // UI transparency: tooltip shows which candles were compared for A/X classification
-  let axTooltip='';
-  if(data.monday&&data.friday){
-    axTooltip=`Mon H:$${data.monday.high.toFixed(2)} L:$${data.monday.low.toFixed(2)} vs Fri H:$${data.friday.high.toFixed(2)} L:$${data.friday.low.toFixed(2)}`;
-  } else {
-    axTooltip=`W1 H:$${data.c0.high.toFixed(2)} L:$${data.c0.low.toFixed(2)} vs PrW H:$${data.c1.high.toFixed(2)} L:$${data.c1.low.toFixed(2)}`;
-  }
+  // Show the ACTUAL values compared for A/X — Monday vs Friday (weekly) or W1 vs PrW (monthly)
+  const isWeekly=!!data.monday;
+  const compH=isWeekly?data.monday.high:data.c0.high;
+  const compL=isWeekly?data.monday.low:data.c0.low;
+  const priorH=isWeekly?data.friday.high:data.c1.high;
+  const priorL=isWeekly?data.friday.low:data.c1.low;
+  const range=compH&&compL&&((compH+compL)/2)?((compH-compL)/((compH+compL)/2)*100).toFixed(1):'—';
+  // Tooltips: show full week range for context
+  const compTip=isWeekly?`Full week H:$${data.c0.high.toFixed(2)} L:$${data.c0.low.toFixed(2)}`:'';
+  const priorTip=isWeekly?`Full week H:$${data.c1.high.toFixed(2)} L:$${data.c1.low.toFixed(2)}`:'';
   // Swept: has current period taken out prior period's H or L?
   const isMonthly=data.pmh!==undefined;
   const curH=isMonthly&&data.cmh!==undefined?data.cmh:data.c0.high;
   const curL=isMonthly&&data.cml!==undefined?data.cml:data.c0.low;
-  const refH=isMonthly?data.pmh:data.c1.high;
-  const refL=isMonthly?data.pml:data.c1.low;
-  const sweptHigh=curH>refH;
-  const sweptLow=curL<refL;
+  const swRefH=isMonthly?data.pmh:data.c1.high;
+  const swRefL=isMonthly?data.pml:data.c1.low;
+  const sweptHigh=curH>swRefH;
+  const sweptLow=curL<swRefL;
   const hLabel=isMonthly?'PMH':'PWH';
   const lLabel=isMonthly?'PML':'PWL';
   let sweptHtml='<span style="color:var(--text-muted)">—</span>';
@@ -1218,11 +1180,11 @@ function buildTableRow(sym,data){
   }
   return `<tr class="row-${data.ax.toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}" data-manip="${manipAttr}" data-swept="${sweptAttr}">
     <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong></div></td>
-    <td><span class="badge ${badgeCls}" title="${axTooltip}">${axLabel}</span></td>
-    <td class="mono sensitive">$${data.c0.high.toFixed(2)}</td>
-    <td class="mono sensitive">$${data.c0.low.toFixed(2)}</td>
-    <td class="mono" style="color:var(--text-sec)">$${data.c1.high.toFixed(2)}</td>
-    <td class="mono" style="color:var(--text-sec)">$${data.c1.low.toFixed(2)}</td>
+    <td><span class="badge ${badgeCls}">${axLabel}</span></td>
+    <td class="mono sensitive" title="${compTip}">$${compH.toFixed(2)}</td>
+    <td class="mono sensitive" title="${compTip}">$${compL.toFixed(2)}</td>
+    <td class="mono" style="color:var(--text-sec)" title="${priorTip}">$${priorH.toFixed(2)}</td>
+    <td class="mono" style="color:var(--text-sec)" title="${priorTip}">$${priorL.toFixed(2)}</td>
     <td class="mono">${range}%</td>
     <td>${sweptHtml}</td>
     <td>${manipHtml}</td>
@@ -1522,14 +1484,14 @@ const VIEW_CONFIG={
     render:renderDailyView
   },
   weekly:{
-    title:'Weekly A/X', subtitle:'Inside bar — current week vs prior week',
-    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Swept</th><th>Manip</th></tr>`,
+    title:'Weekly A/X', subtitle:'Monday candle vs Friday candle — inside = A, expanding = X',
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Mon H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Mon L</th><th>Fri H</th><th>Fri L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Swept</th><th>Manip</th></tr>`,
     filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
     render:renderWeeklyView
   },
   monthly:{
-    title:'Monthly A/X', subtitle:'First week of current month vs last week of prior month',
-    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Current H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Current L</th><th>Prior H</th><th>Prior L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Swept</th><th>Manip</th></tr>`,
+    title:'Monthly A/X', subtitle:'W1 of current month vs last week of prior month',
+    thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">W1 H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">W1 L</th><th>PrW H</th><th>PrW L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Swept</th><th>Manip</th></tr>`,
     filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
     render:renderMonthlyView
   },
