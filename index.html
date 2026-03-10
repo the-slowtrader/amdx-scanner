@@ -607,11 +607,15 @@ function classifyMonthlyAX(candles){
   // Full prior month high/low across all weeks
   const pmh=Math.max(...priorMonthCandles.map(w=>w.high));
   const pml=Math.min(...priorMonthCandles.map(w=>w.low));
-  const isA=c0.high<=c1.high && c0.low>=c1.low;
+  // A/X determined by W1's Monday vs prior month last week's Friday
+  const w1Monday=c0.days&&c0.days.length?c0.days[0]:null;
+  const pmLastFriday=c1.days&&c1.days.length?c1.days[c1.days.length-1]:null;
+  if(!w1Monday||!pmLastFriday) return null;
+  const isA=w1Monday.high<=pmLastFriday.high && w1Monday.low>=pmLastFriday.low;
   let breakDir=null;
   if(!isA){
-    if(c0.high>c1.high && c0.low<c1.low) breakDir='outside';
-    else if(c0.high>c1.high) breakDir='break-high';
+    if(w1Monday.high>pmLastFriday.high && w1Monday.low<pmLastFriday.low) breakDir='outside';
+    else if(w1Monday.high>pmLastFriday.high) breakDir='break-high';
     else breakDir='break-low';
   }
   // Manipulation agree/disagree
@@ -640,8 +644,10 @@ function classifyMonthlyAX(candles){
     ax:isA?'A':'X',
     c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
     c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
+    w1Monday:{high:w1Monday.high,low:w1Monday.low,open:w1Monday.open,close:w1Monday.close},
+    pmLastFriday:{high:pmLastFriday.high,low:pmLastFriday.low,open:pmLastFriday.open,close:pmLastFriday.close},
     pmh,pml,
-    label:`${MONTHS[curMonth]} W1 vs ${MONTHS[priorMonth]} last week`,
+    label:`${MONTHS[curMonth]} W1 Mon vs ${MONTHS[priorMonth]} last Fri`,
     dayCount:c0.dayCount,
     breakDir,
     manip
