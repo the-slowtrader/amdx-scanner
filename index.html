@@ -601,7 +601,12 @@ function classifyWeeklyAX(candles){
   const etNow=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
   const todayISO=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date());
   const monIncomplete=monCandle.date===todayISO && etNow.getHours()<20;
-  const isA=monCandle.high<=friCandle.high && monCandle.low>=friCandle.low;
+  // Tolerance: 0.1% of mid-price (~$0.18 on a $180 stock). FMP vs TradingView
+  // data feeds differ by a few cents — if Monday is within noise of Friday's
+  // boundary, the liquidity was taken. If it swept by even a cent, it's X.
+  const mid=(friCandle.high+friCandle.low)/2;
+  const tol=mid*0.001;
+  const isA=(monCandle.high+tol)<=friCandle.high && (monCandle.low-tol)>=friCandle.low;
   let breakDir=null;
   if(!isA){
     if(monCandle.high>friCandle.high && monCandle.low<friCandle.low) breakDir='outside';
@@ -692,7 +697,10 @@ function classifyMonthlyAX(candles){
   // W1 is incomplete if it's the current week and market is still open on a weekday
   const w1IsCurrent=c0.weekKey>=getISOWeekKey(now);
   const w1Incomplete=w1IsCurrent && etNow.getDay()>=1 && etNow.getDay()<=5 && etNow.getHours()<20;
-  const isA=c0.high<=c1.high && c0.low>=c1.low;
+  // Tolerance: 0.1% of mid-price — data feeds can differ by a few cents
+  const mMid=(c1.high+c1.low)/2;
+  const mTol=mMid*0.001;
+  const isA=(c0.high+mTol)<=c1.high && (c0.low-mTol)>=c1.low;
   let breakDir=null;
   if(!isA){
     if(c0.high>c1.high && c0.low<c1.low) breakDir='outside';
