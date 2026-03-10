@@ -471,15 +471,32 @@ function getPriorQuarterBounds(date){
 }
 
 // ── FMP Data Fetching ──
-// Uses /stable/historical-chart/1day with extended=true for full session (4am-8pm ET)
+// Fetch 1H bars with extended=true (4am-8pm ET) and aggregate to daily candles
+// The 1day endpoint ignores extended=true, so we must build daily candles from hourly data
 async function fetchSingle(sym, from, to){
-  const url=`https://financialmodelingprep.com/stable/historical-chart/1day?symbol=${fmpSym(sym)}&from=${from}&to=${to}&extended=true&apikey=${FMP_KEY}`;
+  const url=`https://financialmodelingprep.com/stable/historical-chart/1hour?symbol=${fmpSym(sym)}&from=${from}&to=${to}&extended=true&apikey=${FMP_KEY}`;
   const r=await fetch(url);
   if(!r.ok) throw new Error(`HTTP ${r.status}`);
-  const data=await r.json();
-  // Normalize: chart endpoint returns {date:'2026-03-09 00:00:00', ...} — strip time portion
-  if(Array.isArray(data)) data.forEach(d=>{ if(d.date&&d.date.length>10) d.date=d.date.slice(0,10); });
-  return data;
+  const bars=await r.json();
+  if(!Array.isArray(bars)||!bars.length) return [];
+  // Group hourly bars by date → aggregate to daily candles
+  const byDate={};
+  bars.forEach(b=>{
+    const dateStr=b.date.slice(0,10);
+    if(!byDate[dateStr]) byDate[dateStr]=[];
+    byDate[dateStr].push(b);
+  });
+  return Object.entries(byDate).map(([date,hrs])=>{
+    hrs.sort((a,b)=>a.date.localeCompare(b.date));
+    return {
+      date,
+      open:hrs[0].open,
+      high:Math.max(...hrs.map(h=>h.high)),
+      low:Math.min(...hrs.map(h=>h.low)),
+      close:hrs[hrs.length-1].close,
+      volume:hrs.reduce((s,h)=>s+(h.volume||0),0)
+    };
+  }).sort((a,b)=>a.date.localeCompare(b.date));
 }
 
 async function fetchAllTickers(tickers, from, to, onProgress){
