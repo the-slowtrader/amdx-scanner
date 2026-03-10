@@ -565,22 +565,28 @@ function classifyWeeklyAX(candles){
   let manip=null;
   if(!manipDay){
     const today=new Date().getDay();
-    const manipPending=c0.days&&c0.days.length>0&&today<manipDow;
+    const manipPending=c0.days&&c0.days.length>0&&today<=manipDow;
     manip={status:manipPending?'pending':'none',day:isA?'Tue':'Wed',grabbed:null,agreed:null};
   } else {
-    const grabbedLow=manipDay.low<pwl, grabbedHigh=manipDay.high>pwh;
-    let grabbed=null, agreed=null;
-    if(grabbedLow&&grabbedHigh){
-      const mid=(pwh+pwl)/2;
-      if(manipDay.close<=mid){ grabbed='low'; agreed=manipDay.close<pwl; }
-      else{ grabbed='high'; agreed=manipDay.close>pwh; }
-    } else if(grabbedLow){
-      grabbed='low'; agreed=manipDay.close<pwl;
-    } else if(grabbedHigh){
-      grabbed='high'; agreed=manipDay.close>pwh;
+    // If manipulation day is today and market still open (<8pm ET), candle is incomplete
+    const manipIncomplete=manipDay.date===todayISO && etNow.getHours()<20;
+    if(manipIncomplete){
+      manip={status:'pending',day:isA?'Tue':'Wed',grabbed:null,agreed:null};
+    } else {
+      const grabbedLow=manipDay.low<pwl, grabbedHigh=manipDay.high>pwh;
+      let grabbed=null, agreed=null;
+      if(grabbedLow&&grabbedHigh){
+        const mid=(pwh+pwl)/2;
+        if(manipDay.close<=mid){ grabbed='low'; agreed=manipDay.close<pwl; }
+        else{ grabbed='high'; agreed=manipDay.close>pwh; }
+      } else if(grabbedLow){
+        grabbed='low'; agreed=manipDay.close<pwl;
+      } else if(grabbedHigh){
+        grabbed='high'; agreed=manipDay.close>pwh;
+      }
+      manip={status:grabbed?'resolved':'none',day:isA?'Tue':'Wed',grabbed,agreed,
+        manipHigh:manipDay.high,manipLow:manipDay.low,manipClose:manipDay.close};
     }
-    manip={status:grabbed?'resolved':'none',day:isA?'Tue':'Wed',grabbed,agreed,
-      manipHigh:manipDay.high,manipLow:manipDay.low,manipClose:manipDay.close};
   }
   // If Monday candle still forming, mark as pending — can't classify yet
   if(monIncomplete){
@@ -654,19 +660,27 @@ function classifyMonthlyAX(candles){
   if(!manipWeek){
     manip={status:'pending',week:isA?'W2':'W3',grabbed:null,agreed:null};
   } else {
-    const grabbedLow=manipWeek.low<pml, grabbedHigh=manipWeek.high>pmh;
-    let grabbed=null, agreed=null;
-    if(grabbedLow&&grabbedHigh){
-      const mid=(pmh+pml)/2;
-      if(manipWeek.close<=mid){ grabbed='low'; agreed=manipWeek.close<pml; }
-      else{ grabbed='high'; agreed=manipWeek.close>pmh; }
-    } else if(grabbedLow){
-      grabbed='low'; agreed=manipWeek.close<pml;
-    } else if(grabbedHigh){
-      grabbed='high'; agreed=manipWeek.close>pmh;
+    // If manipulation week is the current week and market still open, it's incomplete
+    const manipWkCurrent=manipWeek.weekKey===curMonthCandles[curMonthCandles.length-1].weekKey;
+    const manipWkDay=etNow.getDay();
+    const manipWkIncomplete=manipWkCurrent && manipWkDay>=1 && manipWkDay<=5 && etNow.getHours()<20;
+    if(manipWkIncomplete){
+      manip={status:'pending',week:isA?'W2':'W3',grabbed:null,agreed:null};
+    } else {
+      const grabbedLow=manipWeek.low<pml, grabbedHigh=manipWeek.high>pmh;
+      let grabbed=null, agreed=null;
+      if(grabbedLow&&grabbedHigh){
+        const mid=(pmh+pml)/2;
+        if(manipWeek.close<=mid){ grabbed='low'; agreed=manipWeek.close<pml; }
+        else{ grabbed='high'; agreed=manipWeek.close>pmh; }
+      } else if(grabbedLow){
+        grabbed='low'; agreed=manipWeek.close<pml;
+      } else if(grabbedHigh){
+        grabbed='high'; agreed=manipWeek.close>pmh;
+      }
+      manip={status:grabbed?'resolved':'none',week:isA?'W2':'W3',grabbed,agreed,
+        manipHigh:manipWeek.high,manipLow:manipWeek.low,manipClose:manipWeek.close};
     }
-    manip={status:grabbed?'resolved':'none',week:isA?'W2':'W3',grabbed,agreed,
-      manipHigh:manipWeek.high,manipLow:manipWeek.low,manipClose:manipWeek.close};
   }
   // If W1 Monday candle still forming, mark as pending
   if(w1MonIncomplete){
