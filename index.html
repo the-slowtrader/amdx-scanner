@@ -1540,13 +1540,13 @@ const VIEW_CONFIG={
   weekly:{
     title:'Weekly A/X', subtitle:'Monday candle vs Friday candle — inside = A, expanding = X',
     thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">Mon H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">Mon L</th><th>Fri H</th><th>Fri L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Swept</th><th>Manip</th></tr>`,
-    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
+    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'swept-low',l:'PWL Swept'},{v:'swept-high',l:'PWH Swept'},{v:'swept-both',l:'Both Swept'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
     render:renderWeeklyView
   },
   monthly:{
     title:'Monthly A/X', subtitle:'W1 of current month vs last week of prior month',
     thead:`<tr><th class="sortable" onclick="sortCurrentView('ticker',this)">Ticker</th><th class="sortable" onclick="sortCurrentView('ax',this)">A/X</th><th class="sortable" onclick="sortCurrentView('c0h',this)">W1 H</th><th class="sortable" onclick="sortCurrentView('c0l',this)">W1 L</th><th>PrW H</th><th>PrW L</th><th class="sortable" onclick="sortCurrentView('range',this)">Range %</th><th>Swept</th><th>Manip</th></tr>`,
-    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
+    filterTabs:[{v:'all',l:'All'},{v:'A',l:'A (Inside)'},{v:'X',l:'X (Expanding)'},{v:'swept-low',l:'PML Swept'},{v:'swept-high',l:'PMH Swept'},{v:'swept-both',l:'Both Swept'},{v:'agreed-low',l:'Agreed ↓ SSL'},{v:'disagreed-low',l:'Disagreed ↓ SSL'},{v:'agreed-high',l:'Agreed ↑ BSL'},{v:'disagreed-high',l:'Disagreed ↑ BSL'}],
     render:renderMonthlyView
   },
   quarterly:{
@@ -1647,11 +1647,15 @@ function applyRowFilter(ax){
       tr.style.display=(parseInt(tr.dataset.score)||0)>=3?'':'none';
     } else if(ax==='5'){
       tr.style.display=(parseInt(tr.dataset.score)||0)===5?'':'none';
+    } else if(ax==='swept-low'){
+      tr.style.display=(tr.dataset.swept==='low'||tr.dataset.swept==='both')?'':'none';
+    } else if(ax==='swept-high'){
+      tr.style.display=(tr.dataset.swept==='high'||tr.dataset.swept==='both')?'':'none';
+    } else if(ax==='swept-both'){
+      tr.style.display=tr.dataset.swept==='both'?'':'none';
     } else if(ax.startsWith('agreed-')||ax.startsWith('disagreed-')){
-      // Exact match: agreed-high, agreed-low, disagreed-high, disagreed-low
       tr.style.display=tr.dataset.manip===ax?'':'none';
     } else if(ax==='agreed'||ax==='disagreed'){
-      // Broad match: any agreed or any disagreed
       tr.style.display=tr.dataset.manip.startsWith(ax)?'':'none';
     } else {
       tr.style.display=tr.dataset.ax===ax?'':'none';
