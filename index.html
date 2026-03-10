@@ -89,8 +89,8 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
 .refresh-btn:hover{opacity:.85}
 .refresh-btn:disabled{opacity:.4;cursor:not-allowed}
 .refresh-btn svg{transition:transform .3s}
-.refresh-btn.spinning svg{animation:spin 1s linear infinite}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.refresh-btn.spinning svg{animation:radar 1.2s ease-in-out infinite}
+@keyframes radar{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
 .last-updated{font-size:12px;color:var(--text-sec)}
 .scan-progress{display:flex;align-items:center;gap:12px}
 .progress-text{font-size:12px;font-weight:600;color:var(--text-sec);white-space:nowrap}
@@ -298,7 +298,7 @@ tr.futures-row:hover td{background:rgba(196,169,122,0.06)!important}
   <div class="control-bar">
     <div class="control-left">
       <button class="refresh-btn" id="refreshBtn" onclick="forceRefresh()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1v5h5"/><path d="M3.5 10a6 6 0 1 0 1-5.2L1 8"/></svg>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="8" r="3.5"/><line x1="8" y1="1.5" x2="8" y2="4"/></svg>
         Refresh Scan
       </button>
       <span class="last-updated" id="lastUpdated">Last scan: &mdash;</span>
