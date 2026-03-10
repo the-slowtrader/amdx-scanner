@@ -538,29 +538,31 @@ function aggregateToWeekly(dailyData){
 function classifyWeeklyAX(candles){
   if(candles.length<2) return null;
   const c0=candles[0], c1=candles[1];
-  const isA=c0.high<=c1.high && c0.low>=c1.low;
+  // A/X determined by Monday vs Friday (Q1 vs prior session), NOT full week vs full week
+  const monday=c0.days&&c0.days.length?c0.days[0]:null;
+  const friday=c1.days&&c1.days.length?c1.days[c1.days.length-1]:null;
+  if(!monday||!friday) return null;
+  const isA=monday.high<=friday.high && monday.low>=friday.low;
   let breakDir=null;
   if(!isA){
-    if(c0.high>c1.high && c0.low<c1.low) breakDir='outside';
-    else if(c0.high>c1.high) breakDir='break-high';
+    if(monday.high>friday.high && monday.low<friday.low) breakDir='outside';
+    else if(monday.high>friday.high) breakDir='break-high';
     else breakDir='break-low';
   }
-  // Manipulation agree/disagree
+  // Manipulation agree/disagree — PWH/PWL = full prior week range (where liquidity sits)
   // A(AMDX)→Tue=manip(dow 2), X(XAMD)→Wed=manip(dow 3)
   const manipDow=isA?2:3;
   const manipDay=c0.days?c0.days.find(d=>d.dow===manipDow):null;
+  const pwh=c1.high, pwl=c1.low;
   let manip=null;
   if(!manipDay){
-    // Check if manipulation day hasn't happened yet
     const today=new Date().getDay();
     const manipPending=c0.days&&c0.days.length>0&&today<manipDow;
     manip={status:manipPending?'pending':'none',day:isA?'Tue':'Wed',grabbed:null,agreed:null};
   } else {
-    const pwh=c1.high, pwl=c1.low;
     const grabbedLow=manipDay.low<pwl, grabbedHigh=manipDay.high>pwh;
     let grabbed=null, agreed=null;
     if(grabbedLow&&grabbedHigh){
-      // Outside — use close position
       const mid=(pwh+pwl)/2;
       if(manipDay.close<=mid){ grabbed='low'; agreed=manipDay.close<pwl; }
       else{ grabbed='high'; agreed=manipDay.close>pwh; }
@@ -576,6 +578,8 @@ function classifyWeeklyAX(candles){
     ax:isA?'A':'X',
     c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
     c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
+    monday:{high:monday.high,low:monday.low,open:monday.open,close:monday.close},
+    friday:{high:friday.high,low:friday.low,open:friday.open,close:friday.close},
     currentWeek:c0.weekKey,
     priorWeek:c1.weekKey,
     dayCount:c0.dayCount,
