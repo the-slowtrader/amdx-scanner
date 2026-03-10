@@ -471,32 +471,57 @@ function getPriorQuarterBounds(date){
 }
 
 // ── FMP Data Fetching ──
-// Fetch 1H bars with extended=true (4am-8pm ET) and aggregate to daily candles
-// The 1day endpoint ignores extended=true, so we must build daily candles from hourly data
+// EOD for bulk history, then overlay 1H extended (4am-8pm ET) for recent 2 weeks
 async function fetchSingle(sym, from, to){
-  const url=`https://financialmodelingprep.com/stable/historical-chart/1hour?symbol=${fmpSym(sym)}&from=${from}&to=${to}&extended=true&apikey=${FMP_KEY}`;
-  const r=await fetch(url);
-  if(!r.ok) throw new Error(`HTTP ${r.status}`);
-  const bars=await r.json();
-  if(!Array.isArray(bars)||!bars.length) return [];
-  // Group hourly bars by date → aggregate to daily candles
-  const byDate={};
-  bars.forEach(b=>{
-    const dateStr=b.date.slice(0,10);
-    if(!byDate[dateStr]) byDate[dateStr]=[];
-    byDate[dateStr].push(b);
+  // 1) Fetch EOD for full history (regular session — reliable, no truncation)
+  const eodUrl=`https://financialmodelingprep.com/stable/historical-price-eod/full?symbol=${fmpSym(sym)}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
+  const eodR=await fetch(eodUrl);
+  if(!eodR.ok) throw new Error(`HTTP ${eodR.status}`);
+  const eodData=await eodR.json();
+  if(!Array.isArray(eodData)||!eodData.length) return [];
+  // 2) Fetch 1H extended for last 15 days to get full-session OHLC
+  const extFrom=dateStr(daysAgo(15));
+  const extUrl=`https://financialmodelingprep.com/stable/historical-chart/1hour?symbol=${fmpSym(sym)}&from=${extFrom}&to=${to}&extended=true&apikey=${FMP_KEY}`;
+  let extDaily={};
+  try{
+    const extR=await fetch(extUrl);
+    if(extR.ok){
+      const bars=await extR.json();
+      if(Array.isArray(bars)&&bars.length){
+        const byDate={};
+        bars.forEach(b=>{
+          const ds=b.date.slice(0,10);
+          if(!byDate[ds]) byDate[ds]=[];
+          byDate[ds].push(b);
+        });
+        for(const[date,hrs] of Object.entries(byDate)){
+          hrs.sort((a,b)=>a.date.localeCompare(b.date));
+          extDaily[date]={
+            date,
+            open:hrs[0].open,
+            high:Math.max(...hrs.map(h=>h.high)),
+            low:Math.min(...hrs.map(h=>h.low)),
+            close:hrs[hrs.length-1].close,
+            volume:hrs.reduce((s,h)=>s+(h.volume||0),0)
+          };
+        }
+      }
+    }
+  }catch(e){ console.warn(`Extended fetch failed: ${sym}`,e.message); }
+  // 3) Merge: overlay extended-hours daily candles onto EOD data for recent days
+  return eodData.map(d=>{
+    const ext=extDaily[d.date];
+    if(ext){
+      return {
+        ...d,
+        high:Math.max(d.high,ext.high),
+        low:Math.min(d.low,ext.low),
+        open:ext.open, // extended session opens earlier
+        close:ext.close // extended session closes later
+      };
+    }
+    return d;
   });
-  return Object.entries(byDate).map(([date,hrs])=>{
-    hrs.sort((a,b)=>a.date.localeCompare(b.date));
-    return {
-      date,
-      open:hrs[0].open,
-      high:Math.max(...hrs.map(h=>h.high)),
-      low:Math.min(...hrs.map(h=>h.low)),
-      close:hrs[hrs.length-1].close,
-      volume:hrs.reduce((s,h)=>s+(h.volume||0),0)
-    };
-  }).sort((a,b)=>a.date.localeCompare(b.date));
 }
 
 async function fetchAllTickers(tickers, from, to, onProgress){
@@ -567,8 +592,8 @@ function classifyWeeklyAX(candles){
   const friCandle=friday||(c1.days&&c1.days.length?c1.days[c1.days.length-1]:null);
   if(!monCandle||!friCandle) return null;
   // Equity session: 4am-8pm ET. If Monday candle is today & market still open, classification is provisional
-  const todayISO=new Date().toISOString().slice(0,10);
   const etNow=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const todayISO=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date());
   const monIncomplete=monCandle.date===todayISO && etNow.getHours()<20;
   const isA=monCandle.high<=friCandle.high && monCandle.low>=friCandle.low;
   let breakDir=null;
@@ -656,8 +681,8 @@ function classifyMonthlyAX(candles){
   const pml=Math.min(...priorMonthCandles.map(w=>w.low));
   // Monthly: each phase is a WEEK. A/X = full W1 candle vs full last week of prior month
   // (NOT Monday vs Friday — that's for the weekly timeframe where each phase is a day)
-  const todayISO=now.toISOString().slice(0,10);
   const etNow=new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const todayISO=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(now);
   // W1 is incomplete if it's the current week and market is still open on a weekday
   const w1IsCurrent=c0.weekKey>=getISOWeekKey(now);
   const w1Incomplete=w1IsCurrent && etNow.getDay()>=1 && etNow.getDay()<=5 && etNow.getHours()<20;
@@ -1159,9 +1184,8 @@ function buildTableRow(sym,data){
     if(data.manip.status==='resolved') manipAttr=(data.manip.agreed?'agreed':'disagreed')+'-'+data.manip.grabbed;
     else if(data.manip.status==='pending') manipAttr='pending';
   }
-  const partial=data.dayCount<5?` <span class="badge b-muted" title="${data.dayCount} days">partial</span>`:'';
   return `<tr class="row-${data.ax.toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}" data-manip="${manipAttr}">
-    <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong>${partial}</div></td>
+    <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong></div></td>
     <td><span class="badge ${badgeCls}">${axLabel}</span></td>
     <td class="mono sensitive">$${data.c0.high.toFixed(2)}</td>
     <td class="mono sensitive">$${data.c0.low.toFixed(2)}</td>
@@ -1234,9 +1258,8 @@ function buildQuarterlyTableRow(sym,data){
     const bLabel=data.breakDir==='break-high'?'↑ High':data.breakDir==='break-low'?'↓ Low':'↕ Outside';
     breakHtml=`<span class="badge ${bCls}">${bLabel}</span>`;
   }
-  const partial=data.dayCount<10?` <span class="badge b-muted" title="${data.dayCount} days">partial</span>`:'';
   return `<tr class="row-${(data.ax||'na').toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}">
-    <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong>${partial}</div></td>
+    <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong></div></td>
     <td><span class="phase-badge">${data.currentPhase}</span></td>
     <td>${buildSequenceHtml(data.cycle,data.currentPhase)}</td>
     <td><span class="badge ${cycleCls}" style="margin-right:4px">${data.ax}</span><span class="badge ${stageCls}" title="${stageLabel}">${data.stage}</span></td>
