@@ -546,6 +546,10 @@ function classifyWeeklyAX(candles){
   const monCandle=monday||(c0.days&&c0.days.length?c0.days[0]:null);
   const friCandle=friday||(c1.days&&c1.days.length?c1.days[c1.days.length-1]:null);
   if(!monCandle||!friCandle) return null;
+  // Equity session: 4am-8pm ET. If Monday candle is today & market still open, classification is provisional
+  const todayISO=new Date().toISOString().slice(0,10);
+  const etNow=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const monIncomplete=monCandle.date===todayISO && etNow.getHours()<20;
   const isA=monCandle.high<=friCandle.high && monCandle.low>=friCandle.low;
   let breakDir=null;
   if(!isA){
@@ -577,6 +581,19 @@ function classifyWeeklyAX(candles){
     }
     manip={status:grabbed?'resolved':'none',day:isA?'Tue':'Wed',grabbed,agreed,
       manipHigh:manipDay.high,manipLow:manipDay.low,manipClose:manipDay.close};
+  }
+  // If Monday candle still forming, mark as pending — can't classify yet
+  if(monIncomplete){
+    return {
+      ax:'pending',
+      c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
+      c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
+      monday:{high:monCandle.high,low:monCandle.low,open:monCandle.open,close:monCandle.close},
+      friday:{high:friCandle.high,low:friCandle.low,open:friCandle.open,close:friCandle.close},
+      currentWeek:c0.weekKey,priorWeek:c1.weekKey,
+      dayCount:c0.dayCount,breakDir:null,
+      manip:{status:'pending',day:'—',grabbed:null,agreed:null}
+    };
   }
   return {
     ax:isA?'A':'X',
@@ -618,6 +635,10 @@ function classifyMonthlyAX(candles){
   const w1Monday=w1Mon||(c0.days&&c0.days.length?c0.days[0]:null);
   const pmLastFriday=pmFri||(c1.days&&c1.days.length?c1.days[c1.days.length-1]:null);
   if(!w1Monday||!pmLastFriday) return null;
+  // Equity session: 4am-8pm ET. If W1 Monday is today & market still open, classification is provisional
+  const todayISO=now.toISOString().slice(0,10);
+  const etNow=new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const w1MonIncomplete=w1Monday.date===todayISO && etNow.getHours()<20;
   const isA=w1Monday.high<=pmLastFriday.high && w1Monday.low>=pmLastFriday.low;
   let breakDir=null;
   if(!isA){
@@ -646,6 +667,20 @@ function classifyMonthlyAX(candles){
     }
     manip={status:grabbed?'resolved':'none',week:isA?'W2':'W3',grabbed,agreed,
       manipHigh:manipWeek.high,manipLow:manipWeek.low,manipClose:manipWeek.close};
+  }
+  // If W1 Monday candle still forming, mark as pending
+  if(w1MonIncomplete){
+    return {
+      ax:'pending',
+      c0:{high:c0.high,low:c0.low,open:c0.open,close:c0.close},
+      c1:{high:c1.high,low:c1.low,open:c1.open,close:c1.close},
+      w1Monday:{high:w1Monday.high,low:w1Monday.low,open:w1Monday.open,close:w1Monday.close},
+      pmLastFriday:{high:pmLastFriday.high,low:pmLastFriday.low,open:pmLastFriday.open,close:pmLastFriday.close},
+      pmh,pml,
+      label:`${MONTHS[curMonth]} W1 Mon vs ${MONTHS[priorMonth]} last Fri`,
+      dayCount:c0.dayCount,breakDir:null,
+      manip:{status:'pending',week:'—',grabbed:null,agreed:null}
+    };
   }
   return {
     ax:isA?'A':'X',
@@ -1087,8 +1122,10 @@ function buildManipBadge(manip){
 }
 function buildTableRow(sym,data){
   const isA=data.ax==='A';
+  const isPending=data.ax==='pending';
   const range=data.c0.close?((data.c0.high-data.c0.low)/data.c0.close*100).toFixed(1):'—';
-  const badgeCls=isA?'b-sage':'b-terracotta';
+  const badgeCls=isPending?'b-muted':isA?'b-sage':'b-terracotta';
+  const axLabel=isPending?'Pending':data.ax;
   const manipHtml=buildManipBadge(data.manip);
   // Granular manip attr: agreed-high, agreed-low, disagreed-high, disagreed-low, pending, none
   let manipAttr='none';
@@ -1099,7 +1136,7 @@ function buildTableRow(sym,data){
   const partial=data.dayCount<5?` <span class="badge b-muted" title="${data.dayCount} days">partial</span>`:'';
   return `<tr class="row-${data.ax.toLowerCase()} ax-row" data-ticker="${sym.toLowerCase()}" data-ax="${data.ax}" data-manip="${manipAttr}">
     <td><div class="ticker-cell">${tickerIcon(sym)}<strong>${sym}</strong>${partial}</div></td>
-    <td><span class="badge ${badgeCls}">${data.ax}</span></td>
+    <td><span class="badge ${badgeCls}">${axLabel}</span></td>
     <td class="mono sensitive">$${data.c0.high.toFixed(2)}</td>
     <td class="mono sensitive">$${data.c0.low.toFixed(2)}</td>
     <td class="mono" style="color:var(--text-sec)">$${data.c1.high.toFixed(2)}</td>
