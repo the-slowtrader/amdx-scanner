@@ -88,9 +88,9 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
 .refresh-btn{display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--charcoal);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
 .refresh-btn:hover{opacity:.85}
 .refresh-btn:disabled{opacity:.4;cursor:not-allowed}
-.refresh-btn svg{transition:transform .3s}
-.refresh-btn.spinning svg{animation:radar 1.2s ease-in-out infinite}
-@keyframes radar{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
+.refresh-icon{font-size:16px;display:inline-block;transition:transform .3s}
+.refresh-btn.spinning .refresh-icon{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .last-updated{font-size:12px;color:var(--text-sec)}
 .scan-progress{display:flex;align-items:center;gap:12px}
 .progress-text{font-size:12px;font-weight:600;color:var(--text-sec);white-space:nowrap}
@@ -298,7 +298,7 @@ tr.futures-row:hover td{background:rgba(196,169,122,0.06)!important}
   <div class="control-bar">
     <div class="control-left">
       <button class="refresh-btn" id="refreshBtn" onclick="forceRefresh()">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="8" r="3.5"/><line x1="8" y1="1.5" x2="8" y2="4"/></svg>
+        <span class="refresh-icon">↻</span>
         Refresh Scan
       </button>
       <span class="last-updated" id="lastUpdated">Last scan: &mdash;</span>
@@ -472,16 +472,62 @@ function getPriorQuarterBounds(date){
 }
 
 // ── FMP Data Fetching ──
-// Regular session EOD only — extended hours data from FMP includes spurious
-// low-volume pre/post-market prices that distort candle ranges and cause
-// incorrect A/X classifications (verified against TradingView 24H candles).
+// EOD for bulk history + 1H extended bars (4am-8pm ET equity session) for
+// recent 15 days to match TradingView 24H candles. Bars filtered to equity
+// session window and minimum volume to exclude spurious thin trades.
+const EXT_MIN_VOL=100; // min volume per 1H bar to include
 async function fetchSingle(sym, from, to){
+  // 1) EOD for full history (regular session 9:30-4pm)
   const eodUrl=`https://financialmodelingprep.com/stable/historical-price-eod/full?symbol=${fmpSym(sym)}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
   const eodR=await fetch(eodUrl);
   if(!eodR.ok) throw new Error(`HTTP ${eodR.status}`);
   const eodData=await eodR.json();
   if(!Array.isArray(eodData)||!eodData.length) return [];
-  return eodData;
+  // 2) 1H extended for recent 15 days — filtered to 4am-8pm ET equity session
+  const extFrom=dateStr(daysAgo(15));
+  const extUrl=`https://financialmodelingprep.com/stable/historical-chart/1hour?symbol=${fmpSym(sym)}&from=${extFrom}&to=${to}&extended=true&apikey=${FMP_KEY}`;
+  let extDaily={};
+  try{
+    const extR=await fetch(extUrl);
+    if(extR.ok){
+      const bars=await extR.json();
+      if(Array.isArray(bars)&&bars.length){
+        const byDate={};
+        bars.forEach(b=>{
+          const hour=parseInt(b.date.slice(11,13));
+          if(hour<4||hour>=20) return; // outside equity session (4am-8pm ET)
+          if((b.volume||0)<EXT_MIN_VOL) return; // skip thin/spurious bars
+          const ds=b.date.slice(0,10);
+          if(!byDate[ds]) byDate[ds]=[];
+          byDate[ds].push(b);
+        });
+        for(const[date,hrs] of Object.entries(byDate)){
+          hrs.sort((a,b)=>a.date.localeCompare(b.date));
+          extDaily[date]={
+            date,
+            open:hrs[0].open,
+            high:Math.max(...hrs.map(h=>h.high)),
+            low:Math.min(...hrs.map(h=>h.low)),
+            close:hrs[hrs.length-1].close
+          };
+        }
+      }
+    }
+  }catch(e){ console.warn(`Extended fetch failed: ${sym}`,e.message); }
+  // 3) Merge: overlay extended onto EOD for recent days
+  return eodData.map(d=>{
+    const ext=extDaily[d.date];
+    if(ext){
+      return {
+        ...d,
+        high:Math.max(d.high,ext.high),
+        low:Math.min(d.low,ext.low),
+        open:ext.open,
+        close:ext.close
+      };
+    }
+    return d;
+  });
 }
 
 async function fetchAllTickers(tickers, from, to, onProgress){
