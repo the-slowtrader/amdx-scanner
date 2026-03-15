@@ -264,7 +264,7 @@ function parseDescription(desc, line){
     ticker: m[3], expiration: m[4],
     strike: parseFloat(m[5]), optionType: m[6],
     premium: parseFloat(m[7]), amount,
-    session: classifySession(time),
+    session: classifySession(time, m[3]),
     dayOfWeek: classifyDay(date)
   };
 }
@@ -315,7 +315,12 @@ function parseExpDate(s){
 function daysBetween(a,b){ const da=new Date(a),db=new Date(b); return isNaN(da)||isNaN(db)?0:Math.round((db-da)/(864e5)); }
 
 // ─── SESSION / DAY ───
-function classifySession(timeStr){
+// Non-equity tickers — NY AM doesn't apply to these
+const NON_EQUITY = new Set(['VIX','UVXY','SVXY','VXX','VIXY','/ES','/NQ','/CL','/GC','/SI','/ZB','/ZN','SPX','NDX','RUT','DJX','XSP']);
+
+function isEquity(ticker){ return !NON_EQUITY.has((ticker||'').toUpperCase()); }
+
+function classifySession(timeStr, ticker){
   if(!timeStr) return '';
   const m = timeStr.match(/(\d{1,2}):(\d{2}):?(\d{2})?\s*(AM|PM)?/i);
   if(!m) return '';
@@ -323,6 +328,12 @@ function classifySession(timeStr){
   if(m[4]){ if(m[4].toUpperCase()==='PM'&&h!==12) h+=12; if(m[4].toUpperCase()==='AM'&&h===12) h=0; }
   h += 1; // CST → ET
   if(h>=24) h-=24;
+  // NY AM only applies to equities
+  if(!isEquity(ticker)){
+    if(h>=9&&h<16) return 'NY Open';
+    if(h<9) return 'Pre-Market';
+    return 'After Hours';
+  }
   if(h<4) return 'Asian';
   if(h<9) return 'London';
   if(h>=9&&h<12) return 'NY AM';
@@ -349,13 +360,13 @@ const MODELS = [
   { id:'weekly-xamd', name:'Weekly XAMD', cat:'WEEKLY', color:'var(--sage)',
     desc:'Trade the weekly candle using XAMD structure. Accumulate Mon/Tue, manipulation Wed, distribute Thu/Fri.',
     checklist:['Identify previous week high, low, and CE of weekly range','Mark all weekly voids','Determine weekly bias from draw on liquidity','Mon/Tue: Mark accumulation range','Wednesday: Wait for manipulation at key level','Enter after 10 AM ET confirmation','Target: Opposing liquidity, void CE, or next void','Stop: Below/above the manipulation wick'],
-    params:{Bias:'Weekly/Monthly',Entry:'Daily or 4H',Session:'NY AM',Day:'Wed entry',Hold:'1-5 days'},
+    params:{Bias:'Weekly/Monthly',Entry:'Daily or 4H',Session:'NY AM (equities)',Day:'Wed entry',Hold:'1-5 days'},
     profile:{ sessions:['NY AM'], days:['Wed','Thu'], holdMin:1, holdMax:5, dteMin:5, dteMax:30 }
   },
   { id:'daily-amd', name:'Daily AMD', cat:'DAILY', color:'var(--blue)',
     desc:'Trade the daily candle. Accumulation in Asian/London, manipulation at open, distribution by close.',
     checklist:['Mark prior day high, low, and CE','Identify daily voids','Asian session: Mark accumulation range','London: Identify manipulation direction','10 AM ET: Confirm bias from agreement/disagreement','Enter 10 AM - 12 PM','Target: Prior day high/low or daily void'],
-    params:{Bias:'Weekly',Entry:'1H or 15min',Session:'NY AM (10-12)',Day:'Any',Hold:'0-2 days'},
+    params:{Bias:'Weekly',Entry:'1H or 15min',Session:'NY AM 10-12 (equities)',Day:'Any',Hold:'0-2 days'},
     profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:2, dteMin:0, dteMax:14 }
   },
   { id:'void-to-void', name:'Void-to-Void', cat:'SWING', color:'var(--amber)',
@@ -367,13 +378,13 @@ const MODELS = [
   { id:'bpr-entry', name:'BPR Entry', cat:'DAILY', color:'var(--blue)',
     desc:'An FVG gets closed through, becoming a Balanced Price Range. Trade the retest of its CE.',
     checklist:['Identify FVG on 4H/6H chart','Wait for price to close through the FVG (now a BPR)','Mark the CE of the BPR','Wait for retrace back to the CE','Enter on rejection candle at CE','Target: Opposing liquidity or next void'],
-    params:{Bias:'Daily/Weekly',Entry:'1H',Session:'NY AM',Day:'Wed/Thu',Hold:'1-3 days'},
+    params:{Bias:'Daily/Weekly',Entry:'1H',Session:'NY AM (equities)',Day:'Wed/Thu',Hold:'1-3 days'},
     profile:{ sessions:['NY AM'], days:['Wed','Thu'], holdMin:1, holdMax:3, dteMin:3, dteMax:14 }
   },
   { id:'wednesday-manip', name:'Wednesday Manipulation', cat:'WEEKLY', color:'var(--sage)',
     desc:'Target Wednesday as the manipulation day of the weekly XAMD candle. Wait for disagreement.',
     checklist:['Sun/Mon: Determine weekly bias','Tue: Mark accumulation range boundaries','Wed: Wait for price to sweep accumulation','Observe disagreement at the swept level','Enter during Wednesday NY AM session','Target: Weekly void or opposing liquidity','Stop: Below the Wednesday manipulation wick'],
-    params:{Bias:'Weekly',Entry:'4H or 1H',Session:'NY AM',Day:'Wednesday only',Hold:'1-4 days'},
+    params:{Bias:'Weekly',Entry:'4H or 1H',Session:'NY AM (equities)',Day:'Wednesday only',Hold:'1-4 days'},
     profile:{ sessions:['NY AM'], days:['Wed'], holdMin:1, holdMax:4, dteMin:5, dteMax:21 }
   },
   { id:'agree-liq', name:'Agreement at Liquidity', cat:'INTRADAY', color:'var(--green)',
@@ -391,13 +402,13 @@ const MODELS = [
   { id:'rejection-void', name:'Rejection Block + Void', cat:'SWING', color:'var(--amber)',
     desc:'Rejection block CE at the same price as a void — the strongest confluence entry.',
     checklist:['Identify rejection block on higher TF','Confirm a void exists at the same level','CE of rejection block is inside the void = max confluence','Wait for price to reach this level','Enter on rejection'],
-    params:{Bias:'Higher TF',Entry:'Lower TF',Session:'NY AM',Day:'Any',Hold:'2-7 days'},
+    params:{Bias:'Higher TF',Entry:'Lower TF',Session:'NY AM (equities)',Day:'Any',Hold:'2-7 days'},
     profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:2, holdMax:7, dteMin:14, dteMax:45 }
   },
   { id:'tf-alignment', name:'Timeframe Alignment', cat:'SWING', color:'var(--amber)',
     desc:'Align bias across weekly, daily, 4H, and 1H. Enter on the lowest timeframe when all agree.',
     checklist:['Weekly bias: determine bullish or bearish','Daily bias: must confirm weekly','4H bias: must confirm daily','1H: find entry when aligned with all above','Enter only when all timeframes agree'],
-    params:{Bias:'3+ TFs aligned',Entry:'Lowest aligned TF',Session:'NY AM',Day:'Any',Hold:'2-10 days'},
+    params:{Bias:'3+ TFs aligned',Entry:'Lowest aligned TF',Session:'NY AM (equities)',Day:'Any',Hold:'2-10 days'},
     profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:2, holdMax:10, dteMin:7, dteMax:30 }
   },
   { id:'monthly-amdx', name:'Monthly AMDX Swing', cat:'SWING', color:'var(--amber)',
@@ -409,7 +420,7 @@ const MODELS = [
   { id:'intraday-scalp', name:'Intraday Scalp', cat:'INTRADAY', color:'var(--green)',
     desc:'Scalp intraday moves on the 15min/5min chart, aligned with higher TF bias.',
     checklist:['Confirm daily and weekly bias direction','Drop to 15min or 5min chart','Identify intraday voids, FVGs, or BPRs','Find the XAMD pattern on intraday candle','Enter during the manipulation phase','Target: Prior day high/low or intraday void'],
-    params:{Bias:'Daily/Weekly',Entry:'15min or 5min',Session:'NY AM',Day:'Any',Hold:'Same day'},
+    params:{Bias:'Daily/Weekly',Entry:'15min or 5min',Session:'NY AM (equities)',Day:'Any',Hold:'Same day'},
     profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:1, dteMin:0, dteMax:7 }
   },
   { id:'wheel-strategy', name:'Wheel Strategy', cat:'OPTIONS', color:'var(--purple)',
@@ -440,8 +451,11 @@ function scoreModels(trips){
     wins.forEach(w=>{
       let tradeScore = 0;
 
-      // Session fit
-      if(p.sessions.includes(w.session)) tradeScore += 3;
+      // Session fit — NY AM only counts for equities
+      const sessMatch = p.sessions.includes(w.session);
+      const nyAMModel = p.sessions.includes('NY AM') && p.sessions.length<=2;
+      if(sessMatch && (!nyAMModel || isEquity(w.ticker))) tradeScore += 3;
+      else if(nyAMModel && !isEquity(w.ticker)) tradeScore += 0; // neutral for non-equity
       else if(w.session) tradeScore -= 1;
 
       // Day fit
@@ -577,7 +591,7 @@ function generateStory(trips){
     const bsArr = bestSess[1], bsName = bestSess[0];
     const bsPct = pct(bsArr.length, wins.length);
     html += `<p class="story-p">Your wins cluster in the <span class="hl">${bsName}</span> session — <strong>${bsArr.length} of your ${wins.length} wins (${bsPct}%)</strong> happen there. `;
-    if(bsName==='NY AM') html += `This is the session Matt Reese trades almost exclusively. The daily manipulation is complete by 10 AM, and the distribution move runs until noon. Your timing already aligns with the strongest ICT window.</p>`;
+    if(bsName==='NY AM') html += `This is the session Matt Reese trades almost exclusively — and it only applies to equities. The daily manipulation is complete by 10 AM, and the distribution move runs until noon. Your timing already aligns with the strongest ICT window.</p>`;
     else if(bsName==='London') html += `London is when the daily manipulation often begins. You're catching the early move before NY confirms the direction.</p>`;
     else if(bsName==='NY PM') html += `The afternoon session is typically distribution. You're catching the continuation after the morning setup.</p>`;
     else html += `</p>`;
