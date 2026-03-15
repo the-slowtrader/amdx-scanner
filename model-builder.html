@@ -8,98 +8,131 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#f0f1ec;--card:#ffffff;--card-alt:#f8f9f5;
-  --border:rgba(0,0,0,0.06);--border-strong:rgba(0,0,0,0.1);
-  --text:#1a1a1a;--text-sec:#6b7280;--text-muted:#9ca3af;
-  --sage:#6d7e5e;--sage-bg:rgba(109,126,94,0.08);--sage-light:rgba(109,126,94,0.04);
-  --green:#22c55e;--green-bg:rgba(34,197,94,0.08);
-  --red:#ef4444;--red-bg:rgba(239,68,68,0.06);
-  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.08);
-  --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.08);
+  --bg:#e8e9f0;--card:#ffffff;--card-alt:#f6f6fa;
+  --dark:#1e1e2e;--dark-sec:#2a2b3d;--dark-text:rgba(255,255,255,0.55);
+  --border:rgba(0,0,0,0.06);
+  --text:#1a1a2e;--text-sec:#6b7280;--text-muted:#9ca3af;
+  --sage:#6d7e5e;--sage-bg:rgba(109,126,94,0.1);
+  --green:#22c55e;--green-bg:rgba(34,197,94,0.1);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.08);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.1);
+  --blue:#6366f1;--blue-bg:rgba(99,102,241,0.08);
   --purple:#8b5cf6;--purple-bg:rgba(139,92,246,0.08);
-  --yellow:#e2e857;
-  --sidebar-w:72px;--radius:16px;--radius-sm:10px;--radius-xs:8px;
-  --shadow:0 1px 3px rgba(0,0,0,0.03);--shadow-md:0 2px 8px rgba(0,0,0,0.05),0 8px 24px rgba(0,0,0,0.03);
+  --lime:#d4e157;
+  --sidebar-w:200px;--radius:16px;--radius-sm:12px;--radius-xs:8px;
+  --shadow:0 1px 3px rgba(0,0,0,0.04);--shadow-md:0 4px 16px rgba(0,0,0,0.06);
   --sans:'Inter',system-ui,-apple-system,sans-serif;
 }
 body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;font-size:14px;-webkit-font-smoothing:antialiased}
 
-/* ICON SIDEBAR */
-.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--card);z-index:200;display:flex;flex-direction:column;align-items:center;padding:20px 0;border-right:1px solid var(--border)}
-.sidebar-logo{width:40px;height:40px;border-radius:12px;background:var(--sage);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#fff;margin-bottom:32px;letter-spacing:-.5px}
-.nav-item{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;margin-bottom:6px;color:var(--text-muted);position:relative}
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--card);z-index:200;display:flex;flex-direction:column;padding:24px 16px 16px}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 8px;margin-bottom:36px}
+.sidebar-brand .brand-mark{width:32px;height:32px;border-radius:10px;background:var(--dark);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:9px;color:#fff;letter-spacing:-.3px}
+.sidebar-brand .brand-name{font-size:16px;font-weight:800;letter-spacing:-.4px;color:var(--text)}
+.sidebar-nav{flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);color:var(--text-sec);cursor:pointer;transition:all .15s;font-size:13px;font-weight:500;margin-bottom:2px;text-decoration:none}
 .nav-item:hover{background:var(--card-alt);color:var(--text)}
-.nav-item.active{background:var(--sage-bg);color:var(--sage)}
-.nav-item svg{width:20px;height:20px}
-.nav-item .tooltip{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--text);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
-.nav-item:hover .tooltip{opacity:1}
+.nav-item.active{background:var(--dark);color:#fff}
+.nav-item.active svg{opacity:1}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.4}
+.nav-item.active svg{opacity:.7}
+.sidebar-bottom{padding:8px;font-size:11px;color:var(--text-muted)}
 
 /* MOBILE */
 .sidebar-toggle{display:none;position:fixed;top:16px;left:16px;z-index:300;width:40px;height:40px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);cursor:pointer;align-items:center;justify-content:center;box-shadow:var(--shadow-md)}
-@media(max-width:768px){
+@media(max-width:800px){
   .sidebar{transform:translateX(-100%);transition:transform .3s}.sidebar.open{transform:translateX(0)}
   .sidebar-toggle{display:flex}.main{margin-left:0!important;padding:24px 16px!important}
 }
 
 /* MAIN */
-.main{margin-left:var(--sidebar-w);min-height:100vh;padding:40px 48px;max-width:960px}
+.main{margin-left:var(--sidebar-w);min-height:100vh;padding:28px 32px 60px}
 
-/* UPLOAD */
-.upload-zone{border:2px dashed var(--border-strong);border-radius:var(--radius);padding:72px 32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card)}
-.upload-zone:hover,.upload-zone.dragover{border-color:var(--sage);background:var(--sage-light)}
-.upload-zone .uz-icon{width:48px;height:48px;margin:0 auto 20px;color:var(--text-muted);opacity:.5}
-.upload-zone .uz-title{font-size:18px;font-weight:700;margin-bottom:6px;letter-spacing:-.2px}
+/* UPLOAD STATE */
+.upload-state{display:flex;align-items:center;justify-content:center;min-height:80vh}
+.upload-box{text-align:center;max-width:480px;width:100%}
+.upload-box h1{font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+.upload-box p{font-size:14px;color:var(--text-sec);margin-bottom:28px}
+.upload-zone{border:2px dashed rgba(0,0,0,0.12);border-radius:var(--radius);padding:64px 32px;cursor:pointer;transition:all .2s;background:var(--card)}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--sage);background:rgba(109,126,94,0.03)}
+.upload-zone .uz-icon{width:44px;height:44px;margin:0 auto 16px;color:var(--text-muted);opacity:.4}
+.upload-zone .uz-title{font-size:16px;font-weight:700;margin-bottom:4px}
 .upload-zone .uz-sub{font-size:13px;color:var(--text-sec)}
 
-/* SECTION */
-.section{display:none}.section.active{display:block}
+/* DASHBOARD */
+.dash{display:none}
+.dash.visible{display:block}
 
-/* STORY */
-.story{max-width:720px}
-.story-hero{margin-bottom:48px}
-.story-hero h1{font-size:36px;font-weight:800;letter-spacing:-.8px;line-height:1.15;margin-bottom:12px}
-.story-hero .hero-sub{font-size:15px;color:var(--text-sec);line-height:1.7}
+/* HERO */
+.hero{background:var(--dark);border-radius:var(--radius);padding:32px 36px;margin-bottom:20px;display:flex;gap:24px;align-items:stretch;overflow:hidden}
+.hero-left{flex:1;min-width:0}
+.hero-left .hero-greeting{font-size:14px;color:var(--dark-text);font-weight:500;margin-bottom:4px}
+.hero-left h1{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.2;margin-bottom:16px}
+.hero-left .hero-sub{font-size:13px;color:var(--dark-text);line-height:1.6}
+.hero-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer;border:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);transition:all .15s;margin-top:16px;text-transform:uppercase;letter-spacing:.5px}
+.hero-btn:hover{background:rgba(255,255,255,0.18);color:#fff}
 
-.story-section{margin-bottom:48px}
-.story-section h2{font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:20px;display:flex;align-items:center;gap:10px}
-.story-section h2::before{content:'';width:24px;height:2px;background:var(--sage);border-radius:1px}
-.story-p{font-size:15px;line-height:1.85;margin-bottom:14px;color:var(--text)}
-.story-p strong{font-weight:700}
-.story-p .hl{background:rgba(226,232,87,0.25);padding:1px 6px;border-radius:4px;font-weight:700}
-.story-p .hl-red{background:var(--red-bg);padding:1px 6px;border-radius:4px;font-weight:700;color:#dc2626}
-.story-p .hl-green{background:var(--green-bg);padding:1px 6px;border-radius:4px;font-weight:700;color:#16a34a}
+/* MODEL CARDS ROW */
+.model-row{display:flex;gap:12px;flex-shrink:0}
+.model-pill{width:160px;border-radius:var(--radius-sm);padding:18px 16px;display:flex;flex-direction:column;justify-content:space-between;min-height:140px;cursor:pointer;transition:all .15s;position:relative;flex-shrink:0}
+.model-pill:hover{transform:translateY(-2px)}
+.model-pill.pill-dark{background:var(--dark-sec);color:#fff}
+.model-pill.pill-dark .pill-num,.model-pill.pill-dark .pill-name{color:#fff}
+.model-pill.pill-dark .pill-meta{color:var(--dark-text)}
+.model-pill.pill-lime{background:var(--lime);color:var(--text)}
+.model-pill .pill-num{font-size:12px;font-weight:700;opacity:.5;margin-bottom:auto}
+.model-pill .pill-icon{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.model-pill.pill-lime .pill-icon{background:rgba(0,0,0,0.08)}
+.model-pill .pill-icon svg{width:14px;height:14px}
+.model-pill .pill-name{font-size:13px;font-weight:700;letter-spacing:-.1px;line-height:1.3}
+.model-pill .pill-meta{font-size:11px;margin-top:4px;opacity:.5}
 
-.story-stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:24px 0}
-.story-stat{background:var(--card);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow)}
-.story-stat .ss-val{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1}
-.story-stat .ss-label{font-size:11px;font-weight:600;color:var(--text-muted);margin-top:6px;letter-spacing:.3px}
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.stat-card .sc-val{font-size:36px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+.stat-card .sc-label{font-size:11px;font-weight:600;color:var(--text-muted);margin-top:6px}
 
-.story-callout{background:var(--card);border-radius:var(--radius);padding:24px 28px;margin:24px 0;box-shadow:var(--shadow);border-left:4px solid var(--sage)}
-.story-callout .sc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:8px}
-.story-callout .sc-text{font-size:16px;font-weight:600;line-height:1.6;letter-spacing:-.2px}
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
 
-.story-warning{background:var(--card);border-left:4px solid var(--amber);border-radius:var(--radius);padding:18px 24px;margin:16px 0;font-size:14px;line-height:1.7;box-shadow:var(--shadow)}
+/* CARD */
+.card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+.card-title{font-size:16px;font-weight:800;letter-spacing:-.2px;margin-bottom:16px}
+.card-sub{font-size:12px;color:var(--text-muted);margin-top:-12px;margin-bottom:16px}
 
-.story-model{background:var(--card);border-radius:var(--radius);padding:28px 32px;margin:20px 0;box-shadow:var(--shadow);border:1px solid var(--border)}
-.story-model .sm-rank{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:6px}
-.story-model .sm-name{font-size:24px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px}
-.story-model .sm-cat{display:inline-flex;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:14px}
-.story-model .sm-desc{font-size:14px;color:var(--text-sec);line-height:1.6;margin-bottom:16px}
-.story-model .sm-why{font-size:14px;line-height:1.7;margin-bottom:16px}
-.story-model .sm-checklist{list-style:none;padding:0}
-.story-model .sm-checklist li{display:flex;align-items:flex-start;gap:10px;padding:6px 0;font-size:13px;color:var(--text-sec)}
-.story-model .sm-checklist li::before{content:'';width:16px;height:16px;border:2px solid var(--border-strong);border-radius:4px;flex-shrink:0;margin-top:1px}
-.story-model .sm-params{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
-.story-model .sm-param{background:var(--card-alt);border-radius:var(--radius-xs);padding:10px 14px}
-.story-model .sm-param-label{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px}
-.story-model .sm-param-val{font-size:13px;font-weight:600;margin-top:3px}
+/* INSIGHT ROWS */
+.insight-row{padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.7}
+.insight-row:last-child{border:none}
+.insight-row strong{font-weight:700}
+.insight-row .ir-hl{background:rgba(212,225,87,0.3);padding:1px 6px;border-radius:4px;font-weight:700}
+.insight-row .ir-green{background:var(--green-bg);padding:1px 6px;border-radius:4px;font-weight:700;color:#16a34a}
+.insight-row .ir-red{background:var(--red-bg);padding:1px 6px;border-radius:4px;font-weight:700;color:#dc2626}
 
-.story-model.secondary{border-color:var(--border)}
-.story-model.secondary .sm-rank{color:var(--text-muted)}
-.story-model.secondary .sm-name{font-size:20px}
+/* WARNING */
+.warn-card{background:var(--card);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border-left:4px solid var(--amber);margin-bottom:12px;font-size:13px;line-height:1.7}
 
-.story-trades{margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
-.story-trades summary{font-size:12px;font-weight:700;color:var(--sage);cursor:pointer;margin-bottom:10px;letter-spacing:.2px}
+/* MODEL DETAIL */
+.model-detail{background:var(--card);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:20px}
+.md-rank{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:4px}
+.md-name{font-size:22px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+.md-cat{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:12px}
+.md-desc{font-size:14px;color:var(--text-sec);line-height:1.6;margin-bottom:16px}
+.md-why{font-size:14px;line-height:1.7;margin-bottom:16px}
+.md-why p{margin-bottom:8px}
+.md-checklist{list-style:none;padding:0;margin-bottom:16px}
+.md-checklist li{display:flex;align-items:flex-start;gap:10px;padding:5px 0;font-size:13px;color:var(--text-sec)}
+.md-checklist li::before{content:'';width:16px;height:16px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;margin-top:1px}
+.md-params{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:700px){.md-params{grid-template-columns:1fr 1fr}}
+.md-param{background:var(--card-alt);border-radius:var(--radius-xs);padding:10px 14px}
+.md-param-label{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px}
+.md-param-val{font-size:12px;font-weight:600;margin-top:3px}
+
+/* TRADES LIST */
+.trades-toggle{font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;margin-top:14px;border-top:1px solid var(--border);padding-top:14px}
 .st-row{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:center;flex-wrap:wrap}
 .st-row:last-child{border:none}
 .st-date{width:70px;color:var(--text-sec);flex-shrink:0}
@@ -112,31 +145,36 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .tag-red{background:var(--red-bg);color:#dc2626}
 .tag-sage{background:var(--sage-bg);color:var(--sage)}
 .tag-blue{background:var(--blue-bg);color:var(--blue)}
-.tag-amber{background:var(--amber-bg);color:#d97706}
-.tag-purple{background:var(--purple-bg);color:var(--purple)}
 
-/* MODEL LIBRARY */
-.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-.model-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;transition:all .2s;cursor:pointer;box-shadow:var(--shadow)}
-.model-card:hover{border-color:var(--sage);box-shadow:var(--shadow-md);transform:translateY(-1px)}
-.model-card .mc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.model-card .mc-name{font-size:16px;font-weight:700;letter-spacing:-.2px}
-.model-card .mc-cat{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:6px;letter-spacing:.3px}
-.model-card .mc-desc{font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:12px}
-.model-card .mc-detail{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
-.model-card.expanded .mc-detail{display:block}
-.checklist-item{display:flex;align-items:flex-start;gap:10px;padding:5px 0;font-size:12px;color:var(--text-sec)}
-.checklist-item::before{content:'';width:14px;height:14px;border:2px solid var(--border-strong);border-radius:4px;flex-shrink:0;margin-top:2px}
-.mc-params{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-.mc-param{background:var(--card-alt);border-radius:var(--radius-xs);padding:10px 12px}
-.mc-param-label{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-muted)}
-.mc-param-val{font-size:12px;font-weight:600;margin-top:3px}
+/* ACTIONS */
+.action-card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
+.action-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.7}
+.action-item:last-child{border:none}
+.action-item::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--sage);flex-shrink:0;margin-top:8px}
+.action-item strong{font-weight:700}
+
+/* LIBRARY */
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.lib-card{background:var(--card);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
+.lib-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.lib-card .lc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.lib-card .lc-name{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.lib-card .lc-cat{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:6px}
+.lib-card .lc-desc{font-size:12px;color:var(--text-sec);line-height:1.5}
+.lib-card .lc-detail{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.lib-card.expanded .lc-detail{display:block}
+.checklist-item{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:12px;color:var(--text-sec)}
+.checklist-item::before{content:'';width:14px;height:14px;border:2px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:2px}
 
 /* BTN */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);transition:all .15s;box-shadow:var(--shadow)}
-.btn:hover{border-color:var(--sage);color:var(--sage);box-shadow:var(--shadow-md)}
-.btn-primary{background:var(--sage);color:#fff;border-color:var(--sage)}
-.btn-primary:hover{background:#5e6e50}
+.btn:hover{box-shadow:var(--shadow-md)}
+
+/* SCROLL */
+@media(max-width:1100px){
+  .hero{flex-direction:column}
+  .model-row{overflow-x:auto;padding-bottom:8px}
+}
 </style>
 </head>
 <body>
@@ -146,651 +184,445 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 </button>
 
 <div class="sidebar" id="sidebar">
-<div class="sidebar-logo">ICT</div>
-<a class="nav-item active" onclick="go('story')" data-s="story">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-<span class="tooltip">Your Story</span></a>
-<a class="nav-item" onclick="go('library')" data-s="library">
+<div class="sidebar-brand">
+<div class="brand-mark">ICT</div>
+<div class="brand-name">Model Builder</div>
+</div>
+<nav class="sidebar-nav">
+<a class="nav-item active" onclick="showDash()" data-s="dash">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+Dashboard</a>
+<a class="nav-item" onclick="showLib()" data-s="lib">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-<span class="tooltip">Model Library</span></a>
-<a class="nav-item" onclick="go('upload')" data-s="upload">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-<span class="tooltip">Upload CSV</span></a>
+Models</a>
+</nav>
+<div class="sidebar-bottom">Based on Matt Reese's<br>TBT Incubator</div>
 </div>
 
 <div class="main">
 
-<!-- UPLOAD -->
-<div class="section" id="sec-upload">
-<div style="max-width:560px">
-<h1 style="font-size:32px;font-weight:800;letter-spacing:-.6px;margin-bottom:8px;line-height:1.2">Upload your trades</h1>
-<p style="font-size:15px;color:var(--text-sec);margin-bottom:32px;line-height:1.6">Drop your Schwab Account Statement CSV. We'll find patterns in your winning trades and match you to an ICT model.</p>
+<!-- UPLOAD STATE -->
+<div id="uploadState" class="upload-state">
+<div class="upload-box">
+<h1>ICT Model Builder</h1>
+<p>Upload your Schwab Account Statement CSV. We'll analyze your winning trades and match you to an ICT model.</p>
 <div class="upload-zone" id="uploadZone">
 <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-<div class="uz-title">Drop Schwab Account Statement CSV</div>
-<div class="uz-sub">We'll parse your BOT/SOLD trades, match them into round trips, and build your story</div>
+<div class="uz-title">Drop CSV file here</div>
+<div class="uz-sub">Schwab Account Statement format</div>
 </div>
 <input type="file" id="fileInput" accept=".csv" style="display:none">
-<div id="parseStatus" style="margin-top:20px"></div>
 </div>
 </div>
 
-<!-- YOUR STORY -->
-<div class="section" id="sec-story">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;max-width:720px">
-<div id="storyFileLabel" style="font-size:12px;color:var(--text-muted);font-weight:500"></div>
-<button class="btn" onclick="document.getElementById('fileInput2').click()">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-Upload New CSV</button>
+<!-- DASHBOARD (single page, all content) -->
+<div id="dashboard" class="dash">
+<div id="dashContent"></div>
+</div>
+
+<!-- LIBRARY -->
+<div id="libraryView" class="dash">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+<div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.3px">ICT Model Library</h1>
+<p style="font-size:13px;color:var(--text-sec);margin-top:2px">All 13 models from the TBT Incubator</p></div>
+<button class="btn" onclick="showDash()">Back to Dashboard</button>
+</div>
+<div class="lib-grid" id="libGrid"></div>
+</div>
+
 <input type="file" id="fileInput2" accept=".csv" style="display:none">
-</div>
-<div class="story" id="storyContent">
-<div style="text-align:center;padding:80px 20px;color:var(--text-muted)">
-<p style="font-size:16px;font-weight:600;margin-bottom:6px">No trades loaded yet</p>
-<p style="font-size:13px">Upload your Schwab CSV to generate your trading story</p>
-</div>
-</div>
-</div>
-
-<!-- MODEL LIBRARY -->
-<div class="section" id="sec-library">
-<h1 style="font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px">ICT Model Library</h1>
-<p style="font-size:14px;color:var(--text-sec);margin-bottom:28px">All 13 models from the TBT Incubator — click any card to see the full checklist</p>
-<div class="model-grid" id="libraryGrid"></div>
-</div>
-
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   ICT MODEL BUILDER — Story-Driven
-   ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   ICT MODEL BUILDER — Single Page Dashboard
+   ═══════════════════════════════════════ */
 
-// ─── STATE ───
 let STATE = { roundTrips: [], rawTrades: [], lastFile: '' };
-const STORE_KEY = 'ictModelBuilder_v3';
+const STORE_KEY = 'ictModelBuilder_v4';
 function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); }
 function load(){ try { const s=localStorage.getItem(STORE_KEY); if(s) STATE=JSON.parse(s); } catch(e){} }
 
 // ─── SCHWAB CSV PARSER ───
 function parseSchwabCSV(text){
-  const lines = text.split(/\r?\n/);
-  const trades = [];
+  const lines = text.split(/\r?\n/), trades = [];
   for(const line of lines){
     if(!line.includes(',TRD,')) continue;
-    const desc = extractField(line, 4);
+    const desc = xf(line, 4);
     if(!desc) continue;
-    const parsed = parseDescription(desc, line);
-    if(parsed) trades.push(parsed);
+    const p = parseTrade(desc, line);
+    if(p) trades.push(p);
   }
   return trades;
 }
-
-function extractField(line, idx){
-  const parts = [];
-  let inQuote=false, current='';
-  for(const ch of line){
-    if(ch==='"'){ inQuote=!inQuote; continue; }
-    if(ch===','&&!inQuote){ parts.push(current); current=''; continue; }
-    current+=ch;
-  }
-  parts.push(current);
-  return parts[idx]||'';
+function xf(line, idx){
+  const parts=[]; let q=false,c='';
+  for(const ch of line){if(ch==='"'){q=!q;continue;}if(ch===','&&!q){parts.push(c);c='';continue;}c+=ch;}
+  parts.push(c); return parts[idx]||'';
 }
-
-function parseDescription(desc, line){
+function parseTrade(desc, line){
   if(desc.includes('DIAGONAL')||desc.includes('CUSTOM')||desc.includes('1/-1')) return null;
-  const m = desc.match(/^(BOT|SOLD)\s+([+-]\d+)\s+(\w+)\s+100\s+(?:\((?:Weeklys|EOM)\)\s+)?(\d+\s+\w+\s+\d+)\s+([\d.]+)\s+(CALL|PUT)\s+@([\d.]+)/);
+  const m=desc.match(/^(BOT|SOLD)\s+([+-]\d+)\s+(\w+)\s+100\s+(?:\((?:Weeklys|EOM)\)\s+)?(\d+\s+\w+\s+\d+)\s+([\d.]+)\s+(CALL|PUT)\s+@([\d.]+)/);
   if(!m) return null;
-  const date = extractField(line, 0);
-  const time = extractField(line, 1);
-  const amount = parseFloat((extractField(line, 7)||'0').replace(/[$,]/g,''))||0;
-  const qty = Math.abs(parseInt(m[2]));
-  return {
-    date, time, action: m[1], qty,
-    ticker: m[3], expiration: m[4],
-    strike: parseFloat(m[5]), optionType: m[6],
-    premium: parseFloat(m[7]), amount,
-    session: classifySession(time, m[3]),
-    dayOfWeek: classifyDay(date)
-  };
+  const date=xf(line,0), time=xf(line,1);
+  return { date, time, action:m[1], qty:Math.abs(parseInt(m[2])),
+    ticker:m[3], expiration:m[4], strike:parseFloat(m[5]),
+    optionType:m[6], premium:parseFloat(m[7]),
+    amount:parseFloat((xf(line,7)||'0').replace(/[$,]/g,''))||0,
+    session:classifySession(time,m[3]), dayOfWeek:classifyDay(date) };
 }
 
-// ─── MATCH INTO ROUND TRIPS ───
 function matchTrades(trades){
-  const groups = {};
-  trades.forEach(t=>{
-    const key = `${t.ticker}_${t.expiration}_${t.strike}_${t.optionType}`;
-    if(!groups[key]) groups[key]=[];
-    groups[key].push(t);
-  });
-  const roundTrips = [];
-  for(const[key,arr] of Object.entries(groups)){
-    const buys = arr.filter(t=>t.action==='BOT').sort((a,b)=>new Date(a.date)-new Date(b.date));
-    const sells = arr.filter(t=>t.action==='SOLD').sort((a,b)=>new Date(a.date)-new Date(b.date));
-    let bi=0, si=0;
-    while(bi<buys.length && si<sells.length){
-      const buy=buys[bi], sell=sells[si];
-      const matchQty = Math.min(buy.qty, sell.qty);
-      const pnl = (sell.premium - buy.premium) * matchQty * 100;
-      roundTrips.push({
-        ticker: buy.ticker, optionType: buy.optionType, strike: buy.strike,
-        expiration: buy.expiration, qty: matchQty,
-        entryDate: buy.date, entryTime: buy.time,
-        exitDate: sell.date, exitTime: sell.time,
-        entryPremium: buy.premium, exitPremium: sell.premium,
-        pnl: +pnl.toFixed(2),
-        pnlPct: +((sell.premium/buy.premium - 1)*100).toFixed(1),
-        session: buy.session, dayOfWeek: buy.dayOfWeek,
-        holdDays: daysBetween(buy.date, sell.date),
-        daysToExpiry: daysBetween(buy.date, parseExpDate(buy.expiration)),
-        win: sell.premium > buy.premium
-      });
-      buy.qty -= matchQty; sell.qty -= matchQty;
-      if(buy.qty<=0) bi++;
-      if(sell.qty<=0) si++;
+  const g={};
+  trades.forEach(t=>{const k=`${t.ticker}_${t.expiration}_${t.strike}_${t.optionType}`;if(!g[k])g[k]=[];g[k].push(t);});
+  const rt=[];
+  for(const[,arr] of Object.entries(g)){
+    const buys=arr.filter(t=>t.action==='BOT').sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const sells=arr.filter(t=>t.action==='SOLD').sort((a,b)=>new Date(a.date)-new Date(b.date));
+    let bi=0,si=0;
+    while(bi<buys.length&&si<sells.length){
+      const b=buys[bi],s=sells[si],mq=Math.min(b.qty,s.qty);
+      rt.push({ ticker:b.ticker, optionType:b.optionType, strike:b.strike, expiration:b.expiration, qty:mq,
+        entryDate:b.date, entryTime:b.time, exitDate:s.date, exitTime:s.time,
+        entryPremium:b.premium, exitPremium:s.premium,
+        pnl:+((s.premium-b.premium)*mq*100).toFixed(2),
+        pnlPct:+((s.premium/b.premium-1)*100).toFixed(1),
+        session:b.session, dayOfWeek:b.dayOfWeek,
+        holdDays:daysB(b.date,s.date), daysToExpiry:daysB(b.date,parseExp(b.expiration)),
+        win:s.premium>b.premium });
+      b.qty-=mq;s.qty-=mq;if(b.qty<=0)bi++;if(s.qty<=0)si++;
     }
   }
-  return roundTrips.sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));
+  return rt.sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));
 }
 
-function parseExpDate(s){
-  const months={JAN:'1',FEB:'2',MAR:'3',APR:'4',MAY:'5',JUN:'6',JUL:'7',AUG:'8',SEP:'9',OCT:'10',NOV:'11',DEC:'12'};
-  const p=s.split(/\s+/); if(p.length<3) return s;
-  return `${months[p[1]]||'1'}/${p[0]}/${p[2]}`;
-}
-function daysBetween(a,b){ const da=new Date(a),db=new Date(b); return isNaN(da)||isNaN(db)?0:Math.round((db-da)/(864e5)); }
+function parseExp(s){const M={JAN:'1',FEB:'2',MAR:'3',APR:'4',MAY:'5',JUN:'6',JUL:'7',AUG:'8',SEP:'9',OCT:'10',NOV:'11',DEC:'12'};const p=s.split(/\s+/);return p.length<3?s:`${M[p[1]]||'1'}/${p[0]}/${p[2]}`;}
+function daysB(a,b){const da=new Date(a),db=new Date(b);return isNaN(da)||isNaN(db)?0:Math.round((db-da)/864e5);}
 
-// ─── SESSION / DAY ───
-const NON_EQUITY = new Set(['VIX','UVXY','SVXY','VXX','VIXY','/ES','/NQ','/CL','/GC','/SI','/ZB','/ZN','SPX','NDX','RUT','DJX','XSP']);
-function isEquity(ticker){ return !NON_EQUITY.has((ticker||'').toUpperCase()); }
+const NON_EQ=new Set(['VIX','UVXY','SVXY','VXX','VIXY','/ES','/NQ','/CL','/GC','/SI','/ZB','/ZN','SPX','NDX','RUT','DJX','XSP']);
+function isEq(t){return !NON_EQ.has((t||'').toUpperCase());}
 
-function classifySession(timeStr, ticker){
-  if(!timeStr) return '';
-  const m = timeStr.match(/(\d{1,2}):(\d{2}):?(\d{2})?\s*(AM|PM)?/i);
-  if(!m) return '';
-  let h = parseInt(m[1]);
-  if(m[4]){ if(m[4].toUpperCase()==='PM'&&h!==12) h+=12; if(m[4].toUpperCase()==='AM'&&h===12) h=0; }
-  h += 1; // CST to ET
-  if(h>=24) h-=24;
-  if(!isEquity(ticker)){
-    if(h>=9&&h<16) return 'NY Open';
-    if(h<9) return 'Pre-Market';
-    return 'After Hours';
-  }
-  if(h<4) return 'Asian';
-  if(h<9) return 'London';
-  if(h>=9&&h<12) return 'NY AM';
-  if(h>=12&&h<16) return 'NY PM';
-  return 'After Hours';
+function classifySession(ts,ticker){
+  if(!ts)return '';const m=ts.match(/(\d{1,2}):(\d{2}):?(\d{2})?\s*(AM|PM)?/i);if(!m)return '';
+  let h=parseInt(m[1]);if(m[4]){if(m[4].toUpperCase()==='PM'&&h!==12)h+=12;if(m[4].toUpperCase()==='AM'&&h===12)h=0;}
+  h+=1;if(h>=24)h-=24;
+  if(!isEq(ticker)){return h>=9&&h<16?'NY Open':h<9?'Pre-Market':'After Hours';}
+  if(h<4)return'Asian';if(h<9)return'London';if(h>=9&&h<12)return'NY AM';if(h>=12&&h<16)return'NY PM';return'After Hours';
 }
-function classifyDay(dateStr){
-  if(!dateStr) return '';
-  const d = new Date(dateStr); if(isNaN(d)) return '';
-  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]||'';
-}
+function classifyDay(d){if(!d)return '';const dt=new Date(d);return isNaN(dt)?'':['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()]||'';}
 
 // ─── HELPERS ───
-function winRate(arr){ return arr.length ? +(arr.filter(t=>t.win).length/arr.length*100).toFixed(1) : 0; }
-function totalPnl(arr){ return arr.reduce((s,t)=>s+t.pnl,0); }
-function avgPnl(arr){ return arr.length ? +(arr.reduce((s,t)=>s+t.pnl,0)/arr.length).toFixed(2) : 0; }
-function groupBy(arr,fn){ const g={}; arr.forEach(t=>{ const k=fn(t)||'Unknown'; if(!g[k])g[k]=[]; g[k].push(t); }); return g; }
-function best(obj){ return Object.entries(obj).filter(([,a])=>a.length>=2).sort((a,b)=>winRate(b[1])-winRate(a[1]))[0]; }
-function worst(obj){ return Object.entries(obj).filter(([,a])=>a.length>=2).sort((a,b)=>winRate(a[1])-winRate(b[1]))[0]; }
-function pct(n,d){ return d?+(n/d*100).toFixed(1):0; }
+function wr(a){return a.length?+(a.filter(t=>t.win).length/a.length*100).toFixed(1):0;}
+function tp(a){return a.reduce((s,t)=>s+t.pnl,0);}
+function ap(a){return a.length?+(a.reduce((s,t)=>s+t.pnl,0)/a.length).toFixed(2):0;}
+function gb(a,fn){const g={};a.forEach(t=>{const k=fn(t)||'?';if(!g[k])g[k]=[];g[k].push(t);});return g;}
+function best(o){return Object.entries(o).filter(([,a])=>a.length>=2).sort((a,b)=>wr(b[1])-wr(a[1]))[0];}
+function worst(o){return Object.entries(o).filter(([,a])=>a.length>=2).sort((a,b)=>wr(a[1])-wr(b[1]))[0];}
+function pc(n,d){return d?+(n/d*100).toFixed(1):0;}
 
-// ─── ICT MODELS ───
+// ─── MODELS ───
 const MODELS = [
-  { id:'weekly-xamd', name:'Weekly XAMD', cat:'WEEKLY', color:'var(--sage)',
-    desc:'Trade the weekly candle using XAMD structure. Accumulate Mon/Tue, manipulation Wed, distribute Thu/Fri.',
-    checklist:['Identify previous week high, low, and CE of weekly range','Mark all weekly voids','Determine weekly bias from draw on liquidity','Mon/Tue: Mark accumulation range','Wednesday: Wait for manipulation at key level','Enter after 10 AM ET confirmation','Target: Opposing liquidity, void CE, or next void','Stop: Below/above the manipulation wick'],
+  {id:'weekly-xamd',name:'Weekly XAMD',cat:'WEEKLY',color:'#6d7e5e',desc:'Trade the weekly candle using XAMD structure. Accumulate Mon/Tue, manipulation Wed, distribute Thu/Fri.',
+    checklist:['ID previous week H/L and CE','Mark weekly voids','Determine weekly bias','Mon/Tue: Mark accumulation','Wed: Wait for manipulation','Enter after 10 AM ET','Target: Opposing liquidity or void CE','Stop: Below/above manipulation wick'],
     params:{Bias:'Weekly/Monthly',Entry:'Daily or 4H',Session:'NY AM (equities)',Day:'Wed entry',Hold:'1-5 days'},
-    profile:{ sessions:['NY AM'], days:['Wed','Thu'], holdMin:1, holdMax:5, dteMin:5, dteMax:30 }
-  },
-  { id:'daily-amd', name:'Daily AMD', cat:'DAILY', color:'var(--blue)',
-    desc:'Trade the daily candle. Accumulation in Asian/London, manipulation at open, distribution by close.',
-    checklist:['Mark prior day high, low, and CE','Identify daily voids','Asian session: Mark accumulation range','London: Identify manipulation direction','10 AM ET: Confirm bias from agreement/disagreement','Enter 10 AM - 12 PM','Target: Prior day high/low or daily void'],
+    profile:{sessions:['NY AM'],days:['Wed','Thu'],holdMin:1,holdMax:5,dteMin:5,dteMax:30}},
+  {id:'daily-amd',name:'Daily AMD',cat:'DAILY',color:'#6366f1',desc:'Trade the daily candle. Accumulation in Asian/London, manipulation at open, distribution by close.',
+    checklist:['Mark prior day H/L and CE','ID daily voids','Asian: Mark accumulation','London: ID manipulation direction','10 AM: Confirm bias','Enter 10 AM - 12 PM','Target: Prior day H/L or void'],
     params:{Bias:'Weekly',Entry:'1H or 15min',Session:'NY AM 10-12 (equities)',Day:'Any',Hold:'0-2 days'},
-    profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:2, dteMin:0, dteMax:14 }
-  },
-  { id:'void-to-void', name:'Void-to-Void', cat:'SWING', color:'var(--amber)',
-    desc:"Enter at one void's CE, target the next void. Matt's highest-conviction model.",
-    checklist:['Identify all voids on the higher timeframe','Determine bias from draw on liquidity','Wait for price to reach a void','Enter at or near the void CE (50% level)','First target: CE of the next void','Runner: Full closure of the next void'],
+    profile:{sessions:['NY AM'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:0,holdMax:2,dteMin:0,dteMax:14}},
+  {id:'void-to-void',name:'Void-to-Void',cat:'SWING',color:'#f59e0b',desc:"Enter at one void's CE, target the next void. Matt's highest-conviction model.",
+    checklist:['ID all voids on higher TF','Determine bias','Wait for price to reach a void','Enter at void CE','First TP: CE of next void','Runner: Full closure of next void'],
     params:{Bias:'Any',Entry:'At void CE',Session:'Any',Day:'Any',Hold:'2-10 days'},
-    profile:{ sessions:['NY AM','London','NY PM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:2, holdMax:10, dteMin:7, dteMax:45 }
-  },
-  { id:'bpr-entry', name:'BPR Entry', cat:'DAILY', color:'var(--blue)',
-    desc:'An FVG gets closed through, becoming a Balanced Price Range. Trade the retest of its CE.',
-    checklist:['Identify FVG on 4H/6H chart','Wait for price to close through the FVG (now a BPR)','Mark the CE of the BPR','Wait for retrace back to the CE','Enter on rejection candle at CE','Target: Opposing liquidity or next void'],
+    profile:{sessions:['NY AM','London','NY PM'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:2,holdMax:10,dteMin:7,dteMax:45}},
+  {id:'bpr-entry',name:'BPR Entry',cat:'DAILY',color:'#6366f1',desc:'FVG gets closed through → BPR. Trade the retest of its CE.',
+    checklist:['ID FVG on 4H/6H','Wait for close through (now BPR)','Mark CE of BPR','Wait for retrace to CE','Enter on rejection at CE','Target: Opposing liquidity'],
     params:{Bias:'Daily/Weekly',Entry:'1H',Session:'NY AM (equities)',Day:'Wed/Thu',Hold:'1-3 days'},
-    profile:{ sessions:['NY AM'], days:['Wed','Thu'], holdMin:1, holdMax:3, dteMin:3, dteMax:14 }
-  },
-  { id:'wednesday-manip', name:'Wednesday Manipulation', cat:'WEEKLY', color:'var(--sage)',
-    desc:'Target Wednesday as the manipulation day of the weekly XAMD candle. Wait for disagreement.',
-    checklist:['Sun/Mon: Determine weekly bias','Tue: Mark accumulation range boundaries','Wed: Wait for price to sweep accumulation','Observe disagreement at the swept level','Enter during Wednesday NY AM session','Target: Weekly void or opposing liquidity','Stop: Below the Wednesday manipulation wick'],
-    params:{Bias:'Weekly',Entry:'4H or 1H',Session:'NY AM (equities)',Day:'Wednesday only',Hold:'1-4 days'},
-    profile:{ sessions:['NY AM'], days:['Wed'], holdMin:1, holdMax:4, dteMin:5, dteMax:21 }
-  },
-  { id:'agree-liq', name:'Agreement at Liquidity', cat:'INTRADAY', color:'var(--green)',
-    desc:'Price reaches liquidity and agrees (continues). Trade the continuation after a retrace.',
-    checklist:['Identify the draw on liquidity target','Wait for price to reach that liquidity level','Observe agreement: price continues past the level','Enter on first retrace back toward the level','Target: Next liquidity level in same direction'],
+    profile:{sessions:['NY AM'],days:['Wed','Thu'],holdMin:1,holdMax:3,dteMin:3,dteMax:14}},
+  {id:'wednesday-manip',name:'Wed Manipulation',cat:'WEEKLY',color:'#6d7e5e',desc:'Wednesday is the manipulation day of the weekly XAMD candle.',
+    checklist:['Sun/Mon: Determine weekly bias','Tue: Mark accumulation boundaries','Wed: Wait for sweep','Observe disagreement','Enter Wed NY AM','Target: Weekly void','Stop: Below Wed wick'],
+    params:{Bias:'Weekly',Entry:'4H or 1H',Session:'NY AM (equities)',Day:'Wednesday',Hold:'1-4 days'},
+    profile:{sessions:['NY AM'],days:['Wed'],holdMin:1,holdMax:4,dteMin:5,dteMax:21}},
+  {id:'agree-liq',name:'Agreement at Liq',cat:'INTRADAY',color:'#22c55e',desc:'Price reaches liquidity and continues. Trade the continuation after retrace.',
+    checklist:['ID draw on liquidity target','Wait for price to reach it','Observe agreement (continuation)','Enter on retrace','Target: Next liquidity in same direction'],
     params:{Bias:'Any',Entry:'15min-1H',Session:'Any',Day:'Any',Hold:'0-2 days'},
-    profile:{ sessions:['NY AM','NY PM','London'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:2, dteMin:0, dteMax:14 }
-  },
-  { id:'disagree-liq', name:'Disagreement at Liquidity', cat:'INTRADAY', color:'var(--green)',
-    desc:"Price reaches liquidity and disagrees (reverses). Matt's preferred reversal setup.",
-    checklist:['Identify the draw on liquidity target','Wait for price to reach that liquidity','Observe disagreement: wick through then close back inside','Enter immediately on reversal confirmation','Target: Opposing side liquidity'],
+    profile:{sessions:['NY AM','NY PM','London'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:0,holdMax:2,dteMin:0,dteMax:14}},
+  {id:'disagree-liq',name:'Disagreement at Liq',cat:'INTRADAY',color:'#22c55e',desc:"Price reaches liquidity and reverses. Matt's preferred reversal setup.",
+    checklist:['ID draw on liquidity','Wait for price to reach it','Observe disagreement (reversal)','Enter on reversal confirmation','Target: Opposing liquidity'],
     params:{Bias:'Any',Entry:'15min-1H',Session:'Any',Day:'Any',Hold:'0-2 days'},
-    profile:{ sessions:['NY AM','NY PM','London'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:2, dteMin:0, dteMax:14 }
-  },
-  { id:'rejection-void', name:'Rejection Block + Void', cat:'SWING', color:'var(--amber)',
-    desc:'Rejection block CE at the same price as a void — the strongest confluence entry.',
-    checklist:['Identify rejection block on higher TF','Confirm a void exists at the same level','CE of rejection block is inside the void = max confluence','Wait for price to reach this level','Enter on rejection'],
+    profile:{sessions:['NY AM','NY PM','London'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:0,holdMax:2,dteMin:0,dteMax:14}},
+  {id:'rejection-void',name:'Rejection Block + Void',cat:'SWING',color:'#f59e0b',desc:'Rejection block CE at same price as void — strongest confluence.',
+    checklist:['ID rejection block on higher TF','Confirm void at same level','CE inside void = confluence','Wait for price to reach','Enter on rejection'],
     params:{Bias:'Higher TF',Entry:'Lower TF',Session:'NY AM (equities)',Day:'Any',Hold:'2-7 days'},
-    profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:2, holdMax:7, dteMin:14, dteMax:45 }
-  },
-  { id:'tf-alignment', name:'Timeframe Alignment', cat:'SWING', color:'var(--amber)',
-    desc:'Align bias across weekly, daily, 4H, and 1H. Enter on the lowest timeframe when all agree.',
-    checklist:['Weekly bias: determine bullish or bearish','Daily bias: must confirm weekly','4H bias: must confirm daily','1H: find entry when aligned with all above','Enter only when all timeframes agree'],
-    params:{Bias:'3+ TFs aligned',Entry:'Lowest aligned TF',Session:'NY AM (equities)',Day:'Any',Hold:'2-10 days'},
-    profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:2, holdMax:10, dteMin:7, dteMax:30 }
-  },
-  { id:'monthly-amdx', name:'Monthly AMDX Swing', cat:'SWING', color:'var(--amber)',
-    desc:'Trade the monthly candle structure for swing or LEAPS positions.',
-    checklist:['Mark monthly opening range','Week 1: Accumulation — mark the range','Week 2-3: Manipulation — your entry window','Enter during the monthly manipulation week','Target: Monthly void or opposing liquidity'],
+    profile:{sessions:['NY AM'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:2,holdMax:7,dteMin:14,dteMax:45}},
+  {id:'tf-alignment',name:'TF Alignment',cat:'SWING',color:'#f59e0b',desc:'Align bias across weekly, daily, 4H, 1H. Enter on lowest when all agree.',
+    checklist:['Weekly bias','Daily confirms weekly','4H confirms daily','1H entry when all aligned','Enter only on full agreement'],
+    params:{Bias:'3+ TFs aligned',Entry:'Lowest TF',Session:'NY AM (equities)',Day:'Any',Hold:'2-10 days'},
+    profile:{sessions:['NY AM'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:2,holdMax:10,dteMin:7,dteMax:30}},
+  {id:'monthly-amdx',name:'Monthly AMDX',cat:'SWING',color:'#f59e0b',desc:'Monthly candle structure for swing/LEAPS positions.',
+    checklist:['Mark monthly opening range','Week 1: Accumulation','Week 2-3: Manipulation entry','Enter during manip week','Target: Monthly void'],
     params:{Bias:'Monthly/Quarterly',Entry:'Weekly/Daily',Session:'Any',Day:'Week 2-3',Hold:'5-30 days'},
-    profile:{ sessions:['NY AM','London','NY PM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:5, holdMax:45, dteMin:30, dteMax:90 }
-  },
-  { id:'intraday-scalp', name:'Intraday Scalp', cat:'INTRADAY', color:'var(--green)',
-    desc:'Scalp intraday moves on the 15min/5min chart, aligned with higher TF bias.',
-    checklist:['Confirm daily and weekly bias direction','Drop to 15min or 5min chart','Identify intraday voids, FVGs, or BPRs','Find the XAMD pattern on intraday candle','Enter during the manipulation phase','Target: Prior day high/low or intraday void'],
+    profile:{sessions:['NY AM','London','NY PM'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:5,holdMax:45,dteMin:30,dteMax:90}},
+  {id:'intraday-scalp',name:'Intraday Scalp',cat:'INTRADAY',color:'#22c55e',desc:'Scalp intraday on 15min/5min aligned with higher TF bias.',
+    checklist:['Confirm daily/weekly bias','Drop to 15min or 5min','ID intraday voids/FVGs/BPRs','Find XAMD pattern','Enter during manipulation','Target: Prior day H/L'],
     params:{Bias:'Daily/Weekly',Entry:'15min or 5min',Session:'NY AM (equities)',Day:'Any',Hold:'Same day'},
-    profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:1, dteMin:0, dteMax:7 }
-  },
-  { id:'wheel-strategy', name:'Wheel Strategy', cat:'OPTIONS', color:'var(--purple)',
-    desc:'Combine ICT swing low/high levels with options wheel: sell CSP at SSL, sell CC at BSL.',
-    checklist:['Identify ticker at swing low (SSL)','Sell cash-secured put at or near SSL','If assigned: own shares at discount','Sell covered call at swing high (BSL)','Repeat the cycle: Cash → Shares → Cash'],
+    profile:{sessions:['NY AM'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:0,holdMax:1,dteMin:0,dteMax:7}},
+  {id:'wheel-strategy',name:'Wheel Strategy',cat:'OPTIONS',color:'#8b5cf6',desc:'ICT levels + options wheel: sell CSP at SSL, sell CC at BSL.',
+    checklist:['ID ticker at swing low (SSL)','Sell CSP at/near SSL','If assigned: own shares','Sell CC at swing high (BSL)','Repeat cycle'],
     params:{Bias:'Weekly/Monthly',Entry:'At liquidity',Session:'Any',Day:'Any',Hold:'7-45 days'},
-    profile:{ sessions:['NY AM','NY PM','London'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:7, holdMax:45, dteMin:14, dteMax:45 }
-  },
-  { id:'vix-spike', name:'VIX Spike Mean Reversion', cat:'OPTIONS', color:'var(--purple)',
-    desc:'Buy UVXY puts on major VIX spikes — 80-90% probability trade.',
-    checklist:['Wait for VIX to spike above 30-40','Buy UVXY puts (30-60 DTE)','Target: VIX returning to equilibrium under 24','Exit as VIX returns to discount zone'],
-    params:{Bias:'Mean reversion',Entry:'On VIX spike',Session:'Any',Day:'Any',Hold:'5-30 days'},
-    profile:{ sessions:['NY AM','NY PM','London'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:5, holdMax:30, dteMin:14, dteMax:60 }
-  }
+    profile:{sessions:['NY AM','NY PM','London'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:7,holdMax:45,dteMin:14,dteMax:45}},
+  {id:'vix-spike',name:'VIX Spike Reversion',cat:'OPTIONS',color:'#8b5cf6',desc:'Buy UVXY puts on major VIX spikes — 80-90% probability trade.',
+    checklist:['Wait for VIX spike above 30-40','Buy UVXY puts (30-60 DTE)','Target: VIX back under 24','Exit as VIX returns to discount'],
+    params:{Bias:'Mean reversion',Entry:'On spike',Session:'Any',Day:'Any',Hold:'5-30 days'},
+    profile:{sessions:['NY AM','NY PM','London'],days:['Mon','Tue','Wed','Thu','Fri'],holdMin:5,holdMax:30,dteMin:14,dteMax:60}}
 ];
 
-// ─── MODEL SCORING (from winning trade characteristics) ───
+const PILL_ICONS = {
+  WEEKLY:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>',
+  DAILY:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  SWING:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  INTRADAY:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+  OPTIONS:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/></svg>'
+};
+
+// ─── MODEL SCORING ───
 function scoreModels(trips){
-  const wins = trips.filter(t=>t.win);
-  if(wins.length < 2) return MODELS.map(m=>({ model:m, score:0, matchingWins:[], reasons:[] }));
-
+  const wins=trips.filter(t=>t.win);
+  if(wins.length<2) return MODELS.map(m=>({model:m,score:0,matchingWins:[],reasons:[]}));
   return MODELS.map(model=>{
-    const p = model.profile;
-    let score = 0;
-    const reasons = [];
-    const matchingWins = [];
-
+    const p=model.profile;let score=0;const reasons=[],mw=[];
     wins.forEach(w=>{
-      let tradeScore = 0;
-
-      // Session fit — NY AM only counts for equities
-      const sessMatch = p.sessions.includes(w.session);
-      const nyAMModel = p.sessions.includes('NY AM') && p.sessions.length<=2;
-      if(sessMatch && (!nyAMModel || isEquity(w.ticker))) tradeScore += 3;
-      else if(nyAMModel && !isEquity(w.ticker)) tradeScore += 0;
-      else if(w.session) tradeScore -= 1;
-
-      // Day fit
-      if(p.days.includes(w.dayOfWeek)) tradeScore += 2;
-
-      // Hold duration fit
-      if(w.holdDays >= p.holdMin && w.holdDays <= p.holdMax) tradeScore += 3;
-      else if(Math.abs(w.holdDays - (p.holdMin+p.holdMax)/2) <= 2) tradeScore += 1;
-
-      // DTE fit
-      if(w.daysToExpiry >= p.dteMin && w.daysToExpiry <= p.dteMax) tradeScore += 2;
-
-      if(tradeScore >= 6) matchingWins.push(w);
-      score += tradeScore;
+      let ts=0;
+      const sm=p.sessions.includes(w.session),ny=p.sessions.includes('NY AM')&&p.sessions.length<=2;
+      if(sm&&(!ny||isEq(w.ticker)))ts+=3;else if(ny&&!isEq(w.ticker))ts+=0;else if(w.session)ts-=1;
+      if(p.days.includes(w.dayOfWeek))ts+=2;
+      if(w.holdDays>=p.holdMin&&w.holdDays<=p.holdMax)ts+=3;else if(Math.abs(w.holdDays-(p.holdMin+p.holdMax)/2)<=2)ts+=1;
+      if(w.daysToExpiry>=p.dteMin&&w.daysToExpiry<=p.dteMax)ts+=2;
+      if(ts>=6)mw.push(w);score+=ts;
     });
-
-    score = score / wins.length;
-
-    const matchRate = matchingWins.length / wins.length;
-    if(matchRate >= 0.5) score += 5;
-    else if(matchRate >= 0.3) score += 3;
-
-    if(matchingWins.length >= 2){
-      const matchPnl = totalPnl(matchingWins);
-      if(matchPnl > 0) score += 2;
-    }
-
-    // Build reasons
-    const sessGroups = groupBy(wins.filter(w=>w.session), w=>w.session);
-    const topSess = Object.entries(sessGroups).sort((a,b)=>b[1].length-a[1].length)[0];
-    if(topSess && p.sessions.includes(topSess[0])){
-      reasons.push(`${pct(topSess[1].length, wins.length)}% of your wins come in <strong>${topSess[0]}</strong>, this model's ideal session.`);
-    }
-
-    const dayGroups = groupBy(wins, w=>w.dayOfWeek);
-    if(model.id === 'wednesday-manip'){
-      const wedWins = dayGroups['Wed']||[];
-      if(wedWins.length >= 2) reasons.push(`You have <strong>${wedWins.length} wins on Wednesday</strong> (${pct(wedWins.length, wins.length)}% of wins).`);
-    }
-    const topDay = Object.entries(dayGroups).sort((a,b)=>b[1].length-a[1].length)[0];
-    if(topDay && p.days.includes(topDay[0]) && model.id !== 'wednesday-manip'){
-      reasons.push(`Your best winning day is <strong>${topDay[0]}</strong>, which aligns with this model.`);
-    }
-
-    const avgHold = wins.reduce((s,w)=>s+w.holdDays,0)/wins.length;
-    if(avgHold >= p.holdMin && avgHold <= p.holdMax){
-      reasons.push(`Your avg winning hold of <strong>${avgHold.toFixed(1)} days</strong> fits this model's ${p.holdMin}-${p.holdMax} day range.`);
-    }
-
-    if(matchingWins.length >= 2){
-      reasons.push(`<strong>${matchingWins.length} of your ${wins.length} wins</strong> (${pct(matchingWins.length, wins.length)}%) match this model's profile.`);
-    }
-
-    return { model, score, matchingWins, reasons };
+    score/=wins.length;
+    const mr=mw.length/wins.length;if(mr>=.5)score+=5;else if(mr>=.3)score+=3;
+    if(mw.length>=2&&tp(mw)>0)score+=2;
+    const sg=gb(wins.filter(w=>w.session),w=>w.session),ts2=Object.entries(sg).sort((a,b)=>b[1].length-a[1].length)[0];
+    if(ts2&&p.sessions.includes(ts2[0]))reasons.push(`${pc(ts2[1].length,wins.length)}% of your wins come in <strong>${ts2[0]}</strong>, this model's ideal session.`);
+    const dg=gb(wins,w=>w.dayOfWeek);
+    if(model.id==='wednesday-manip'){const ww=dg['Wed']||[];if(ww.length>=2)reasons.push(`<strong>${ww.length} wins on Wednesday</strong> (${pc(ww.length,wins.length)}% of wins).`);}
+    const td=Object.entries(dg).sort((a,b)=>b[1].length-a[1].length)[0];
+    if(td&&p.days.includes(td[0])&&model.id!=='wednesday-manip')reasons.push(`Best day <strong>${td[0]}</strong> aligns with this model.`);
+    const ah=wins.reduce((s,w)=>s+w.holdDays,0)/wins.length;
+    if(ah>=p.holdMin&&ah<=p.holdMax)reasons.push(`Avg winning hold <strong>${ah.toFixed(1)}d</strong> fits ${p.holdMin}-${p.holdMax}d range.`);
+    if(mw.length>=2)reasons.push(`<strong>${mw.length}/${wins.length} wins</strong> (${pc(mw.length,wins.length)}%) match this profile.`);
+    return {model,score,matchingWins:mw,reasons};
   }).sort((a,b)=>b.score-a.score);
 }
 
-// ─── GENERATE STORY ───
-function generateStory(trips){
+// ─── BUILD DASHBOARD ───
+function buildDash(trips){
   if(!trips.length) return '';
+  const wins=trips.filter(t=>t.win),losses=trips.filter(t=>!t.win);
+  const wrV=wr(trips),tpV=tp(trips),tickers=[...new Set(trips.map(t=>t.ticker))];
+  const wSess=gb(wins.filter(w=>w.session),w=>w.session),wDays=gb(wins,w=>w.dayOfWeek),wTick=gb(wins,w=>w.ticker);
+  const bSess=best(wSess),wrstSess=worst(gb(trips.filter(t=>t.session),t=>t.session));
+  const bDay=best(wDays),wrstDay=worst(gb(trips,t=>t.dayOfWeek));
+  const bTick=Object.entries(wTick).sort((a,b)=>b[1].length-a[1].length)[0];
+  const avgWH=wins.length?wins.reduce((s,w)=>s+w.holdDays,0)/wins.length:0;
+  const avgLH=losses.length?losses.reduce((s,w)=>s+w.holdDays,0)/losses.length:0;
+  const avgWP=wins.length?ap(wins):0,avgLP=losses.length?ap(losses):0;
+  const avgDTE=wins.length?wins.reduce((s,w)=>s+w.daysToExpiry,0)/wins.length:0;
+  const calls=trips.filter(t=>t.optionType==='CALL'),puts=trips.filter(t=>t.optionType==='PUT');
+  const cWR=wr(calls),pWR=wr(puts);
+  const qW=wins.filter(w=>w.holdDays<=1),sW=wins.filter(w=>w.holdDays>=2&&w.holdDays<=7),lW=wins.filter(w=>w.holdDays>7);
+  const scored=scoreModels(trips),top3=scored.slice(0,3);
+  let h='';
 
-  const wins = trips.filter(t=>t.win);
-  const losses = trips.filter(t=>!t.win);
-  const wr = winRate(trips);
-  const tp = totalPnl(trips);
-  const tickers = [...new Set(trips.map(t=>t.ticker))];
-
-  const winSessions = groupBy(wins.filter(w=>w.session), w=>w.session);
-  const winDays = groupBy(wins, w=>w.dayOfWeek);
-  const winTickers = groupBy(wins, w=>w.ticker);
-
-  const bestSess = best(winSessions);
-  const worstSess = worst(groupBy(trips.filter(t=>t.session), t=>t.session));
-  const bestDay = best(winDays);
-  const worstDay = worst(groupBy(trips, t=>t.dayOfWeek));
-  const bestTicker = Object.entries(winTickers).sort((a,b)=>b[1].length-a[1].length)[0];
-
-  const avgWinHold = wins.length ? (wins.reduce((s,w)=>s+w.holdDays,0)/wins.length) : 0;
-  const avgLossHold = losses.length ? (losses.reduce((s,w)=>s+w.holdDays,0)/losses.length) : 0;
-  const avgWinPnl = wins.length ? avgPnl(wins) : 0;
-  const avgLossPnl = losses.length ? avgPnl(losses) : 0;
-  const avgWinDTE = wins.length ? (wins.reduce((s,w)=>s+w.daysToExpiry,0)/wins.length) : 0;
-
-  const calls = trips.filter(t=>t.optionType==='CALL');
-  const puts = trips.filter(t=>t.optionType==='PUT');
-  const callWR = winRate(calls), putWR = winRate(puts);
-
-  const quickWins = wins.filter(w=>w.holdDays<=1);
-  const swingWins = wins.filter(w=>w.holdDays>=2 && w.holdDays<=7);
-  const longWins = wins.filter(w=>w.holdDays>7);
-
-  const scored = scoreModels(trips);
-  const top3 = scored.slice(0,3);
-
-  let html = '';
-
-  // HERO
-  html += `<div class="story-hero">
-    <h1>${tp>=0 ? 'Your winning edge,<br>decoded.' : 'Finding your edge.'}</h1>
-    <div class="hero-sub">We analyzed <strong>${trips.length} round-trip trades</strong> across <strong>${tickers.length} tickers</strong> to find the patterns hiding in your winners.</div>
-  </div>`;
-
-  // 1. THE OVERVIEW
-  html += `<div class="story-section">
-    <h2>The Overview</h2>
-    <div class="story-stat-row">
-      <div class="story-stat"><div class="ss-val">${trips.length}</div><div class="ss-label">Round Trips</div></div>
-      <div class="story-stat"><div class="ss-val" style="color:${wr>=50?'var(--green)':'var(--red)'}">${wr}%</div><div class="ss-label">Win Rate</div></div>
-      <div class="story-stat"><div class="ss-val" style="color:${tp>=0?'var(--green)':'var(--red)'}">${tp>=0?'+':''}$${tp.toFixed(0)}</div><div class="ss-label">Total P&L</div></div>
-      <div class="story-stat"><div class="ss-val">${wins.length}</div><div class="ss-label">Winners</div></div>
+  // ─ HERO ─
+  h+=`<div class="hero">
+    <div class="hero-left">
+      <div class="hero-greeting">ICT Model Builder</div>
+      <h1>${tpV>=0?'Your winning edge,<br>decoded.':'Finding your edge.'}</h1>
+      <div class="hero-sub">${trips.length} round trips across ${tickers.length} tickers. ${wins.length} winners at ${wrV}% win rate.</div>
+      <button class="hero-btn" onclick="document.getElementById('fileInput2').click()">Upload New CSV &nearr;</button>
     </div>
-    <p class="story-p">You took ${trips.length} completed round trips, winning <span class="hl">${wins.length} of them (${wr}%)</span>. Your average win is <span class="hl-green">+$${avgWinPnl.toFixed(0)}</span> and your average loss is <span class="hl-red">$${avgLossPnl.toFixed(0)}</span>${Math.abs(avgLossPnl) > avgWinPnl*1.3 && wins.length>=3 ? '. Your losses are bigger than your wins — this is the first thing to address.' : '.'}</p>
-  </div>`;
-
-  // 2. WHEN YOU WIN
-  html += `<div class="story-section">
-    <h2>When You Win</h2>`;
-
-  if(bestSess){
-    const bsArr = bestSess[1], bsName = bestSess[0];
-    const bsPct = pct(bsArr.length, wins.length);
-    html += `<p class="story-p">Your wins cluster in the <span class="hl">${bsName}</span> session — <strong>${bsArr.length} of your ${wins.length} wins (${bsPct}%)</strong> happen there. `;
-    if(bsName==='NY AM') html += `This is the session Matt Reese trades almost exclusively — and it only applies to equities. The daily manipulation is complete by 10 AM, and the distribution move runs until noon. Your timing already aligns with the strongest ICT window.</p>`;
-    else if(bsName==='London') html += `London is when the daily manipulation often begins. You're catching the early move before NY confirms the direction.</p>`;
-    else if(bsName==='NY PM') html += `The afternoon session is typically distribution. You're catching the continuation after the morning setup.</p>`;
-    else html += `</p>`;
-  }
-
-  if(bestDay){
-    const bdArr = bestDay[1], bdName = bestDay[0];
-    html += `<p class="story-p">Your strongest winning day is <span class="hl">${bdName}</span> — you win <strong>${winRate(bdArr)}%</strong> of ${bdArr.length} trades taken that day. `;
-    if(bdName==='Wed') html += `Wednesday is the manipulation day in the weekly XAMD cycle. This isn't coincidence — you're naturally trading the weekly manipulation.</p>`;
-    else if(bdName==='Mon'||bdName==='Tue') html += `Early-week entries mean you're catching the accumulation-to-manipulation phase of the weekly candle.</p>`;
-    else if(bdName==='Thu'||bdName==='Fri') html += `Late-week entries mean you're riding the distribution leg of the weekly candle.</p>`;
-    else html += `</p>`;
-  }
-
-  if(worstSess && worstSess[1].length>=3 && winRate(worstSess[1])<35){
-    html += `<div class="story-warning"><strong>Blind spot:</strong> Your ${worstSess[0]} session win rate is just <strong>${winRate(worstSess[1])}%</strong> across ${worstSess[1].length} trades. Consider sitting this session out entirely — it's dragging down your overall edge.</div>`;
-  }
-  if(worstDay && worstDay[1].length>=3 && winRate(worstDay[1])<35 && worstDay[0]!==bestDay?.[0]){
-    html += `<div class="story-warning"><strong>Weak day:</strong> ${worstDay[0]} is your worst day at <strong>${winRate(worstDay[1])}%</strong> win rate. Your winners don't come on ${worstDay[0]}s — your model shouldn't either.</div>`;
-  }
-
-  html += `</div>`;
-
-  // 3. HOW YOU WIN
-  html += `<div class="story-section">
-    <h2>How You Win</h2>`;
-
-  let holdStory = '';
-  if(quickWins.length >= swingWins.length && quickWins.length >= longWins.length){
-    holdStory = `You're a <span class="hl">quick-flip trader</span> — ${quickWins.length} of your ${wins.length} wins are held 0-1 days. Your winning edge is in fast execution, not patience.`;
-  } else if(swingWins.length >= quickWins.length && swingWins.length >= longWins.length){
-    holdStory = `You're a <span class="hl">swing trader</span> — ${swingWins.length} of your ${wins.length} wins are held 2-7 days. You give trades time to work without overstaying.`;
-  } else {
-    holdStory = `You're a <span class="hl">position trader</span> — ${longWins.length} of your ${wins.length} wins are held 7+ days. You have patience and conviction.`;
-  }
-  html += `<p class="story-p">${holdStory} Your average winning hold is <strong>${avgWinHold.toFixed(1)} days</strong>${avgLossHold>avgWinHold*1.5&&losses.length>=3 ? `, but your average losing hold is <strong>${avgLossHold.toFixed(1)} days</strong> — you hold losers too long` : ''}.</p>`;
-
-  if(calls.length >= 2 && puts.length >= 2){
-    const bias = callWR > putWR + 10 ? 'bullish' : putWR > callWR + 10 ? 'bearish' : 'balanced';
-    html += `<p class="story-p">`;
-    if(bias==='bullish') html += `You have a clear <span class="hl-green">bullish edge</span> — calls win at <strong>${callWR}%</strong> vs puts at <strong>${putWR}%</strong>. ${calls.length >= puts.length*2 ? "And you clearly prefer calls, which is smart — trade what works." : "Even though you trade both directions, your winners skew bullish."}`;
-    else if(bias==='bearish') html += `You have a clear <span class="hl-red">bearish edge</span> — puts win at <strong>${putWR}%</strong> vs calls at <strong>${callWR}%</strong>. You read the downside better.`;
-    else html += `Your directional edge is <span class="hl">balanced</span> — calls at ${callWR}% and puts at ${putWR}%. You read both sides of the market.`;
-    html += `</p>`;
-  } else if(calls.length >= 2){
-    html += `<p class="story-p">You trade almost exclusively <span class="hl-green">calls</span> (${calls.length} of ${trips.length} trades) with a <strong>${callWR}%</strong> win rate.</p>`;
-  } else if(puts.length >= 2){
-    html += `<p class="story-p">You trade almost exclusively <span class="hl-red">puts</span> (${puts.length} of ${trips.length} trades) with a <strong>${putWR}%</strong> win rate.</p>`;
-  }
-
-  html += `<p class="story-p">Your winning trades average <strong>${avgWinDTE.toFixed(0)} DTE</strong> at entry. ${avgWinDTE<=7 ? 'Short-dated options — you need precision timing.' : avgWinDTE<=21 ? 'Medium-dated — enough theta runway without overpaying for time.' : 'Longer-dated — you buy time, which forgives entry imprecision.'}</p>`;
-
-  if(bestTicker && bestTicker[1].length >= 2){
-    html += `<p class="story-p">Your most consistent winner is <span class="hl">${bestTicker[0]}</span> with <strong>${bestTicker[1].length} wins</strong> and <strong>+$${totalPnl(bestTicker[1]).toFixed(0)}</strong> P&L. You know this name — keep trading it.</p>`;
-  }
-
-  html += `</div>`;
-
-  // 4. YOUR MODEL
-  html += `<div class="story-section">
-    <h2>Your Model</h2>`;
-
-  const topModel = top3[0];
-  if(topModel && topModel.matchingWins.length >= 1){
-    const tm = topModel.model;
-    const mw = topModel.matchingWins;
-
-    html += `<div class="story-callout">
-      <div class="sc-label">Your #1 Model Match</div>
-      <div class="sc-text">Based on your winning patterns — ${bestSess?bestSess[0]+' session, ':''}${bestDay?bestDay[0]+'s, ':''}${avgWinHold.toFixed(0)}-day holds — you should study and focus on the <strong>${tm.name}</strong> model.</div>
-    </div>`;
-
-    html += `<div class="story-model">
-      <div class="sm-rank">#1 Recommended Model</div>
-      <div class="sm-name">${tm.name}</div>
-      <span class="sm-cat" style="background:${tm.color}18;color:${tm.color}">${tm.cat}</span>
-      <div class="sm-desc">${tm.desc}</div>
-      <div class="sm-why">
-        ${topModel.reasons.map(r=>`<p class="story-p">${r}</p>`).join('')}
-      </div>
-      <div style="font-weight:700;font-size:13px;margin-bottom:10px">Setup Checklist</div>
-      <ul class="sm-checklist">${tm.checklist.map(c=>`<li>${c}</li>`).join('')}</ul>
-      <div class="sm-params">${Object.entries(tm.params).map(([k,v])=>`<div class="sm-param"><div class="sm-param-label">${k}</div><div class="sm-param-val">${v}</div></div>`).join('')}</div>
-      <div class="story-trades">
-        <details><summary>Show ${mw.length} matching winning trades</summary>
-        ${mw.map(t=>`<div class="st-row">
-          <span class="st-date">${t.entryDate}</span>
-          <span class="st-ticker">${t.ticker}</span>
-          <span class="st-type"><span class="tag ${t.optionType==='CALL'?'tag-sage':'tag-blue'}">${t.optionType==='CALL'?'C':'P'}</span></span>
-          <span class="st-detail">$${t.strike} · $${t.entryPremium.toFixed(2)}→$${t.exitPremium.toFixed(2)} · ${t.holdDays}d · ${t.session}</span>
-          <span class="st-pnl" style="color:var(--green)">+$${t.pnl.toFixed(0)}</span>
-        </div>`).join('')}
-        </details>
-      </div>
-    </div>`;
-  }
-
-  top3.slice(1).forEach((s,i)=>{
-    if(s.matchingWins.length < 1) return;
-    const m = s.model;
-    html += `<div class="story-model secondary">
-      <div class="sm-rank">#${i+2} Also Consider</div>
-      <div class="sm-name">${m.name}</div>
-      <span class="sm-cat" style="background:${m.color}18;color:${m.color}">${m.cat}</span>
-      <div class="sm-desc">${m.desc}</div>
-      <div class="sm-why">${s.reasons.slice(0,2).map(r=>`<p class="story-p">${r}</p>`).join('')}</div>
-      <div class="story-trades">
-        <details><summary>Show ${s.matchingWins.length} matching winning trades</summary>
-        ${s.matchingWins.map(t=>`<div class="st-row">
-          <span class="st-date">${t.entryDate}</span>
-          <span class="st-ticker">${t.ticker}</span>
-          <span class="st-type"><span class="tag ${t.optionType==='CALL'?'tag-sage':'tag-blue'}">${t.optionType==='CALL'?'C':'P'}</span></span>
-          <span class="st-detail">$${t.strike} · $${t.entryPremium.toFixed(2)}→$${t.exitPremium.toFixed(2)} · ${t.holdDays}d · ${t.session}</span>
-          <span class="st-pnl" style="color:var(--green)">+$${t.pnl.toFixed(0)}</span>
-        </div>`).join('')}
-        </details>
-      </div>
+    <div class="model-row">`;
+  top3.forEach((s,i)=>{
+    const m=s.model, cls=i===2?'pill-lime':'pill-dark';
+    h+=`<div class="model-pill ${cls}">
+      <div class="pill-num">0${i+1}</div>
+      <div class="pill-icon">${PILL_ICONS[m.cat]||''}</div>
+      <div class="pill-name">${m.name}</div>
+      <div class="pill-meta">${s.matchingWins.length} wins | ${s.matchingWins.length>=2?wr(s.matchingWins)+'%':'—'}</div>
     </div>`;
   });
+  h+=`</div></div>`;
 
-  html += `</div>`;
+  // ─ STATS ─
+  h+=`<div class="stats-row">
+    <div class="stat-card"><div class="sc-val">${trips.length}</div><div class="sc-label">Round Trips</div></div>
+    <div class="stat-card"><div class="sc-val" style="color:${wrV>=50?'var(--green)':'var(--red)'}">${wrV}%</div><div class="sc-label">Win Rate</div></div>
+    <div class="stat-card"><div class="sc-val" style="color:${tpV>=0?'var(--green)':'var(--red)'}">${tpV>=0?'+':''}$${tpV.toFixed(0)}</div><div class="sc-label">Total P&L</div></div>
+    <div class="stat-card"><div class="sc-val">${avgWH.toFixed(1)}</div><div class="sc-label">Avg Win Hold (days)</div></div>
+    <div class="stat-card"><div class="sc-val">${avgDTE.toFixed(0)}</div><div class="sc-label">Avg Win DTE</div></div>
+  </div>`;
 
-  // 5. WHAT TO FOCUS ON
-  html += `<div class="story-section">
-    <h2>What to Focus On</h2>`;
+  // ─ EDGE + BLINDSPOTS ─
+  h+=`<div class="grid-2">`;
 
-  const actions = [];
+  // Your Edge
+  h+=`<div class="card"><div class="card-title">Your Edge</div>`;
+  if(bSess){
+    const n=bSess[0],a=bSess[1];
+    h+=`<div class="insight-row">Wins cluster in <span class="ir-hl">${n}</span> — <strong>${a.length}/${wins.length} wins (${pc(a.length,wins.length)}%)</strong>${n==='NY AM'?' happen there. This is Matt\'s primary session — equities only.':'.'}</div>`;
+  }
+  if(bDay){
+    const n=bDay[0],a=bDay[1];
+    h+=`<div class="insight-row">Strongest day: <span class="ir-hl">${n}</span> at <strong>${wr(a)}% WR</strong> across ${a.length} trades.${n==='Wed'?' Wednesday = weekly manipulation day in XAMD.':''}</div>`;
+  }
+  // Hold
+  let ht='';
+  if(qW.length>=sW.length&&qW.length>=lW.length) ht=`Quick-flip trader — ${qW.length}/${wins.length} wins held 0-1 days.`;
+  else if(sW.length>=qW.length&&sW.length>=lW.length) ht=`Swing trader — ${sW.length}/${wins.length} wins held 2-7 days.`;
+  else ht=`Position trader — ${lW.length}/${wins.length} wins held 7+ days.`;
+  h+=`<div class="insight-row">${ht}</div>`;
+  // Direction
+  if(calls.length>=2&&puts.length>=2){
+    const bias=cWR>pWR+10?'bullish':pWR>cWR+10?'bearish':'balanced';
+    if(bias==='bullish') h+=`<div class="insight-row"><span class="ir-green">Bullish edge</span> — calls ${cWR}% vs puts ${pWR}%.</div>`;
+    else if(bias==='bearish') h+=`<div class="insight-row"><span class="ir-red">Bearish edge</span> — puts ${pWR}% vs calls ${cWR}%.</div>`;
+    else h+=`<div class="insight-row">Balanced direction — calls ${cWR}% / puts ${pWR}%.</div>`;
+  }
+  if(bTick&&bTick[1].length>=2) h+=`<div class="insight-row">Best ticker: <strong>${bTick[0]}</strong> with ${bTick[1].length} wins (+$${tp(bTick[1]).toFixed(0)}).</div>`;
+  h+=`</div>`;
 
-  if(bestSess){
-    const otherSess = Object.entries(winSessions).filter(([k])=>k!==bestSess[0]);
-    if(otherSess.length && bestSess[1].length >= wins.length*0.4){
-      actions.push(`<strong>Session discipline:</strong> ${pct(bestSess[1].length, wins.length)}% of your wins come in ${bestSess[0]}. Trade only in this session for the next 20 trades and see if your win rate improves.`);
-    }
+  // Blind Spots
+  h+=`<div class="card"><div class="card-title">Blind Spots</div>`;
+  let blinds=0;
+  if(wrstSess&&wrstSess[1].length>=3&&wr(wrstSess[1])<35){
+    h+=`<div class="insight-row"><span class="ir-red">${wrstSess[0]}</span> session: <strong>${wr(wrstSess[1])}% WR</strong> across ${wrstSess[1].length} trades. Consider sitting it out.</div>`;blinds++;
+  }
+  if(wrstDay&&wrstDay[1].length>=3&&wr(wrstDay[1])<35&&wrstDay[0]!==bDay?.[0]){
+    h+=`<div class="insight-row"><span class="ir-red">${wrstDay[0]}</span> is your worst day at <strong>${wr(wrstDay[1])}%</strong>. Your winners don't come here.</div>`;blinds++;
+  }
+  if(losses.length>=3&&Math.abs(avgLP)>avgWP*1.3){
+    h+=`<div class="insight-row">Avg loss <span class="ir-red">$${Math.abs(avgLP).toFixed(0)}</span> is ${(Math.abs(avgLP)/avgWP).toFixed(1)}x avg win <span class="ir-green">$${avgWP.toFixed(0)}</span>. Cut losers faster.</div>`;blinds++;
+  }
+  if(avgLH>avgWH*1.5&&losses.length>=3){
+    h+=`<div class="insight-row">Hold losers <strong>${avgLH.toFixed(1)}d</strong> vs winners <strong>${avgWH.toFixed(1)}d</strong>. Use time stops.</div>`;blinds++;
+  }
+  if(!blinds) h+=`<div class="insight-row" style="color:var(--text-muted)">No major blind spots detected. Keep trading clean.</div>`;
+  h+=`</div></div>`;
+
+  // ─ TOP MODEL DETAIL ─
+  const tm=top3[0];
+  if(tm&&tm.matchingWins.length>=1){
+    const m=tm.model,mw=tm.matchingWins;
+    h+=`<div class="model-detail">
+      <div class="md-rank">#1 Recommended Model</div>
+      <div class="md-name">${m.name}</div>
+      <span class="md-cat" style="background:${m.color}18;color:${m.color}">${m.cat}</span>
+      <div class="md-desc">${m.desc}</div>
+      <div class="md-why">${tm.reasons.map(r=>`<p>${r}</p>`).join('')}</div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">Setup Checklist</div>
+      <ul class="md-checklist">${m.checklist.map(c=>`<li>${c}</li>`).join('')}</ul>
+      <div class="md-params">${Object.entries(m.params).map(([k,v])=>`<div class="md-param"><div class="md-param-label">${k}</div><div class="md-param-val">${v}</div></div>`).join('')}</div>
+      <details class="trades-toggle"><summary>Show ${mw.length} matching winning trades</summary>
+      ${mw.map(t=>`<div class="st-row"><span class="st-date">${t.entryDate}</span><span class="st-ticker">${t.ticker}</span><span class="st-type"><span class="tag ${t.optionType==='CALL'?'tag-sage':'tag-blue'}">${t.optionType==='CALL'?'C':'P'}</span></span><span class="st-detail">$${t.strike} · $${t.entryPremium.toFixed(2)}→$${t.exitPremium.toFixed(2)} · ${t.holdDays}d · ${t.session}</span><span class="st-pnl" style="color:var(--green)">+$${t.pnl.toFixed(0)}</span></div>`).join('')}
+      </details>
+    </div>`;
   }
 
-  if(bestDay && bestDay[1].length >= 3){
-    actions.push(`<strong>Day selection:</strong> Your ${bestDay[0]} win rate is ${winRate(bestDay[1])}%. ${bestDay[0]==='Wed'?'This aligns perfectly with the Wednesday Manipulation model.':'Consider sizing up on this day.'}`);
+  // ─ #2 and #3 ─
+  if(top3.length>1){
+    h+=`<div class="grid-2">`;
+    top3.slice(1).forEach((s,i)=>{
+      if(s.matchingWins.length<1) return;
+      const m=s.model;
+      h+=`<div class="model-detail" style="margin-bottom:0">
+        <div class="md-rank">#${i+2} Also Consider</div>
+        <div class="md-name" style="font-size:18px">${m.name}</div>
+        <span class="md-cat" style="background:${m.color}18;color:${m.color}">${m.cat}</span>
+        <div class="md-desc">${m.desc}</div>
+        <div class="md-why">${s.reasons.slice(0,2).map(r=>`<p>${r}</p>`).join('')}</div>
+        <details class="trades-toggle"><summary>Show ${s.matchingWins.length} matching trades</summary>
+        ${s.matchingWins.map(t=>`<div class="st-row"><span class="st-date">${t.entryDate}</span><span class="st-ticker">${t.ticker}</span><span class="st-type"><span class="tag ${t.optionType==='CALL'?'tag-sage':'tag-blue'}">${t.optionType==='CALL'?'C':'P'}</span></span><span class="st-detail">$${t.strike} · ${t.holdDays}d</span><span class="st-pnl" style="color:var(--green)">+$${t.pnl.toFixed(0)}</span></div>`).join('')}
+        </details>
+      </div>`;
+    });
+    h+=`</div>`;
   }
 
-  if(losses.length >= 3 && Math.abs(avgLossPnl) > avgWinPnl * 1.3){
-    actions.push(`<strong>Cut losses faster:</strong> Your avg loss ($${Math.abs(avgLossPnl).toFixed(0)}) is ${(Math.abs(avgLossPnl)/avgWinPnl).toFixed(1)}x your avg win ($${avgWinPnl.toFixed(0)}). Set a hard stop at 50% of premium paid.`);
-  }
+  // ─ ACTIONS ─
+  h+=`<div class="action-card"><div class="card-title">What to Focus On</div>`;
+  const acts=[];
+  if(bSess&&bSess[1].length>=wins.length*.4) acts.push(`<strong>Session discipline:</strong> ${pc(bSess[1].length,wins.length)}% of wins in ${bSess[0]}. Trade only this session for 20 trades.`);
+  if(bDay&&bDay[1].length>=3) acts.push(`<strong>Day selection:</strong> ${bDay[0]} WR is ${wr(bDay[1])}%.${bDay[0]==='Wed'?' Aligns with Wednesday Manipulation.':' Size up here.'}`);
+  if(losses.length>=3&&Math.abs(avgLP)>avgWP*1.3) acts.push(`<strong>Cut losses faster:</strong> Avg loss $${Math.abs(avgLP).toFixed(0)} is ${(Math.abs(avgLP)/avgWP).toFixed(1)}x avg win. Set 50% stop on premium.`);
+  if(calls.length>=3&&puts.length>=3&&Math.abs(cWR-pWR)>15){const str=cWR>pWR?'calls':'puts',wk=cWR>pWR?'puts':'calls';acts.push(`<strong>Direction:</strong> Stop trading ${wk}. You win ${Math.max(cWR,pWR)}% on ${str} vs ${Math.min(cWR,pWR)}% on ${wk}.`);}
+  if(tm&&tm.matchingWins.length>=2) acts.push(`<strong>Study ${tm.model.name}:</strong> ${tm.matchingWins.length} wins match. Learn the checklist and grade entries against it.`);
+  if(acts.length) h+=acts.map(a=>`<div class="action-item">${a}</div>`).join('');
+  else h+=`<div class="action-item">Keep trading and upload more data. Patterns sharpen with volume.</div>`;
+  h+=`</div>`;
 
-  if(avgLossHold > avgWinHold * 1.5 && losses.length >= 3){
-    actions.push(`<strong>Time stops:</strong> You hold losers an average of ${avgLossHold.toFixed(1)} days vs ${avgWinHold.toFixed(1)} days for winners. If a trade isn't working in ${Math.ceil(avgWinHold)} days, cut it.`);
-  }
-
-  if(calls.length>=3 && puts.length>=3 && Math.abs(callWR-putWR)>15){
-    const stronger = callWR>putWR ? 'calls' : 'puts';
-    const weaker = callWR>putWR ? 'puts' : 'calls';
-    actions.push(`<strong>Directional focus:</strong> Stop trading ${weaker} until your win rate there improves. You win ${Math.max(callWR,putWR)}% on ${stronger} vs ${Math.min(callWR,putWR)}% on ${weaker}.`);
-  }
-
-  if(top3[0] && top3[0].matchingWins.length >= 2){
-    actions.push(`<strong>Study the ${top3[0].model.name}:</strong> ${top3[0].matchingWins.length} of your wins already match this model's profile. Learn the full checklist and start grading your entries against it.`);
-  }
-
-  if(actions.length){
-    html += actions.map(a=>`<p class="story-p">${a}</p>`).join('');
-  } else {
-    html += `<p class="story-p">Keep trading your current approach and upload more data. With more round trips, the patterns will sharpen.</p>`;
-  }
-
-  html += `</div>`;
-
-  return html;
-}
-
-function matchesProfile(trade, profile){
-  return profile.sessions.includes(trade.session) &&
-    profile.days.includes(trade.dayOfWeek) &&
-    trade.holdDays >= profile.holdMin && trade.holdDays <= profile.holdMax;
+  return h;
 }
 
 // ─── UPLOAD ───
 function setupUpload(){
-  const zone=document.getElementById('uploadZone'), input=document.getElementById('fileInput');
-  const input2=document.getElementById('fileInput2');
-  zone.addEventListener('click',()=>input.click());
+  const zone=document.getElementById('uploadZone'),inp=document.getElementById('fileInput'),inp2=document.getElementById('fileInput2');
+  zone.addEventListener('click',()=>inp.click());
   zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover');});
   zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));
   zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');handleFile(e.dataTransfer.files[0]);});
-  input.addEventListener('change',e=>{if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value='';});
-  input2.addEventListener('change',e=>{if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value='';});
+  inp.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);e.target.value='';});
+  inp2.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);e.target.value='';});
 }
-
 function handleFile(file){
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const raw=parseSchwabCSV(e.target.result);
-    const trips=matchTrades(raw);
-    STATE = { rawTrades:raw, roundTrips:trips, lastFile:file.name };
-    save();
-    document.getElementById('parseStatus').innerHTML=`
-      <div class="story-callout"><div class="sc-label">Import Complete</div>
-      <div class="sc-text">Parsed <strong>${raw.length}</strong> trades → <strong>${trips.length}</strong> round trips across <strong>${new Set(trips.map(t=>t.ticker)).size}</strong> tickers.</div></div>`;
-    go('story');
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const raw=parseSchwabCSV(e.target.result),trips=matchTrades(raw);
+    STATE={rawTrades:raw,roundTrips:trips,lastFile:file.name};save();
+    render();
   };
-  reader.readAsText(file);
+  r.readAsText(file);
 }
 
-// ─── NAVIGATION ───
-function go(id){
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.getElementById('sec-'+id).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.s===id));
-  if(id==='story'){
-    document.getElementById('storyContent').innerHTML = generateStory(STATE.roundTrips);
-    document.getElementById('storyFileLabel').textContent = STATE.lastFile ? `Loaded: ${STATE.lastFile}` : '';
+// ─── RENDER ───
+function render(){
+  const has=STATE.roundTrips.length>0;
+  document.getElementById('uploadState').style.display=has?'none':'flex';
+  document.getElementById('dashboard').className=has?'dash visible':'dash';
+  document.getElementById('libraryView').className='dash';
+  if(has) document.getElementById('dashContent').innerHTML=buildDash(STATE.roundTrips);
+  // update nav
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.s==='dash'));
+}
+
+function showDash(){
+  document.getElementById('libraryView').className='dash';
+  if(STATE.roundTrips.length){
+    document.getElementById('uploadState').style.display='none';
+    document.getElementById('dashboard').className='dash visible';
+    document.getElementById('dashContent').innerHTML=buildDash(STATE.roundTrips);
+  } else {
+    document.getElementById('uploadState').style.display='flex';
+    document.getElementById('dashboard').className='dash';
   }
-  if(id==='library') renderLibrary();
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.s==='dash'));
 }
 
-// ─── LIBRARY ───
-function renderLibrary(){
-  document.getElementById('libraryGrid').innerHTML = MODELS.map(m=>`
-    <div class="model-card" onclick="this.classList.toggle('expanded')">
-      <div class="mc-head">
-        <div class="mc-name">${m.name}</div>
-        <span class="mc-cat" style="background:${m.color}18;color:${m.color}">${m.cat}</span>
-      </div>
-      <div class="mc-desc">${m.desc}</div>
-      <div class="mc-detail">
-        <div style="font-weight:700;font-size:13px;margin-bottom:10px">Setup Checklist</div>
+function showLib(){
+  document.getElementById('uploadState').style.display='none';
+  document.getElementById('dashboard').className='dash';
+  document.getElementById('libraryView').className='dash visible';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.s==='lib'));
+  document.getElementById('libGrid').innerHTML=MODELS.map(m=>`
+    <div class="lib-card" onclick="this.classList.toggle('expanded')">
+      <div class="lc-head"><div class="lc-name">${m.name}</div><span class="lc-cat" style="background:${m.color}18;color:${m.color}">${m.cat}</span></div>
+      <div class="lc-desc">${m.desc}</div>
+      <div class="lc-detail">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px">Checklist</div>
         ${m.checklist.map(c=>`<div class="checklist-item">${c}</div>`).join('')}
-        <div style="font-weight:700;font-size:13px;margin:14px 0 10px">Ideal Parameters</div>
-        <div class="mc-params">${Object.entries(m.params).map(([k,v])=>`<div class="mc-param"><div class="mc-param-label">${k}</div><div class="mc-param-val">${v}</div></div>`).join('')}</div>
+        <div style="font-weight:700;font-size:13px;margin:12px 0 8px">Parameters</div>
+        <div class="mc-params" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${Object.entries(m.params).map(([k,v])=>`<div class="mc-param" style="background:var(--card-alt);border-radius:8px;padding:8px 10px"><div class="mc-param-label" style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-muted)">${k}</div><div style="font-size:12px;font-weight:600;margin-top:2px">${v}</div></div>`).join('')}</div>
       </div>
     </div>`).join('');
 }
@@ -798,8 +630,7 @@ function renderLibrary(){
 // ─── INIT ───
 load();
 setupUpload();
-if(STATE.roundTrips.length) go('story');
-else go('upload');
+render();
 </script>
 </body>
 </html>
