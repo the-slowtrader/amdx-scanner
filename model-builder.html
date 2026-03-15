@@ -48,33 +48,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 }
 
 /* MAIN */
-.main{margin-left:var(--sidebar-w);min-height:100vh;padding:32px;max-width:1200px}
-.page-title{font-size:22px;font-weight:700;letter-spacing:-.3px;margin-bottom:6px}
-.page-sub{font-size:13px;color:var(--text-sec);margin-bottom:24px}
-
-/* CARDS */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px}
-.card-title{font-size:14px;font-weight:700;margin-bottom:16px;letter-spacing:-.1px;display:flex;align-items:center;gap:8px}
-.card-title svg{width:16px;height:16px;color:var(--sage)}
-
-/* STAT ROW */
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px}
-.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px}
-.stat-value{font-size:24px;font-weight:800;letter-spacing:-.5px}
-.stat-sub{font-size:11px;color:var(--text-sec);margin-top:2px}
-
-/* TAGS */
-.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
-.tag-green{background:var(--green-bg);color:#16a34a}
-.tag-red{background:var(--red-bg);color:#dc2626}
-.tag-sage{background:var(--sage-bg);color:var(--sage)}
-.tag-blue{background:var(--blue-bg);color:var(--blue)}
-.tag-amber{background:var(--amber-bg);color:#d97706}
-.tag-purple{background:var(--purple-bg);color:var(--purple)}
-
-/* SECTIONS */
-.section{display:none}.section.active{display:block}
+.main{margin-left:var(--sidebar-w);min-height:100vh;padding:32px;max-width:900px}
 
 /* UPLOAD */
 .upload-zone{border:2px dashed var(--border-strong);border-radius:var(--radius);padding:60px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card)}
@@ -83,36 +57,79 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .upload-zone .uz-title{font-size:17px;font-weight:700;margin-bottom:4px}
 .upload-zone .uz-sub{font-size:13px;color:var(--text-sec)}
 
-/* BAR CHART */
-.bar-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
-.bar-row:last-child{border:none}
-.bar-label{width:100px;font-size:12px;font-weight:600;flex-shrink:0;text-align:right}
-.bar-track{flex:1;height:28px;background:var(--card-alt);border-radius:6px;position:relative;overflow:hidden}
-.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 10px;font-size:11px;font-weight:700;color:#fff;min-width:fit-content;transition:width .6s ease}
-.bar-meta{width:80px;font-size:12px;text-align:right;flex-shrink:0;font-weight:600}
+/* SECTION */
+.section{display:none}.section.active{display:block}
 
-/* HEATMAP */
-.heatmap{display:grid;gap:3px}
-.hm-cell{border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:600;min-height:52px;transition:transform .1s}
-.hm-cell:hover{transform:scale(1.05)}
-.hm-cell .hm-count{font-size:9px;opacity:.6;margin-top:1px}
-.hm-label{font-size:10px;font-weight:600;color:var(--text-muted);display:flex;align-items:center;justify-content:center;text-transform:uppercase;letter-spacing:.5px}
+/* STORY */
+.story{max-width:720px}
+.story-hero{margin-bottom:40px}
+.story-hero h1{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1.2;margin-bottom:8px}
+.story-hero .hero-sub{font-size:15px;color:var(--text-sec);line-height:1.6}
 
-/* MODEL CARDS */
-.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
-.model-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s}
+.story-section{margin-bottom:40px}
+.story-section h2{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.story-section h2 .section-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--sage);color:#fff;font-size:12px;font-weight:800;flex-shrink:0}
+.story-section .section-intro{font-size:13px;color:var(--text-sec);margin-bottom:16px}
+.story-p{font-size:14px;line-height:1.8;margin-bottom:12px;color:var(--text)}
+.story-p strong{font-weight:700}
+.story-p .hl{background:rgba(109,126,94,0.12);padding:1px 6px;border-radius:4px;font-weight:700}
+.story-p .hl-red{background:var(--red-bg);padding:1px 6px;border-radius:4px;font-weight:700;color:#dc2626}
+.story-p .hl-green{background:var(--green-bg);padding:1px 6px;border-radius:4px;font-weight:700;color:#16a34a}
+
+.story-stat-row{display:flex;gap:12px;margin:16px 0;flex-wrap:wrap}
+.story-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;min-width:120px;flex:1}
+.story-stat .ss-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.story-stat .ss-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-top:2px}
+
+.story-callout{background:linear-gradient(135deg,#f0f7ed,#e8f0e4);border:1px solid rgba(109,126,94,0.15);border-radius:var(--radius);padding:20px 24px;margin:20px 0}
+.story-callout .sc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:6px}
+.story-callout .sc-text{font-size:15px;font-weight:600;line-height:1.6}
+
+.story-warning{background:var(--amber-bg);border:1px solid rgba(245,158,11,0.15);border-radius:var(--radius);padding:16px 20px;margin:16px 0;font-size:13px;line-height:1.7}
+
+.story-model{background:var(--card);border:2px solid var(--sage);border-radius:var(--radius);padding:24px;margin:20px 0}
+.story-model .sm-rank{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:4px}
+.story-model .sm-name{font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+.story-model .sm-cat{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:10px}
+.story-model .sm-desc{font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:14px}
+.story-model .sm-why{font-size:14px;line-height:1.7;margin-bottom:14px}
+.story-model .sm-checklist{list-style:none;padding:0}
+.story-model .sm-checklist li{display:flex;align-items:flex-start;gap:8px;padding:5px 0;font-size:12px;color:var(--text-sec)}
+.story-model .sm-checklist li::before{content:'';width:14px;height:14px;border:2px solid var(--border-strong);border-radius:3px;flex-shrink:0;margin-top:2px}
+.story-model .sm-params{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.story-model .sm-param{background:var(--card-alt);border-radius:var(--radius-xs);padding:8px 10px}
+.story-model .sm-param-label{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-muted)}
+.story-model .sm-param-val{font-size:12px;font-weight:600;margin-top:2px}
+
+.story-model.secondary{border-color:var(--border-strong);border-width:1px}
+.story-model.secondary .sm-rank{color:var(--text-muted)}
+
+.story-trades{margin-top:14px;border-top:1px solid var(--border);padding-top:14px}
+.story-trades summary{font-size:12px;font-weight:700;color:var(--sage);cursor:pointer;margin-bottom:8px}
+.st-row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:center;flex-wrap:wrap}
+.st-row:last-child{border:none}
+.st-date{width:65px;color:var(--text-sec);flex-shrink:0}
+.st-ticker{width:45px;font-weight:700;flex-shrink:0}
+.st-type{width:36px;flex-shrink:0}
+.st-detail{flex:1;color:var(--text-sec)}
+.st-pnl{width:60px;text-align:right;font-weight:700;flex-shrink:0}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.tag-green{background:var(--green-bg);color:#16a34a}
+.tag-red{background:var(--red-bg);color:#dc2626}
+.tag-sage{background:var(--sage-bg);color:var(--sage)}
+.tag-blue{background:var(--blue-bg);color:var(--blue)}
+.tag-amber{background:var(--amber-bg);color:#d97706}
+.tag-purple{background:var(--purple-bg);color:var(--purple)}
+
+/* MODEL LIBRARY */
+.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.model-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s;cursor:pointer}
 .model-card:hover{border-color:var(--sage);box-shadow:var(--shadow-md)}
-.model-card.recommended{border-color:var(--sage);border-width:2px}
-.model-card.recommended::before{content:'Recommended for You';display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:8px}
-.mc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-.mc-name{font-size:15px;font-weight:700;letter-spacing:-.2px}
-.mc-cat{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:4px}
-.mc-desc{font-size:12px;color:var(--text-sec);line-height:1.5;margin-bottom:12px}
-.mc-stats{display:flex;gap:16px}
-.mc-stat-val{font-size:16px;font-weight:800}
-.mc-stat-lbl{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase}
-.mc-why{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--sage);font-weight:600;line-height:1.5}
-.mc-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.model-card .mc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.model-card .mc-name{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.model-card .mc-cat{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:4px}
+.model-card .mc-desc{font-size:12px;color:var(--text-sec);line-height:1.5;margin-bottom:12px}
+.model-card .mc-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .model-card.expanded .mc-detail{display:block}
 .checklist-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;font-size:12px;color:var(--text-sec)}
 .checklist-item::before{content:'';width:14px;height:14px;border:2px solid var(--border-strong);border-radius:3px;flex-shrink:0;margin-top:2px}
@@ -121,45 +138,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .mc-param-label{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-muted)}
 .mc-param-val{font-size:12px;font-weight:600;margin-top:2px}
 
-/* INSIGHT CARD */
-.insight{background:linear-gradient(135deg,#f0f7ed,#e8f0e4);border:1px solid rgba(109,126,94,0.15);border-radius:var(--radius);padding:20px;margin-bottom:16px}
-.insight-title{font-size:13px;font-weight:700;color:var(--sage);margin-bottom:6px}
-.insight-text{font-size:13px;color:var(--text);line-height:1.6}
-.insight-text strong{font-weight:700}
-
-/* WEAKNESS */
-.weakness{background:var(--amber-bg);border:1px solid rgba(245,158,11,0.15);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px;font-size:13px;line-height:1.6}
-.weakness strong{font-weight:700}
-
 /* BTN */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);transition:all .15s}
 .btn:hover{border-color:var(--sage);color:var(--sage)}
 .btn-primary{background:var(--sage);color:#fff;border-color:var(--sage)}
 .btn-primary:hover{background:#5e6e50}
-.btn-sm{padding:5px 12px;font-size:12px}
-
-/* GRID */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:800px){.grid-2{grid-template-columns:1fr}}
-
-/* TRADE DRILL-DOWN */
-.bar-row.clickable{cursor:pointer;transition:background .15s}
-.bar-row.clickable:hover{background:var(--sage-light)}
-.bar-row.clickable .bar-label::after{content:'▸';margin-left:4px;font-size:10px;opacity:.4;transition:transform .2s}
-.bar-row.clickable.expanded .bar-label::after{content:'▾'}
-.trade-list{display:none;padding:4px 0 8px 112px}
-.bar-row.expanded+.trade-list{display:block}
-.trade-item{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:11px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.trade-item:last-child{border:none}
-.trade-item .ti-date{width:70px;color:var(--text-sec);flex-shrink:0}
-.trade-item .ti-ticker{width:50px;font-weight:700;flex-shrink:0}
-.trade-item .ti-type{width:40px;flex-shrink:0}
-.trade-item .ti-prices{flex:1;color:var(--text-sec)}
-.trade-item .ti-pnl{width:65px;text-align:right;font-weight:700;flex-shrink:0}
-.trade-item .ti-meta{font-size:10px;color:var(--text-muted)}
-.tf-badge{display:inline-flex;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.tf-daily{background:var(--blue-bg);color:var(--blue)}
-.tf-hourly{background:var(--purple-bg);color:var(--purple)}
 </style>
 </head>
 <body>
@@ -175,12 +158,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 </div>
 <nav class="sidebar-nav">
 <div class="nav-section-label" style="margin-top:8px">Navigate</div>
-<a class="nav-item active" onclick="go('insights')" data-s="insights">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-Insights</a>
-<a class="nav-item" onclick="go('models')" data-s="models">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-Model Fit</a>
+<a class="nav-item active" onclick="go('story')" data-s="story">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+Your Story</a>
 <a class="nav-item" onclick="go('library')" data-s="library">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
 Model Library</a>
@@ -195,83 +175,56 @@ Upload CSV</a>
 
 <!-- UPLOAD -->
 <div class="section" id="sec-upload">
-<div class="page-title">Upload Your Trades</div>
-<div class="page-sub">Drop your Schwab Account Statement CSV to get ICT model insights</div>
+<div style="max-width:600px">
+<h1 style="font-size:24px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px">Upload Your Trades</h1>
+<p style="font-size:14px;color:var(--text-sec);margin-bottom:24px">Drop your Schwab Account Statement CSV. We'll find patterns in your winning trades and match you to an ICT model.</p>
 <div class="upload-zone" id="uploadZone">
 <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
 <div class="uz-title">Drop Schwab Account Statement CSV</div>
-<div class="uz-sub">We'll parse your BOT/SOLD trades and match them into round trips</div>
+<div class="uz-sub">We'll parse your BOT/SOLD trades, match them into round trips, and build your story</div>
 </div>
 <input type="file" id="fileInput" accept=".csv" style="display:none">
 <div id="parseStatus" style="margin-top:16px"></div>
 </div>
-
-<!-- INSIGHTS -->
-<div class="section" id="sec-insights">
-<div class="page-title">Your Trading Insights</div>
-<div class="page-sub" id="insightsSub"></div>
-<div id="analyzeBar" style="display:none;margin-bottom:20px">
-<div class="card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-<div style="flex:1">
-<div style="font-weight:700;font-size:14px" id="analyzeLabel">Analyze trades with OHLCV data</div>
-<div style="font-size:12px;color:var(--text-sec)" id="analyzeDesc">Fetches price history and auto-detects voids, FVGs, order blocks, and liquidity levels at each trade entry</div>
-</div>
-<button class="btn btn-primary" id="analyzeBtn" onclick="runAnalysis()">Detect ICT Setups</button>
-</div>
-<div id="analyzeProgress" style="display:none;margin-top:8px">
-<div style="height:6px;background:var(--card-alt);border-radius:3px;overflow:hidden"><div id="analyzeBar2" style="height:100%;background:var(--sage);width:0;transition:width .3s;border-radius:3px"></div></div>
-<div style="font-size:11px;color:var(--text-muted);margin-top:4px" id="analyzeStatus"></div>
-</div>
-</div>
-<div class="stats-row" id="heroStats"></div>
-<div id="topInsight"></div>
-<div id="conceptBreakdown"></div>
-<div class="grid-2">
-<div class="card"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Win Rate by Ticker</div><div id="chartTicker"></div></div>
-<div class="card"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Session Performance</div><div id="chartSession"></div></div>
-</div>
-<div class="grid-2">
-<div class="card"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Day of Week</div><div id="chartDay"></div></div>
-<div class="card"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Calls vs Puts</div><div id="chartType"></div></div>
-</div>
-<div class="card"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Session x Day Heatmap</div><div id="heatmap"></div></div>
-<div id="weaknesses"></div>
 </div>
 
-<!-- MODEL FIT -->
-<div class="section" id="sec-models">
-<div class="page-title">Your Model Fit</div>
-<div class="page-sub">Based on your trading patterns, these ICT models best match your edge</div>
-<div id="modelFitCards"></div>
+<!-- YOUR STORY -->
+<div class="section" id="sec-story">
+<div class="story" id="storyContent">
+<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+<p style="font-size:15px;font-weight:600;margin-bottom:4px">No trades loaded yet</p>
+<p style="font-size:13px">Upload your Schwab CSV to generate your trading story</p>
+</div>
+</div>
 </div>
 
 <!-- MODEL LIBRARY -->
 <div class="section" id="sec-library">
-<div class="page-title">ICT Model Library</div>
-<div class="page-sub">All 13 models from the TBT Incubator with setup checklists</div>
+<h1 style="font-size:22px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px">ICT Model Library</h1>
+<p style="font-size:13px;color:var(--text-sec);margin-bottom:24px">All 13 models from the TBT Incubator — click any card to see the full checklist</p>
 <div class="model-grid" id="libraryGrid"></div>
 </div>
 
-</div><!-- .main -->
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════
-   ICT MODEL BUILDER
+   ICT MODEL BUILDER — Story-Driven
    ═══════════════════════════════════════════════════ */
 
 // ─── STATE ───
 let STATE = { roundTrips: [], rawTrades: [], lastFile: '' };
-const STORE_KEY = 'ictModelBuilder_v2';
+const STORE_KEY = 'ictModelBuilder_v3';
 function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); }
 function load(){ try { const s=localStorage.getItem(STORE_KEY); if(s) STATE=JSON.parse(s); } catch(e){} }
 
-// ─── SCHWAB PARSER ───
+// ─── SCHWAB CSV PARSER ───
 function parseSchwabCSV(text){
   const lines = text.split(/\r?\n/);
   const trades = [];
   for(const line of lines){
     if(!line.includes(',TRD,')) continue;
-    const desc = extractDesc(line);
+    const desc = extractField(line, 4);
     if(!desc) continue;
     const parsed = parseDescription(desc, line);
     if(parsed) trades.push(parsed);
@@ -279,9 +232,7 @@ function parseSchwabCSV(text){
   return trades;
 }
 
-function extractDesc(line){
-  // CSV fields: DATE,TIME,TYPE,REF#,DESCRIPTION,...
-  // DESCRIPTION is field index 4, may contain commas inside
+function extractField(line, idx){
   const parts = [];
   let inQuote=false, current='';
   for(const ch of line){
@@ -290,137 +241,80 @@ function extractDesc(line){
     current+=ch;
   }
   parts.push(current);
-  return parts[4]||'';
-}
-
-function extractAmount(line){
-  const parts = [];
-  let inQuote=false, current='';
-  for(const ch of line){
-    if(ch==='"'){ inQuote=!inQuote; continue; }
-    if(ch===','&&!inQuote){ parts.push(current); current=''; continue; }
-    current+=ch;
-  }
-  parts.push(current);
-  // AMOUNT is index 7
-  return parseFloat((parts[7]||'0').replace(/[$,]/g,''))||0;
-}
-
-function extractDateTimeLine(line){
-  const parts=[];
-  let inQuote=false,current='';
-  for(const ch of line){if(ch==='"'){inQuote=!inQuote;continue;}if(ch===','&&!inQuote){parts.push(current);current='';continue;}current+=ch;}
-  parts.push(current);
-  return { date: parts[0]||'', time: parts[1]||'' };
+  return parts[idx]||'';
 }
 
 function parseDescription(desc, line){
-  // Skip spreads/diagonals/custom for now
   if(desc.includes('DIAGONAL')||desc.includes('CUSTOM')||desc.includes('1/-1')) return null;
-  // Pattern: (BOT|SOLD) [+-]N TICKER 100 [(Weeklys)|(EOM)] DD MMM YY STRIKE (CALL|PUT) @PRICE [EXCHANGE]
   const m = desc.match(/^(BOT|SOLD)\s+([+-]\d+)\s+(\w+)\s+100\s+(?:\((?:Weeklys|EOM)\)\s+)?(\d+\s+\w+\s+\d+)\s+([\d.]+)\s+(CALL|PUT)\s+@([\d.]+)/);
   if(!m) return null;
-  const {date,time} = extractDateTimeLine(line);
-  const amount = extractAmount(line);
+  const date = extractField(line, 0);
+  const time = extractField(line, 1);
+  const amount = parseFloat((extractField(line, 7)||'0').replace(/[$,]/g,''))||0;
   const qty = Math.abs(parseInt(m[2]));
   return {
-    date, time,
-    action: m[1],          // BOT or SOLD
-    qty,
-    ticker: m[3],
-    expiration: m[4],      // e.g. "20 FEB 26"
-    strike: parseFloat(m[5]),
-    optionType: m[6],      // CALL or PUT
-    premium: parseFloat(m[7]),
-    amount,                // net dollar amount (negative for BOT, positive for SOLD)
+    date, time, action: m[1], qty,
+    ticker: m[3], expiration: m[4],
+    strike: parseFloat(m[5]), optionType: m[6],
+    premium: parseFloat(m[7]), amount,
     session: classifySession(time),
     dayOfWeek: classifyDay(date)
   };
 }
 
-// ─── MATCH TRADES INTO ROUND TRIPS ───
+// ─── MATCH INTO ROUND TRIPS ───
 function matchTrades(trades){
-  // Group by contract key: ticker_exp_strike_type
   const groups = {};
   trades.forEach(t=>{
     const key = `${t.ticker}_${t.expiration}_${t.strike}_${t.optionType}`;
     if(!groups[key]) groups[key]=[];
     groups[key].push(t);
   });
-
   const roundTrips = [];
   for(const[key,arr] of Object.entries(groups)){
     const buys = arr.filter(t=>t.action==='BOT').sort((a,b)=>new Date(a.date)-new Date(b.date));
     const sells = arr.filter(t=>t.action==='SOLD').sort((a,b)=>new Date(a.date)-new Date(b.date));
-
     let bi=0, si=0;
     while(bi<buys.length && si<sells.length){
-      const buy = buys[bi], sell = sells[si];
+      const buy=buys[bi], sell=sells[si];
       const matchQty = Math.min(buy.qty, sell.qty);
-      const costPer = buy.premium;
-      const revPer = sell.premium;
-      const pnl = (revPer - costPer) * matchQty * 100;
-      const fees = Math.abs(buy.amount/buy.qty*matchQty) + Math.abs(sell.amount/sell.qty*matchQty) - (costPer*matchQty*100) + (revPer*matchQty*100);
-
+      const pnl = (sell.premium - buy.premium) * matchQty * 100;
       roundTrips.push({
-        ticker: buy.ticker,
-        optionType: buy.optionType,
-        strike: buy.strike,
-        expiration: buy.expiration,
-        qty: matchQty,
-        entryDate: buy.date,
-        entryTime: buy.time,
-        exitDate: sell.date,
-        exitTime: sell.time,
-        entryPremium: costPer,
-        exitPremium: revPer,
+        ticker: buy.ticker, optionType: buy.optionType, strike: buy.strike,
+        expiration: buy.expiration, qty: matchQty,
+        entryDate: buy.date, entryTime: buy.time,
+        exitDate: sell.date, exitTime: sell.time,
+        entryPremium: buy.premium, exitPremium: sell.premium,
         pnl: +pnl.toFixed(2),
-        pnlPct: +((revPer/costPer - 1)*100).toFixed(1),
-        session: buy.session,
-        dayOfWeek: buy.dayOfWeek,
-        exitSession: sell.session,
-        exitDay: sell.dayOfWeek,
+        pnlPct: +((sell.premium/buy.premium - 1)*100).toFixed(1),
+        session: buy.session, dayOfWeek: buy.dayOfWeek,
         holdDays: daysBetween(buy.date, sell.date),
         daysToExpiry: daysBetween(buy.date, parseExpDate(buy.expiration)),
-        win: revPer > costPer
+        win: sell.premium > buy.premium
       });
-
-      buy.qty -= matchQty;
-      sell.qty -= matchQty;
+      buy.qty -= matchQty; sell.qty -= matchQty;
       if(buy.qty<=0) bi++;
       if(sell.qty<=0) si++;
     }
   }
-
   return roundTrips.sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));
 }
 
 function parseExpDate(s){
-  // "20 FEB 26" → "2/20/26"
   const months={JAN:'1',FEB:'2',MAR:'3',APR:'4',MAY:'5',JUN:'6',JUL:'7',AUG:'8',SEP:'9',OCT:'10',NOV:'11',DEC:'12'};
-  const p=s.split(/\s+/);
-  if(p.length<3) return s;
+  const p=s.split(/\s+/); if(p.length<3) return s;
   return `${months[p[1]]||'1'}/${p[0]}/${p[2]}`;
 }
+function daysBetween(a,b){ const da=new Date(a),db=new Date(b); return isNaN(da)||isNaN(db)?0:Math.round((db-da)/(864e5)); }
 
-function daysBetween(a,b){
-  const da=new Date(a), db=new Date(b);
-  if(isNaN(da)||isNaN(db)) return 0;
-  return Math.round((db-da)/(1000*60*60*24));
-}
-
-// ─── SESSION / DAY CLASSIFIERS ───
+// ─── SESSION / DAY ───
 function classifySession(timeStr){
   if(!timeStr) return '';
   const m = timeStr.match(/(\d{1,2}):(\d{2}):?(\d{2})?\s*(AM|PM)?/i);
   if(!m) return '';
   let h = parseInt(m[1]);
-  if(m[4]){
-    if(m[4].toUpperCase()==='PM'&&h!==12) h+=12;
-    if(m[4].toUpperCase()==='AM'&&h===12) h=0;
-  }
-  // Schwab times are CST, convert to ET (+1)
-  h += 1;
+  if(m[4]){ if(m[4].toUpperCase()==='PM'&&h!==12) h+=12; if(m[4].toUpperCase()==='AM'&&h===12) h=0; }
+  h += 1; // CST → ET
   if(h>=24) h-=24;
   if(h<4) return 'Asian';
   if(h<9) return 'London';
@@ -428,416 +322,444 @@ function classifySession(timeStr){
   if(h>=12&&h<16) return 'NY PM';
   return 'After Hours';
 }
-
 function classifyDay(dateStr){
   if(!dateStr) return '';
-  const d = new Date(dateStr);
-  if(isNaN(d)) return '';
+  const d = new Date(dateStr); if(isNaN(d)) return '';
   return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]||'';
 }
 
-// ─── OHLCV FETCHING ───
-const FMP_KEY = '9ZZSogafEDXEw5Z3NQnbK4i0NRuQz8yZ';
-const OHLCV_CACHE_KEY = 'ictOHLCV_v1';
+// ─── HELPERS ───
+function winRate(arr){ return arr.length ? +(arr.filter(t=>t.win).length/arr.length*100).toFixed(1) : 0; }
+function totalPnl(arr){ return arr.reduce((s,t)=>s+t.pnl,0); }
+function avgPnl(arr){ return arr.length ? +(arr.reduce((s,t)=>s+t.pnl,0)/arr.length).toFixed(2) : 0; }
+function groupBy(arr,fn){ const g={}; arr.forEach(t=>{ const k=fn(t)||'Unknown'; if(!g[k])g[k]=[]; g[k].push(t); }); return g; }
+function best(obj){ return Object.entries(obj).filter(([,a])=>a.length>=2).sort((a,b)=>winRate(b[1])-winRate(a[1]))[0]; }
+function worst(obj){ return Object.entries(obj).filter(([,a])=>a.length>=2).sort((a,b)=>winRate(a[1])-winRate(b[1]))[0]; }
+function pct(n,d){ return d?+(n/d*100).toFixed(1):0; }
 
-function getOHLCVCache(){ try { return JSON.parse(localStorage.getItem(OHLCV_CACHE_KEY)||'{}'); } catch(e){ return {}; } }
-function setOHLCVCache(c){ localStorage.setItem(OHLCV_CACHE_KEY, JSON.stringify(c)); }
-
-async function fetchOHLCV(ticker, from, to){
-  const cache = getOHLCVCache();
-  const key = `${ticker}_${from}_${to}`;
-  if(cache[key]) return cache[key];
-  const url = `https://financialmodelingprep.com/stable/historical-price-eod/full?symbol=${ticker}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
-  const res = await fetch(url);
-  if(!res.ok) return [];
-  const data = await res.json();
-  if(!Array.isArray(data)||!data.length) return [];
-  const candles = data.sort((a,b)=>a.date.localeCompare(b.date));
-  cache[key] = candles;
-  setOHLCVCache(cache);
-  return candles;
-}
-
-async function fetchOHLCV1H(ticker, from, to){
-  const cache = getOHLCVCache();
-  const key = `${ticker}_1h_${from}_${to}`;
-  if(cache[key]) return cache[key];
-  const url = `https://financialmodelingprep.com/stable/historical-chart/1hour?symbol=${ticker}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
-  const res = await fetch(url);
-  if(!res.ok) return [];
-  const data = await res.json();
-  if(!Array.isArray(data)||!data.length) return [];
-  const candles = data.map(c=>({...c, date:c.date||c.datetime?.slice(0,10)||''})).sort((a,b)=>(a.datetime||a.date).localeCompare(b.datetime||b.date));
-  cache[key] = candles;
-  setOHLCVCache(cache);
-  return candles;
-}
-
-// ─── ICT CONCEPT ENGINE ───
-function detectVoids(candles){
-  const voids = [];
-  for(let i=0;i<candles.length-1;i++){
-    const c=candles[i], n=candles[i+1];
-    const gap = n.open - c.close;
-    if(Math.abs(gap) < 0.01) continue;
-    if(gap > 0) voids.push({ type:'VOID', dir:'BULL', upper:n.open, lower:c.close, ce:(n.open+c.close)/2, date:n.date, idx:i+1 });
-    else voids.push({ type:'VOID', dir:'BEAR', upper:c.close, lower:n.open, ce:(c.close+n.open)/2, date:n.date, idx:i+1 });
-  }
-  return voids;
-}
-
-function detectFVGs(candles){
-  const fvgs = [];
-  for(let i=0;i<candles.length-2;i++){
-    const a=candles[i], b=candles[i+1], c=candles[i+2];
-    if(c.low > a.high) fvgs.push({ type:'FVG', dir:'BULL', upper:c.low, lower:a.high, ce:(c.low+a.high)/2, date:c.date, idx:i+2 });
-    if(c.high < a.low) fvgs.push({ type:'FVG', dir:'BEAR', upper:a.low, lower:c.high, ce:(a.low+c.high)/2, date:c.date, idx:i+2 });
-  }
-  return fvgs;
-}
-
-function detectOrderBlocks(candles){
-  const obs = [];
-  const atr = calcATR(candles, 14);
-  for(let i=1;i<candles.length;i++){
-    const prev=candles[i-1], curr=candles[i];
-    const range = Math.abs(curr.close-curr.open);
-    if(range < atr*1.2) continue;
-    // Bullish OB: prev was bearish, curr is strong bullish displacement
-    if(prev.close<prev.open && curr.close>curr.open && curr.close>prev.high)
-      obs.push({ type:'OB', dir:'BULL', upper:prev.open, lower:prev.close, ce:(prev.open+prev.close)/2, date:prev.date, idx:i-1 });
-    // Bearish OB: prev was bullish, curr is strong bearish displacement
-    if(prev.close>prev.open && curr.close<curr.open && curr.close<prev.low)
-      obs.push({ type:'OB', dir:'BEAR', upper:prev.close, lower:prev.open, ce:(prev.close+prev.open)/2, date:prev.date, idx:i-1 });
-  }
-  return obs;
-}
-
-function detectSwingPoints(candles){
-  const pts = [];
-  for(let i=1;i<candles.length-1;i++){
-    const p=candles[i-1], c=candles[i], n=candles[i+1];
-    if(c.high>p.high && c.high>n.high) pts.push({ type:'SWING_HIGH', price:c.high, date:c.date, idx:i });
-    if(c.low<p.low && c.low<n.low) pts.push({ type:'SWING_LOW', price:c.low, date:c.date, idx:i });
-  }
-  return pts;
-}
-
-function detectLiquidityLevels(candles, tradeDate){
-  const levels = [];
-  const idx = candles.findIndex(c=>c.date>=tradeDate);
-  if(idx<1) return levels;
-  // Prior day H/L
-  const pd = candles[idx-1];
-  levels.push({ type:'PDH', price:pd.high, label:'Prior Day High' });
-  levels.push({ type:'PDL', price:pd.low, label:'Prior Day Low' });
-  // Prior week H/L (last 5 trading days)
-  const weekSlice = candles.slice(Math.max(0,idx-6), idx);
-  if(weekSlice.length){
-    levels.push({ type:'PWH', price:Math.max(...weekSlice.map(c=>c.high)), label:'Prior Week High' });
-    levels.push({ type:'PWL', price:Math.min(...weekSlice.map(c=>c.low)), label:'Prior Week Low' });
-  }
-  // Relative equal highs/lows from swing points
-  const swings = detectSwingPoints(candles.slice(0,idx));
-  const highs = swings.filter(s=>s.type==='SWING_HIGH').map(s=>s.price);
-  const lows = swings.filter(s=>s.type==='SWING_LOW').map(s=>s.price);
-  // Find clusters (within 0.5%)
-  for(let i=0;i<highs.length;i++){
-    for(let j=i+1;j<highs.length;j++){
-      if(Math.abs(highs[i]-highs[j])/highs[i]<0.005)
-        levels.push({ type:'REH', price:(highs[i]+highs[j])/2, label:'Relative Equal Highs' });
-    }
-  }
-  return levels;
-}
-
-function calcATR(candles, period){
-  if(candles.length<period+1) return candles.length?candles[candles.length-1].high-candles[candles.length-1].low:1;
-  let sum=0;
-  for(let i=candles.length-period;i<candles.length;i++){
-    const c=candles[i], p=candles[i-1];
-    sum += Math.max(c.high-c.low, Math.abs(c.high-p.close), Math.abs(c.low-p.close));
-  }
-  return sum/period;
-}
-
-function getPremiumDiscount(candles, tradeDate){
-  const idx = candles.findIndex(c=>c.date>=tradeDate);
-  if(idx<5) return null;
-  const recent = candles.slice(Math.max(0,idx-20), idx+1);
-  const swings = detectSwingPoints(recent);
-  const lastHigh = [...swings.filter(s=>s.type==='SWING_HIGH')].pop();
-  const lastLow = [...swings.filter(s=>s.type==='SWING_LOW')].pop();
-  if(!lastHigh||!lastLow) return null;
-  const rangeHigh = lastHigh.price, rangeLow = lastLow.price;
-  const ce = (rangeHigh+rangeLow)/2;
-  const price = candles[idx].close;
-  return { zone: price>ce?'PREMIUM':'DISCOUNT', ce, rangeHigh, rangeLow, price };
-}
-
-// ─── TRADE CLASSIFIER (multi-timeframe) ───
-function runDetectionOnCandles(candles, tradeDate, stockMid){
-  const idx = candles.findIndex(c=>(c.date||c.datetime?.slice(0,10)||'')>=tradeDate);
-  if(idx<5) return null;
-
-  const priorCandles = candles.slice(0, idx+1);
-  const tol = stockMid * 0.005;
-
-  const voids = detectVoids(priorCandles).filter(v=>v.idx<idx);
-  const fvgs = detectFVGs(priorCandles).filter(f=>f.idx<idx);
-  const obs = detectOrderBlocks(priorCandles).filter(o=>o.idx<idx);
-  const liq = detectLiquidityLevels(candles, tradeDate);
-
-  const activeVoids = voids.filter(v=>idx-v.idx<=20);
-  const atVoidCE = activeVoids.find(v=>Math.abs(stockMid-v.ce)<=tol);
-  const atVoid = activeVoids.find(v=>stockMid>=v.lower-tol && stockMid<=v.upper+tol);
-  const activeFVGs = fvgs.filter(f=>idx-f.idx<=20);
-  const atFVG = activeFVGs.find(f=>stockMid>=f.lower-tol && stockMid<=f.upper+tol);
-  const activeOBs = obs.filter(o=>idx-o.idx<=15);
-  const atOB = activeOBs.find(o=>stockMid>=o.lower-tol && stockMid<=o.upper+tol);
-  const atLiquidity = liq.find(l=>Math.abs(stockMid-l.price)<=tol);
-
-  let concept='NONE', conceptLabel='No Clear Setup', conceptDetail='';
-  if(atVoidCE){ concept='VOID_CE'; conceptLabel='Void CE Entry'; conceptDetail=`Near void CE $${atVoidCE.ce.toFixed(2)} (${atVoidCE.dir})`; }
-  else if(atVoid){ concept='VOID'; conceptLabel='Void Entry'; conceptDetail=`Inside void $${atVoid.lower.toFixed(2)}-$${atVoid.upper.toFixed(2)}`; }
-  else if(atFVG){ concept='FVG'; conceptLabel='FVG Entry'; conceptDetail=`Inside FVG $${atFVG.lower.toFixed(2)}-$${atFVG.upper.toFixed(2)} (${atFVG.dir})`; }
-  else if(atOB){ concept='OB'; conceptLabel='Order Block Entry'; conceptDetail=`At OB $${atOB.lower.toFixed(2)}-$${atOB.upper.toFixed(2)} (${atOB.dir})`; }
-  else if(atLiquidity){ concept='LIQUIDITY'; conceptLabel=atLiquidity.label; conceptDetail=`Near ${atLiquidity.label} $${atLiquidity.price.toFixed(2)}`; }
-
-  // Check for BPR (FVG that was closed through)
-  if(concept==='FVG' && atFVG){
-    const afterFVG = candles.slice(atFVG.idx, idx);
-    const closedThrough = afterFVG.some(c=> atFVG.dir==='BULL'?c.close<atFVG.lower:c.close>atFVG.upper);
-    if(closedThrough){ concept='BPR'; conceptLabel='BPR Entry (Balanced FVG)'; }
-  }
-
-  return { concept, conceptLabel, conceptDetail, voidCount:activeVoids.length, fvgCount:activeFVGs.length, obCount:activeOBs.length, liqLevels:liq.length };
-}
-
-function classifyTradeICT(trade, dailyCandles, hourlyCandles){
-  const tradeDate = toISO(trade.entryDate);
-  const dailyIdx = dailyCandles.findIndex(c=>c.date>=tradeDate);
-  if(dailyIdx<5) return { concept:'UNKNOWN', model:null, details:{}, tf:'daily' };
-
-  const dayCandle = dailyCandles[dailyIdx];
-  const stockMid = (dayCandle.high+dayCandle.low)/2;
-  const pd = getPremiumDiscount(dailyCandles, tradeDate);
-
-  // Run detection on daily candles
-  const dailyResult = runDetectionOnCandles(dailyCandles, tradeDate, stockMid);
-
-  // Run detection on 1H candles if available
-  let hourlyResult = null;
-  let bestTF = 'daily';
-  if(hourlyCandles && hourlyCandles.length >= 10){
-    hourlyResult = runDetectionOnCandles(hourlyCandles, tradeDate, stockMid);
-  }
-
-  // Pick best timeframe: prefer 1H for short holds, daily for swings
-  // If 1H found a concept and daily didn't, use 1H
-  // If both found concepts, prefer 1H for holds <= 2 days, daily for longer
-  let result = dailyResult || { concept:'NONE', conceptLabel:'No Clear Setup', conceptDetail:'' };
-  if(hourlyResult && hourlyResult.concept !== 'NONE'){
-    if(!dailyResult || dailyResult.concept === 'NONE'){
-      result = hourlyResult; bestTF = '1H';
-    } else if(trade.holdDays <= 2){
-      result = hourlyResult; bestTF = '1H';
-    }
-  }
-
-  const concept = result.concept;
-  const day = trade.dayOfWeek, sess = trade.session;
-
-  // Determine model from concept + timing
-  let model = null;
-  if(concept==='VOID_CE'||concept==='VOID'){
-    if(day==='Wed'&&sess==='NY AM') model='wednesday-manip';
-    else if(trade.holdDays>=2) model='void-to-void';
-    else model='daily-amd';
-  } else if(concept==='FVG'){
-    model = sess==='NY AM'?'daily-amd':'agree-liq';
-  } else if(concept==='BPR'){
-    model='bpr-entry';
-  } else if(concept==='OB'){
-    model = trade.holdDays>=3?'tf-alignment':'daily-amd';
-  } else if(concept==='LIQUIDITY'){
-    if(dayCandle.close > dayCandle.open && result.conceptLabel.includes('Low')) model='disagree-liq';
-    else if(dayCandle.close < dayCandle.open && result.conceptLabel.includes('High')) model='disagree-liq';
-    else model='agree-liq';
-  }
-
-  // Intraday scalp override: short hold + 1H detection
-  if(bestTF==='1H' && trade.holdDays<=1 && (concept==='VOID_CE'||concept==='FVG'||concept==='OB'))
-    model='intraday-scalp';
-
-  const weeklyPhase = day==='Mon'||day==='Tue'?'A':day==='Wed'?'M':'D';
-
-  return {
-    concept, conceptLabel: result.conceptLabel, conceptDetail: result.conceptDetail, model,
-    weeklyPhase, tf: bestTF,
-    zone: pd?pd.zone:null,
-    voidCount: result.voidCount||0, fvgCount: result.fvgCount||0,
-    obCount: result.obCount||0, liqLevels: result.liqLevels||0
-  };
-}
-
-function toISO(dateStr){
-  if(!dateStr) return '';
-  const d=new Date(dateStr);
-  if(isNaN(d)) return dateStr;
-  return d.toISOString().slice(0,10);
-}
-
-// ─── ANALYSIS PIPELINE ───
-async function runAnalysis(){
-  const trips = rt();
-  if(!trips.length) return;
-  const btn = document.getElementById('analyzeBtn');
-  const prog = document.getElementById('analyzeProgress');
-  const bar = document.getElementById('analyzeBar2');
-  const status = document.getElementById('analyzeStatus');
-  btn.disabled=true; btn.textContent='Analyzing...'; prog.style.display='block';
-
-  const tickers = [...new Set(trips.map(t=>t.ticker))];
-  const dailyData = {}, hourlyData = {};
-
-  // Fetch daily + 1H OHLCV for each ticker
-  for(let i=0;i<tickers.length;i++){
-    const sym = tickers[i];
-    status.textContent = `Fetching ${sym} daily + 1H (${i+1}/${tickers.length})...`;
-    bar.style.width = `${(i/tickers.length)*50}%`;
-    try {
-      const earliest = trips.filter(t=>t.ticker===sym).sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate))[0];
-      const from = new Date(earliest.entryDate);
-      from.setDate(from.getDate()-90);
-      const fromStr = from.toISOString().slice(0,10);
-      const toStr = new Date().toISOString().slice(0,10);
-      dailyData[sym] = await fetchOHLCV(sym, fromStr, toStr);
-      await new Promise(r=>setTimeout(r,250));
-      // Fetch 1H candles (last 30 days of data is typical FMP limit for free)
-      const from1H = new Date(earliest.entryDate);
-      from1H.setDate(from1H.getDate()-30);
-      hourlyData[sym] = await fetchOHLCV1H(sym, from1H.toISOString().slice(0,10), toStr);
-    } catch(e){ console.warn(`Failed: ${sym}`, e); dailyData[sym]=[]; hourlyData[sym]=[]; }
-    await new Promise(r=>setTimeout(r,350));
-  }
-
-  // Classify each trade using both timeframes
-  for(let i=0;i<trips.length;i++){
-    const t = trips[i];
-    status.textContent = `Classifying trade ${i+1}/${trips.length}...`;
-    bar.style.width = `${50+(i/trips.length)*50}%`;
-    const daily = dailyData[t.ticker]||[];
-    const hourly = hourlyData[t.ticker]||[];
-    if(daily.length>=10){
-      const result = classifyTradeICT(t, daily, hourly.length>=10?hourly:null);
-      t.ictConcept = result.concept;
-      t.ictConceptLabel = result.conceptLabel;
-      t.ictConceptDetail = result.conceptDetail;
-      t.ictModel = result.model;
-      t.weeklyPhase = result.weeklyPhase;
-      t.entryZone = result.zone;
-      t.detectionTF = result.tf;
-      t.voidCount = result.voidCount;
-      t.fvgCount = result.fvgCount;
-      t.obCount = result.obCount;
-    }
-  }
-
-  STATE.roundTrips = trips;
-  STATE.analyzed = true;
-  save();
-
-  bar.style.width='100%'; status.textContent='Analysis complete!';
-  btn.textContent='Re-Analyze'; btn.disabled=false;
-  setTimeout(()=>{ prog.style.display='none'; }, 2000);
-  renderInsights();
-}
-
-// ─── ICT MODEL LIBRARY ───
+// ─── ICT MODELS ───
 const MODELS = [
   { id:'weekly-xamd', name:'Weekly XAMD', cat:'WEEKLY', color:'var(--sage)',
-    desc:'Trade the weekly candle using XAMD structure. Bias from weekly/monthly, entry during Wednesday manipulation.',
-    checklist:['Identify previous week high, low, CE of weekly range','Mark all weekly voids','Determine weekly bias from draw on liquidity','Monday/Tuesday: Mark accumulation range (XA)','Wednesday: Wait for manipulation at key level','Enter after 10 AM confirmation','Target: Opposing liquidity, void CE, or next void','Stop: Below/above the manipulation void'],
-    params:{Bias:'Weekly/Monthly',Entry:'Daily or 4H',Session:'NY AM',Day:'Wed entry, Thu/Fri dist',PD:'Void CE, BPR, weekly FVG'},
-    match: rt => ({ session: rt.session==='NY AM'?2:rt.session==='London'?1:0, day: rt.dayOfWeek==='Wed'?3:rt.dayOfWeek==='Thu'?1:0, hold: rt.holdDays>=1&&rt.holdDays<=5?2:0, dte: rt.daysToExpiry>=5&&rt.daysToExpiry<=30?2:0 })
+    desc:'Trade the weekly candle using XAMD structure. Accumulate Mon/Tue, manipulation Wed, distribute Thu/Fri.',
+    checklist:['Identify previous week high, low, and CE of weekly range','Mark all weekly voids','Determine weekly bias from draw on liquidity','Mon/Tue: Mark accumulation range','Wednesday: Wait for manipulation at key level','Enter after 10 AM ET confirmation','Target: Opposing liquidity, void CE, or next void','Stop: Below/above the manipulation wick'],
+    params:{Bias:'Weekly/Monthly',Entry:'Daily or 4H',Session:'NY AM',Day:'Wed entry',Hold:'1-5 days'},
+    profile:{ sessions:['NY AM'], days:['Wed','Thu'], holdMin:1, holdMax:5, dteMin:5, dteMax:30 }
   },
   { id:'daily-amd', name:'Daily AMD', cat:'DAILY', color:'var(--blue)',
-    desc:'Trade the daily candle using AMD structure. Enter at 10 AM every day after confirming bias.',
-    checklist:['Mark prior day high, low, CE','Identify daily voids on 24H chart','Watch Asian session for accumulation range','London: Identify manipulation direction','10 AM ET: Confirm bias','Enter 10 AM – 12 PM on agreement/disagreement','Target: Prior day high/low, daily void'],
-    params:{Bias:'Weekly',Entry:'1H or 15min',Session:'NY AM (10-12)',Day:'Any',PD:'Daily void, FVG'},
-    match: rt => ({ session: rt.session==='NY AM'?3:rt.session==='NY PM'?1:0, day: 1, hold: rt.holdDays<=1?3:rt.holdDays<=3?1:0, dte: rt.daysToExpiry<=14?2:0 })
+    desc:'Trade the daily candle. Accumulation in Asian/London, manipulation at open, distribution by close.',
+    checklist:['Mark prior day high, low, and CE','Identify daily voids','Asian session: Mark accumulation range','London: Identify manipulation direction','10 AM ET: Confirm bias from agreement/disagreement','Enter 10 AM - 12 PM','Target: Prior day high/low or daily void'],
+    params:{Bias:'Weekly',Entry:'1H or 15min',Session:'NY AM (10-12)',Day:'Any',Hold:'0-2 days'},
+    profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:2, dteMin:0, dteMax:14 }
   },
   { id:'void-to-void', name:'Void-to-Void', cat:'SWING', color:'var(--amber)',
-    desc:"Enter at one void, target the next void. Matt's highest-conviction model.",
-    checklist:['Identify all voids on higher timeframe','Determine bias from draw on liquidity','Wait for agreement/disagreement at void','Enter at or near void CE','First TP: CE of next void','Runner: Full closure of next void'],
-    params:{Bias:'Any',Entry:'At void CE',Session:'Any',Day:'Any',PD:'Void CE → next Void'},
-    match: rt => ({ session: 1, day: 1, hold: rt.holdDays>=1&&rt.holdDays<=10?2:0, dte: rt.daysToExpiry>=7?2:0 })
+    desc:"Enter at one void's CE, target the next void. Matt's highest-conviction model.",
+    checklist:['Identify all voids on the higher timeframe','Determine bias from draw on liquidity','Wait for price to reach a void','Enter at or near the void CE (50% level)','First target: CE of the next void','Runner: Full closure of the next void'],
+    params:{Bias:'Any',Entry:'At void CE',Session:'Any',Day:'Any',Hold:'2-10 days'},
+    profile:{ sessions:['NY AM','London','NY PM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:2, holdMax:10, dteMin:7, dteMax:45 }
   },
   { id:'bpr-entry', name:'BPR Entry', cat:'DAILY', color:'var(--blue)',
-    desc:'When an FVG gets closed through and becomes a BPR, trade the retest of its CE.',
-    checklist:['Identify FVG on 4H/6H chart','Wait for price to close through (now a BPR)','Wait for retrace to CE of the BPR','Enter on rejection at CE','Target: Opposing liquidity or next void'],
-    params:{Bias:'Daily/Weekly',Entry:'1H',Session:'NY AM',Day:'Wed/Thu',PD:'BPR CE'},
-    match: rt => ({ session: rt.session==='NY AM'?2:0, day: (rt.dayOfWeek==='Wed'||rt.dayOfWeek==='Thu')?2:0, hold: rt.holdDays<=3?2:0, dte: rt.daysToExpiry<=14?2:0 })
+    desc:'An FVG gets closed through, becoming a Balanced Price Range. Trade the retest of its CE.',
+    checklist:['Identify FVG on 4H/6H chart','Wait for price to close through the FVG (now a BPR)','Mark the CE of the BPR','Wait for retrace back to the CE','Enter on rejection candle at CE','Target: Opposing liquidity or next void'],
+    params:{Bias:'Daily/Weekly',Entry:'1H',Session:'NY AM',Day:'Wed/Thu',Hold:'1-3 days'},
+    profile:{ sessions:['NY AM'], days:['Wed','Thu'], holdMin:1, holdMax:3, dteMin:3, dteMax:14 }
   },
   { id:'wednesday-manip', name:'Wednesday Manipulation', cat:'WEEKLY', color:'var(--sage)',
-    desc:'Target Wednesday manipulation of the weekly candle for entry. Wait for disagreement.',
-    checklist:['Sun/Mon: Determine weekly bias','Tue: Mark accumulation range','Wed: Wait for manipulation — disagreement','Enter during Wednesday NY AM session','Target: Weekly void, opposing liquidity','Stop: Below Wednesday manipulation low'],
-    params:{Bias:'Weekly',Entry:'4H or 1H',Session:'NY AM',Day:'Wednesday',PD:'Weekly void, CE'},
-    match: rt => ({ session: rt.session==='NY AM'?2:0, day: rt.dayOfWeek==='Wed'?4:0, hold: rt.holdDays>=1&&rt.holdDays<=4?2:0, dte: rt.daysToExpiry>=5?1:0 })
+    desc:'Target Wednesday as the manipulation day of the weekly XAMD candle. Wait for disagreement.',
+    checklist:['Sun/Mon: Determine weekly bias','Tue: Mark accumulation range boundaries','Wed: Wait for price to sweep accumulation','Observe disagreement at the swept level','Enter during Wednesday NY AM session','Target: Weekly void or opposing liquidity','Stop: Below the Wednesday manipulation wick'],
+    params:{Bias:'Weekly',Entry:'4H or 1H',Session:'NY AM',Day:'Wednesday only',Hold:'1-4 days'},
+    profile:{ sessions:['NY AM'], days:['Wed'], holdMin:1, holdMax:4, dteMin:5, dteMax:21 }
   },
   { id:'agree-liq', name:'Agreement at Liquidity', cat:'INTRADAY', color:'var(--green)',
-    desc:'Price reaches liquidity and continues — trade the continuation after retrace.',
-    checklist:['Identify draw on liquidity target','Wait for price to reach opposing liquidity','Observe agreement (continuation)','Enter on retrace back to range','Target: Next liquidity in same direction'],
-    params:{Bias:'Any',Entry:'Any',Session:'Any',Day:'Any',PD:'Liquidity level'},
-    match: rt => ({ session: rt.session==='NY AM'?2:1, day: 1, hold: rt.holdDays<=2?2:0, dte: rt.daysToExpiry<=14?2:0 })
+    desc:'Price reaches liquidity and agrees (continues). Trade the continuation after a retrace.',
+    checklist:['Identify the draw on liquidity target','Wait for price to reach that liquidity level','Observe agreement: price continues past the level','Enter on first retrace back toward the level','Target: Next liquidity level in same direction'],
+    params:{Bias:'Any',Entry:'15min-1H',Session:'Any',Day:'Any',Hold:'0-2 days'},
+    profile:{ sessions:['NY AM','NY PM','London'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:2, dteMin:0, dteMax:14 }
   },
   { id:'disagree-liq', name:'Disagreement at Liquidity', cat:'INTRADAY', color:'var(--green)',
-    desc:"Price reaches liquidity and reverses — trade the reversal. Matt's preferred setup.",
-    checklist:['Identify draw on liquidity target','Wait for price to reach liquidity','Observe disagreement (reversal after sweep)','Enter immediately — already in opposing liquidity','Target: Opposing side liquidity'],
-    params:{Bias:'Any',Entry:'Any',Session:'Any',Day:'Any',PD:'Liquidity level'},
-    match: rt => ({ session: rt.session==='NY AM'?2:1, day: 1, hold: rt.holdDays<=2?2:0, dte: rt.daysToExpiry<=14?2:0 })
+    desc:"Price reaches liquidity and disagrees (reverses). Matt's preferred reversal setup.",
+    checklist:['Identify the draw on liquidity target','Wait for price to reach that liquidity','Observe disagreement: wick through then close back inside','Enter immediately on reversal confirmation','Target: Opposing side liquidity'],
+    params:{Bias:'Any',Entry:'15min-1H',Session:'Any',Day:'Any',Hold:'0-2 days'},
+    profile:{ sessions:['NY AM','NY PM','London'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:2, dteMin:0, dteMax:14 }
   },
   { id:'rejection-void', name:'Rejection Block + Void', cat:'SWING', color:'var(--amber)',
-    desc:'Rejection block CE coincides with a void — the strongest confluence entry.',
-    checklist:['Identify rejection block on higher TF','Confirm void at same level','CE of rejection block inside void = confluence','Wait for manipulation at this level','Enter on rejection'],
-    params:{Bias:'Higher TF',Entry:'Lower TF',Session:'NY AM',Day:'Any',PD:'Void + RB CE'},
-    match: rt => ({ session: rt.session==='NY AM'?2:0, day: 1, hold: rt.holdDays>=2?2:0, dte: rt.daysToExpiry>=14?2:0 })
+    desc:'Rejection block CE at the same price as a void — the strongest confluence entry.',
+    checklist:['Identify rejection block on higher TF','Confirm a void exists at the same level','CE of rejection block is inside the void = max confluence','Wait for price to reach this level','Enter on rejection'],
+    params:{Bias:'Higher TF',Entry:'Lower TF',Session:'NY AM',Day:'Any',Hold:'2-7 days'},
+    profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:2, holdMax:7, dteMin:14, dteMax:45 }
   },
   { id:'tf-alignment', name:'Timeframe Alignment', cat:'SWING', color:'var(--amber)',
-    desc:'Align bias across multiple timeframes and enter on the lowest aligned one.',
-    checklist:['Weekly bias: bullish or bearish','Daily bias: confirm alignment','4H bias: confirm alignment','1H entry: aligned with all above','Enter when all timeframes agree'],
-    params:{Bias:'3+ TFs aligned',Entry:'Lowest TF',Session:'NY AM',Day:'Any',PD:'Aligned levels'},
-    match: rt => ({ session: rt.session==='NY AM'?2:0, day: 1, hold: rt.holdDays>=2?2:0, dte: rt.daysToExpiry>=7?2:0 })
+    desc:'Align bias across weekly, daily, 4H, and 1H. Enter on the lowest timeframe when all agree.',
+    checklist:['Weekly bias: determine bullish or bearish','Daily bias: must confirm weekly','4H bias: must confirm daily','1H: find entry when aligned with all above','Enter only when all timeframes agree'],
+    params:{Bias:'3+ TFs aligned',Entry:'Lowest aligned TF',Session:'NY AM',Day:'Any',Hold:'2-10 days'},
+    profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:2, holdMax:10, dteMin:7, dteMax:30 }
   },
   { id:'monthly-amdx', name:'Monthly AMDX Swing', cat:'SWING', color:'var(--amber)',
-    desc:'Trade the monthly candle structure for swing/LEAPS positions.',
-    checklist:['Mark monthly opening range','Week 1: Accumulation — mark range','Week 2-3: Manipulation — entry window','Enter during monthly manipulation week','Target: Monthly void, opposing liquidity'],
-    params:{Bias:'Monthly/Quarterly',Entry:'Weekly',Session:'Any',Day:'Week 2-3',PD:'Monthly void'},
-    match: rt => ({ session: 1, day: 1, hold: rt.holdDays>=5?3:0, dte: rt.daysToExpiry>=30?3:rt.daysToExpiry>=14?1:0 })
+    desc:'Trade the monthly candle structure for swing or LEAPS positions.',
+    checklist:['Mark monthly opening range','Week 1: Accumulation — mark the range','Week 2-3: Manipulation — your entry window','Enter during the monthly manipulation week','Target: Monthly void or opposing liquidity'],
+    params:{Bias:'Monthly/Quarterly',Entry:'Weekly/Daily',Session:'Any',Day:'Week 2-3',Hold:'5-30 days'},
+    profile:{ sessions:['NY AM','London','NY PM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:5, holdMax:45, dteMin:30, dteMax:90 }
   },
   { id:'intraday-scalp', name:'Intraday Scalp', cat:'INTRADAY', color:'var(--green)',
-    desc:'Scalp intraday moves on 15min/1min aligned with higher TF bias.',
-    checklist:['Confirm daily/weekly bias','Drop to 15min or 1H chart','Identify intraday voids, FVGs, BPRs','Find XAMD pattern on intraday candle','Enter during manipulation phase','Target: Prior day H/L, intraday void'],
-    params:{Bias:'Daily/Weekly',Entry:'15min or 1min',Session:'NY AM',Day:'Any',PD:'Intraday void/FVG'},
-    match: rt => ({ session: rt.session==='NY AM'?3:0, day: 1, hold: rt.holdDays===0?3:rt.holdDays===1?1:0, dte: rt.daysToExpiry<=7?3:rt.daysToExpiry<=14?1:0 })
+    desc:'Scalp intraday moves on the 15min/5min chart, aligned with higher TF bias.',
+    checklist:['Confirm daily and weekly bias direction','Drop to 15min or 5min chart','Identify intraday voids, FVGs, or BPRs','Find the XAMD pattern on intraday candle','Enter during the manipulation phase','Target: Prior day high/low or intraday void'],
+    params:{Bias:'Daily/Weekly',Entry:'15min or 5min',Session:'NY AM',Day:'Any',Hold:'Same day'},
+    profile:{ sessions:['NY AM'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:0, holdMax:1, dteMin:0, dteMax:7 }
   },
   { id:'wheel-strategy', name:'Wheel Strategy', cat:'OPTIONS', color:'var(--purple)',
-    desc:'Combine ICT liquidity with options wheel: sell CSP → own shares → sell CC → repeat.',
-    checklist:['Identify ticker at swing low (SSL)','Sell cash-secured put at/near that level','If assigned: Own shares at discount','Sell covered call at swing high (BSL)','Repeat: Cash → Shares → Cash → Shares'],
-    params:{Bias:'Weekly/Monthly',Entry:'At liquidity',Session:'Any',Day:'Any',PD:'Swing H/L'},
-    match: rt => ({ session: 1, day: 1, hold: rt.holdDays>=7?2:0, dte: rt.daysToExpiry>=14?2:0 })
+    desc:'Combine ICT swing low/high levels with options wheel: sell CSP at SSL, sell CC at BSL.',
+    checklist:['Identify ticker at swing low (SSL)','Sell cash-secured put at or near SSL','If assigned: own shares at discount','Sell covered call at swing high (BSL)','Repeat the cycle: Cash → Shares → Cash'],
+    params:{Bias:'Weekly/Monthly',Entry:'At liquidity',Session:'Any',Day:'Any',Hold:'7-45 days'},
+    profile:{ sessions:['NY AM','NY PM','London'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:7, holdMax:45, dteMin:14, dteMax:45 }
   },
   { id:'vix-spike', name:'VIX Spike Mean Reversion', cat:'OPTIONS', color:'var(--purple)',
     desc:'Buy UVXY puts on major VIX spikes — 80-90% probability trade.',
-    checklist:['VIX spikes above 30-40','Buy UVXY puts','Target: VIX return to equilibrium (<24)','Exit as VIX returns to discount'],
-    params:{Bias:'Mean reversion',Entry:'On spike',Session:'Any',Day:'Any',PD:'VIX > 30'},
-    match: rt => ({ session: 1, day: 1, hold: rt.holdDays>=5?2:0, dte: 1 })
+    checklist:['Wait for VIX to spike above 30-40','Buy UVXY puts (30-60 DTE)','Target: VIX returning to equilibrium under 24','Exit as VIX returns to discount zone'],
+    params:{Bias:'Mean reversion',Entry:'On VIX spike',Session:'Any',Day:'Any',Hold:'5-30 days'},
+    profile:{ sessions:['NY AM','NY PM','London'], days:['Mon','Tue','Wed','Thu','Fri'], holdMin:5, holdMax:30, dteMin:14, dteMax:60 }
   }
 ];
 
-const SESSIONS = ['London','NY AM','NY PM','After Hours'];
-const DAYS = ['Mon','Tue','Wed','Thu','Fri'];
+// ─── MODEL SCORING (from winning trade characteristics) ───
+function scoreModels(trips){
+  const wins = trips.filter(t=>t.win);
+  if(wins.length < 2) return MODELS.map(m=>({ model:m, score:0, matchingWins:[], reasons:[] }));
+
+  return MODELS.map(model=>{
+    const p = model.profile;
+    let score = 0;
+    const reasons = [];
+    const matchingWins = [];
+
+    wins.forEach(w=>{
+      let tradeScore = 0;
+
+      // Session fit
+      if(p.sessions.includes(w.session)) tradeScore += 3;
+      else if(w.session) tradeScore -= 1;
+
+      // Day fit
+      if(p.days.includes(w.dayOfWeek)) tradeScore += 2;
+
+      // Hold duration fit
+      if(w.holdDays >= p.holdMin && w.holdDays <= p.holdMax) tradeScore += 3;
+      else if(Math.abs(w.holdDays - (p.holdMin+p.holdMax)/2) <= 2) tradeScore += 1;
+
+      // DTE fit
+      if(w.daysToExpiry >= p.dteMin && w.daysToExpiry <= p.dteMax) tradeScore += 2;
+
+      if(tradeScore >= 6) matchingWins.push(w);
+      score += tradeScore;
+    });
+
+    // Normalize by number of wins
+    score = score / wins.length;
+
+    // Bonus for high match rate among wins
+    const matchRate = matchingWins.length / wins.length;
+    if(matchRate >= 0.5) score += 5;
+    else if(matchRate >= 0.3) score += 3;
+
+    // Bonus for P&L of matching wins
+    if(matchingWins.length >= 2){
+      const matchPnl = totalPnl(matchingWins);
+      if(matchPnl > 0) score += 2;
+    }
+
+    // Build reasons
+    // Session
+    const sessGroups = groupBy(wins.filter(w=>w.session), w=>w.session);
+    const topSess = Object.entries(sessGroups).sort((a,b)=>b[1].length-a[1].length)[0];
+    if(topSess && p.sessions.includes(topSess[0])){
+      reasons.push(`${pct(topSess[1].length, wins.length)}% of your wins come in <strong>${topSess[0]}</strong>, this model's ideal session.`);
+    }
+
+    // Day
+    const dayGroups = groupBy(wins, w=>w.dayOfWeek);
+    if(model.id === 'wednesday-manip'){
+      const wedWins = dayGroups['Wed']||[];
+      if(wedWins.length >= 2) reasons.push(`You have <strong>${wedWins.length} wins on Wednesday</strong> (${pct(wedWins.length, wins.length)}% of wins).`);
+    }
+    const topDay = Object.entries(dayGroups).sort((a,b)=>b[1].length-a[1].length)[0];
+    if(topDay && p.days.includes(topDay[0]) && model.id !== 'wednesday-manip'){
+      reasons.push(`Your best winning day is <strong>${topDay[0]}</strong>, which aligns with this model.`);
+    }
+
+    // Hold
+    const avgHold = wins.reduce((s,w)=>s+w.holdDays,0)/wins.length;
+    if(avgHold >= p.holdMin && avgHold <= p.holdMax){
+      reasons.push(`Your avg winning hold of <strong>${avgHold.toFixed(1)} days</strong> fits this model's ${p.holdMin}-${p.holdMax} day range.`);
+    }
+
+    // Match count
+    if(matchingWins.length >= 2){
+      reasons.push(`<strong>${matchingWins.length} of your ${wins.length} wins</strong> (${pct(matchingWins.length, wins.length)}%) match this model's profile.`);
+    }
+
+    return { model, score, matchingWins, reasons };
+  }).sort((a,b)=>b.score-a.score);
+}
+
+// ─── GENERATE STORY ───
+function generateStory(trips){
+  if(!trips.length) return '';
+
+  const wins = trips.filter(t=>t.win);
+  const losses = trips.filter(t=>!t.win);
+  const wr = winRate(trips);
+  const tp = totalPnl(trips);
+  const tickers = [...new Set(trips.map(t=>t.ticker))];
+
+  // ── Pattern analysis on WINS ──
+  const winSessions = groupBy(wins.filter(w=>w.session), w=>w.session);
+  const winDays = groupBy(wins, w=>w.dayOfWeek);
+  const winTickers = groupBy(wins, w=>w.ticker);
+  const winTypes = groupBy(wins, w=>w.optionType);
+
+  const bestSess = best(winSessions);
+  const worstSess = worst(groupBy(trips.filter(t=>t.session), t=>t.session));
+  const bestDay = best(winDays);
+  const worstDay = worst(groupBy(trips, t=>t.dayOfWeek));
+  const bestTicker = Object.entries(winTickers).sort((a,b)=>b[1].length-a[1].length)[0];
+
+  const avgWinHold = wins.length ? (wins.reduce((s,w)=>s+w.holdDays,0)/wins.length) : 0;
+  const avgLossHold = losses.length ? (losses.reduce((s,w)=>s+w.holdDays,0)/losses.length) : 0;
+  const avgWinPnl = wins.length ? avgPnl(wins) : 0;
+  const avgLossPnl = losses.length ? avgPnl(losses) : 0;
+  const avgWinDTE = wins.length ? (wins.reduce((s,w)=>s+w.daysToExpiry,0)/wins.length) : 0;
+
+  const calls = trips.filter(t=>t.optionType==='CALL');
+  const puts = trips.filter(t=>t.optionType==='PUT');
+  const callWR = winRate(calls), putWR = winRate(puts);
+
+  // Hold duration buckets
+  const quickWins = wins.filter(w=>w.holdDays<=1);
+  const swingWins = wins.filter(w=>w.holdDays>=2 && w.holdDays<=7);
+  const longWins = wins.filter(w=>w.holdDays>7);
+
+  // Score models
+  const scored = scoreModels(trips);
+  const top3 = scored.slice(0,3);
+
+  // ── Build the story ──
+  let html = '';
+
+  // HERO
+  html += `<div class="story-hero">
+    <h1>${tp>=0 ? 'Your winning edge, decoded.' : 'Finding your edge.'}</h1>
+    <div class="hero-sub">We analyzed <strong>${trips.length} round-trip trades</strong> across <strong>${tickers.length} tickers</strong> to find the patterns hiding in your winners.</div>
+  </div>`;
+
+  // 1. THE OVERVIEW
+  html += `<div class="story-section">
+    <h2><span class="section-num">1</span>The Overview</h2>
+    <div class="story-stat-row">
+      <div class="story-stat"><div class="ss-val">${trips.length}</div><div class="ss-label">Round Trips</div></div>
+      <div class="story-stat"><div class="ss-val" style="color:${wr>=50?'var(--green)':'var(--red)'}">${wr}%</div><div class="ss-label">Win Rate</div></div>
+      <div class="story-stat"><div class="ss-val" style="color:${tp>=0?'var(--green)':'var(--red)'}">${tp>=0?'+':''}$${tp.toFixed(0)}</div><div class="ss-label">Total P&L</div></div>
+      <div class="story-stat"><div class="ss-val">${wins.length}</div><div class="ss-label">Winners</div></div>
+    </div>
+    <p class="story-p">You took ${trips.length} completed round trips, winning <span class="hl">${wins.length} of them (${wr}%)</span>. Your average win is <span class="hl-green">+$${avgWinPnl.toFixed(0)}</span> and your average loss is <span class="hl-red">$${avgLossPnl.toFixed(0)}</span>${Math.abs(avgLossPnl) > avgWinPnl*1.3 && wins.length>=3 ? '. Your losses are bigger than your wins — this is the first thing to address.' : '.'}</p>
+  </div>`;
+
+  // 2. WHEN YOU WIN
+  html += `<div class="story-section">
+    <h2><span class="section-num">2</span>When You Win</h2>
+    <div class="section-intro">We looked at the session and day-of-week of every winning trade.</div>`;
+
+  if(bestSess){
+    const bsArr = bestSess[1], bsName = bestSess[0];
+    const bsPct = pct(bsArr.length, wins.length);
+    html += `<p class="story-p">Your wins cluster in the <span class="hl">${bsName}</span> session — <strong>${bsArr.length} of your ${wins.length} wins (${bsPct}%)</strong> happen there. `;
+    if(bsName==='NY AM') html += `This is the session Matt Reese trades almost exclusively. The daily manipulation is complete by 10 AM, and the distribution move runs until noon. Your timing already aligns with the strongest ICT window.</p>`;
+    else if(bsName==='London') html += `London is when the daily manipulation often begins. You're catching the early move before NY confirms the direction.</p>`;
+    else if(bsName==='NY PM') html += `The afternoon session is typically distribution. You're catching the continuation after the morning setup.</p>`;
+    else html += `</p>`;
+  }
+
+  if(bestDay){
+    const bdArr = bestDay[1], bdName = bestDay[0];
+    html += `<p class="story-p">Your strongest winning day is <span class="hl">${bdName}</span> — you win <strong>${winRate(bdArr)}%</strong> of ${bdArr.length} trades taken that day. `;
+    if(bdName==='Wed') html += `Wednesday is the manipulation day in the weekly XAMD cycle. This isn't coincidence — you're naturally trading the weekly manipulation.</p>`;
+    else if(bdName==='Mon'||bdName==='Tue') html += `Early-week entries mean you're catching the accumulation-to-manipulation phase of the weekly candle.</p>`;
+    else if(bdName==='Thu'||bdName==='Fri') html += `Late-week entries mean you're riding the distribution leg of the weekly candle.</p>`;
+    else html += `</p>`;
+  }
+
+  // Session + Day combo for ALL trades (to find blind spots)
+  if(worstSess && worstSess[1].length>=3 && winRate(worstSess[1])<35){
+    html += `<div class="story-warning"><strong>Blind spot:</strong> Your ${worstSess[0]} session win rate is just <strong>${winRate(worstSess[1])}%</strong> across ${worstSess[1].length} trades. Consider sitting this session out entirely — it's dragging down your overall edge.</div>`;
+  }
+  if(worstDay && worstDay[1].length>=3 && winRate(worstDay[1])<35 && worstDay[0]!==bestDay?.[0]){
+    html += `<div class="story-warning"><strong>Weak day:</strong> ${worstDay[0]} is your worst day at <strong>${winRate(worstDay[1])}%</strong> win rate. Your winners don't come on ${worstDay[0]}s — your model shouldn't either.</div>`;
+  }
+
+  html += `</div>`;
+
+  // 3. HOW YOU WIN
+  html += `<div class="story-section">
+    <h2><span class="section-num">3</span>How You Win</h2>
+    <div class="section-intro">The structure of your winning trades — hold time, DTE, direction.</div>`;
+
+  // Hold duration
+  let holdStory = '';
+  if(quickWins.length >= swingWins.length && quickWins.length >= longWins.length){
+    holdStory = `You're a <span class="hl">quick-flip trader</span> — ${quickWins.length} of your ${wins.length} wins are held 0-1 days. Your winning edge is in fast execution, not patience.`;
+  } else if(swingWins.length >= quickWins.length && swingWins.length >= longWins.length){
+    holdStory = `You're a <span class="hl">swing trader</span> — ${swingWins.length} of your ${wins.length} wins are held 2-7 days. You give trades time to work without overstaying.`;
+  } else {
+    holdStory = `You're a <span class="hl">position trader</span> — ${longWins.length} of your ${wins.length} wins are held 7+ days. You have patience and conviction.`;
+  }
+  html += `<p class="story-p">${holdStory} Your average winning hold is <strong>${avgWinHold.toFixed(1)} days</strong>${avgLossHold>avgWinHold*1.5&&losses.length>=3 ? `, but your average losing hold is <strong>${avgLossHold.toFixed(1)} days</strong> — you hold losers too long` : ''}.</p>`;
+
+  // Calls vs Puts
+  if(calls.length >= 2 && puts.length >= 2){
+    const bias = callWR > putWR + 10 ? 'bullish' : putWR > callWR + 10 ? 'bearish' : 'balanced';
+    html += `<p class="story-p">`;
+    if(bias==='bullish') html += `You have a clear <span class="hl-green">bullish edge</span> — calls win at <strong>${callWR}%</strong> vs puts at <strong>${putWR}%</strong>. ${calls.length >= puts.length*2 ? "And you clearly prefer calls, which is smart — trade what works." : "Even though you trade both directions, your winners skew bullish."}`;
+    else if(bias==='bearish') html += `You have a clear <span class="hl-red">bearish edge</span> — puts win at <strong>${putWR}%</strong> vs calls at <strong>${callWR}%</strong>. You read the downside better.`;
+    else html += `Your directional edge is <span class="hl">balanced</span> — calls at ${callWR}% and puts at ${putWR}%. You read both sides of the market.`;
+    html += `</p>`;
+  } else if(calls.length >= 2){
+    html += `<p class="story-p">You trade almost exclusively <span class="hl-green">calls</span> (${calls.length} of ${trips.length} trades) with a <strong>${callWR}%</strong> win rate.</p>`;
+  } else if(puts.length >= 2){
+    html += `<p class="story-p">You trade almost exclusively <span class="hl-red">puts</span> (${puts.length} of ${trips.length} trades) with a <strong>${putWR}%</strong> win rate.</p>`;
+  }
+
+  // DTE
+  html += `<p class="story-p">Your winning trades average <strong>${avgWinDTE.toFixed(0)} DTE</strong> at entry. ${avgWinDTE<=7 ? 'Short-dated options — you need precision timing.' : avgWinDTE<=21 ? 'Medium-dated — enough theta runway without overpaying for time.' : 'Longer-dated — you buy time, which forgives entry imprecision.'}</p>`;
+
+  // Best ticker
+  if(bestTicker && bestTicker[1].length >= 2){
+    html += `<p class="story-p">Your most consistent winner is <span class="hl">${bestTicker[0]}</span> with <strong>${bestTicker[1].length} wins</strong> and <strong>+$${totalPnl(bestTicker[1]).toFixed(0)}</strong> P&L. You know this name — keep trading it.</p>`;
+  }
+
+  html += `</div>`;
+
+  // 4. YOUR MODEL
+  html += `<div class="story-section">
+    <h2><span class="section-num">4</span>Your Model</h2>
+    <div class="section-intro">Based on the characteristics of your winning trades, these ICT models fit you best.</div>`;
+
+  // Build "why" narrative for top model
+  const topModel = top3[0];
+  if(topModel && topModel.matchingWins.length >= 1){
+    const tm = topModel.model;
+    const mw = topModel.matchingWins;
+    const mwWR = mw.length>=2 ? winRate(mw.concat(trips.filter(t=>!t.win&&matchesProfile(t,tm.profile)))) : null;
+
+    html += `<div class="story-callout">
+      <div class="sc-label">Your #1 Model Match</div>
+      <div class="sc-text">Based on your winning patterns — ${bestSess?bestSess[0]+' session, ':''}${bestDay?bestDay[0]+'s, ':''}${avgWinHold.toFixed(0)}-day holds — you should study and focus on the <strong>${tm.name}</strong> model.</div>
+    </div>`;
+
+    html += `<div class="story-model">
+      <div class="sm-rank">#1 Recommended Model</div>
+      <div class="sm-name">${tm.name}</div>
+      <span class="sm-cat" style="background:${tm.color}18;color:${tm.color}">${tm.cat}</span>
+      <div class="sm-desc">${tm.desc}</div>
+      <div class="sm-why">
+        ${topModel.reasons.map(r=>`<p class="story-p">${r}</p>`).join('')}
+      </div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px">Setup Checklist</div>
+      <ul class="sm-checklist">${tm.checklist.map(c=>`<li>${c}</li>`).join('')}</ul>
+      <div class="sm-params">${Object.entries(tm.params).map(([k,v])=>`<div class="sm-param"><div class="sm-param-label">${k}</div><div class="sm-param-val">${v}</div></div>`).join('')}</div>
+      <div class="story-trades">
+        <details><summary>Show ${mw.length} matching winning trades</summary>
+        ${mw.map(t=>`<div class="st-row">
+          <span class="st-date">${t.entryDate}</span>
+          <span class="st-ticker">${t.ticker}</span>
+          <span class="st-type"><span class="tag ${t.optionType==='CALL'?'tag-sage':'tag-blue'}">${t.optionType==='CALL'?'C':'P'}</span></span>
+          <span class="st-detail">$${t.strike} · $${t.entryPremium.toFixed(2)}→$${t.exitPremium.toFixed(2)} · ${t.holdDays}d · ${t.session}</span>
+          <span class="st-pnl" style="color:var(--green)">+$${t.pnl.toFixed(0)}</span>
+        </div>`).join('')}
+        </details>
+      </div>
+    </div>`;
+  }
+
+  // #2 and #3 models
+  top3.slice(1).forEach((s,i)=>{
+    if(s.matchingWins.length < 1) return;
+    const m = s.model;
+    html += `<div class="story-model secondary">
+      <div class="sm-rank">#${i+2} Also Consider</div>
+      <div class="sm-name">${m.name}</div>
+      <span class="sm-cat" style="background:${m.color}18;color:${m.color}">${m.cat}</span>
+      <div class="sm-desc">${m.desc}</div>
+      <div class="sm-why">${s.reasons.slice(0,2).map(r=>`<p class="story-p">${r}</p>`).join('')}</div>
+      <div class="story-trades">
+        <details><summary>Show ${s.matchingWins.length} matching winning trades</summary>
+        ${s.matchingWins.map(t=>`<div class="st-row">
+          <span class="st-date">${t.entryDate}</span>
+          <span class="st-ticker">${t.ticker}</span>
+          <span class="st-type"><span class="tag ${t.optionType==='CALL'?'tag-sage':'tag-blue'}">${t.optionType==='CALL'?'C':'P'}</span></span>
+          <span class="st-detail">$${t.strike} · $${t.entryPremium.toFixed(2)}→$${t.exitPremium.toFixed(2)} · ${t.holdDays}d · ${t.session}</span>
+          <span class="st-pnl" style="color:var(--green)">+$${t.pnl.toFixed(0)}</span>
+        </div>`).join('')}
+        </details>
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+
+  // 5. WHAT TO FOCUS ON
+  html += `<div class="story-section">
+    <h2><span class="section-num">5</span>What to Focus On</h2>`;
+
+  const actions = [];
+
+  // Session focus
+  if(bestSess){
+    const otherSess = Object.entries(winSessions).filter(([k])=>k!==bestSess[0]);
+    if(otherSess.length && bestSess[1].length >= wins.length*0.4){
+      actions.push(`<strong>Session discipline:</strong> ${pct(bestSess[1].length, wins.length)}% of your wins come in ${bestSess[0]}. Trade only in this session for the next 20 trades and see if your win rate improves.`);
+    }
+  }
+
+  // Day focus
+  if(bestDay && bestDay[1].length >= 3){
+    actions.push(`<strong>Day selection:</strong> Your ${bestDay[0]} win rate is ${winRate(bestDay[1])}%. ${bestDay[0]==='Wed'?'This aligns perfectly with the Wednesday Manipulation model.':'Consider sizing up on this day.'}`);
+  }
+
+  // Loss management
+  if(losses.length >= 3 && Math.abs(avgLossPnl) > avgWinPnl * 1.3){
+    actions.push(`<strong>Cut losses faster:</strong> Your avg loss ($${Math.abs(avgLossPnl).toFixed(0)}) is ${(Math.abs(avgLossPnl)/avgWinPnl).toFixed(1)}x your avg win ($${avgWinPnl.toFixed(0)}). Set a hard stop at 50% of premium paid.`);
+  }
+
+  // Hold time
+  if(avgLossHold > avgWinHold * 1.5 && losses.length >= 3){
+    actions.push(`<strong>Time stops:</strong> You hold losers an average of ${avgLossHold.toFixed(1)} days vs ${avgWinHold.toFixed(1)} days for winners. If a trade isn't working in ${Math.ceil(avgWinHold)} days, cut it.`);
+  }
+
+  // Direction
+  if(calls.length>=3 && puts.length>=3 && Math.abs(callWR-putWR)>15){
+    const stronger = callWR>putWR ? 'calls' : 'puts';
+    const weaker = callWR>putWR ? 'puts' : 'calls';
+    actions.push(`<strong>Directional focus:</strong> Stop trading ${weaker} until your win rate there improves. You win ${Math.max(callWR,putWR)}% on ${stronger} vs ${Math.min(callWR,putWR)}% on ${weaker}.`);
+  }
+
+  // Top model action
+  if(top3[0] && top3[0].matchingWins.length >= 2){
+    actions.push(`<strong>Study the ${top3[0].model.name}:</strong> ${top3[0].matchingWins.length} of your wins already match this model's profile. Learn the full checklist and start grading your entries against it.`);
+  }
+
+  if(actions.length){
+    html += actions.map(a=>`<p class="story-p">${a}</p>`).join('');
+  } else {
+    html += `<p class="story-p">Keep trading your current approach and upload more data. With more round trips, the patterns will sharpen.</p>`;
+  }
+
+  html += `</div>`;
+
+  return html;
+}
+
+function matchesProfile(trade, profile){
+  return profile.sessions.includes(trade.session) &&
+    profile.days.includes(trade.dayOfWeek) &&
+    trade.holdDays >= profile.holdMin && trade.holdDays <= profile.holdMax;
+}
 
 // ─── UPLOAD ───
 function setupUpload(){
@@ -854,16 +776,15 @@ function handleFile(file){
   const reader=new FileReader();
   reader.onload=e=>{
     const raw=parseSchwabCSV(e.target.result);
-    const rt=matchTrades(raw);
+    const trips=matchTrades(raw);
     STATE.rawTrades=raw;
-    STATE.roundTrips=rt;
+    STATE.roundTrips=trips;
     STATE.lastFile=file.name;
     save();
     document.getElementById('parseStatus').innerHTML=`
-      <div class="insight"><div class="insight-title">Import Complete</div>
-      <div class="insight-text">Parsed <strong>${raw.length}</strong> individual trades → <strong>${rt.length}</strong> matched round trips from <strong>${new Set(rt.map(t=>t.ticker)).size}</strong> tickers.
-      ${raw.length-rt.length*2>0?`<br>${raw.length-rt.length*2} trades unmatched (open positions or spreads).`:''}</div></div>`;
-    go('insights');
+      <div class="story-callout"><div class="sc-label">Import Complete</div>
+      <div class="sc-text">Parsed <strong>${raw.length}</strong> trades → <strong>${trips.length}</strong> round trips across <strong>${new Set(trips.map(t=>t.ticker)).size}</strong> tickers.</div></div>`;
+    go('story');
   };
   reader.readAsText(file);
 }
@@ -873,385 +794,32 @@ function go(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.s===id));
-  if(id==='insights') renderInsights();
-  if(id==='models') renderModelFit();
+  if(id==='story') document.getElementById('storyContent').innerHTML = generateStory(STATE.roundTrips);
   if(id==='library') renderLibrary();
-}
-
-// ─── HELPERS ───
-function rt(){ return STATE.roundTrips; }
-function winRate(arr){ if(!arr.length) return 0; return +(arr.filter(t=>t.win).length/arr.length*100).toFixed(1); }
-function avgPnl(arr){ if(!arr.length) return 0; return +(arr.reduce((s,t)=>s+t.pnl,0)/arr.length).toFixed(2); }
-function totalPnl(arr){ return arr.reduce((s,t)=>s+t.pnl,0); }
-function groupBy(arr,fn){ const g={}; arr.forEach(t=>{ const k=fn(t)||'Unknown'; if(!g[k])g[k]=[]; g[k].push(t); }); return g; }
-function mode(arr){ if(!arr.length) return ''; const c={}; arr.forEach(v=>c[v]=(c[v]||0)+1); return Object.entries(c).sort((a,b)=>b[1]-a[1])[0][0]; }
-
-// ─── RENDER BAR CHART ───
-function renderBars(el, data, maxVal){
-  if(!data.length){ el.innerHTML='<div style="color:var(--text-muted);padding:16px;text-align:center;font-size:13px">No data</div>'; return; }
-  if(!maxVal) maxVal = Math.max(...data.map(d=>d.value),1);
-  el.innerHTML = data.map(d=>{
-    const pct = Math.max((d.value/maxVal)*100, 2);
-    const color = d.value>=50 ? 'var(--sage)' : d.value>=40 ? 'var(--amber)' : 'var(--red)';
-    return `<div class="bar-row">
-      <div class="bar-label">${d.label}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${d.color||color}">${d.value}%</div></div>
-      <div class="bar-meta">${d.meta||''}</div>
-    </div>`;
-  }).join('');
-}
-
-// ─── INSIGHTS ───
-function renderInsights(){
-  const trips = rt();
-  if(!trips.length){ go('upload'); return; }
-
-  const w = trips.filter(t=>t.win), l = trips.filter(t=>!t.win);
-  const wr = winRate(trips);
-  const tp = totalPnl(trips);
-  const avgW = w.length ? avgPnl(w) : 0;
-  const avgL = l.length ? avgPnl(l) : 0;
-  const bestTicker = Object.entries(groupBy(trips,t=>t.ticker)).sort((a,b)=>totalPnl(b[1])-totalPnl(a[1]))[0];
-  const bestSession = Object.entries(groupBy(trips.filter(t=>t.session),t=>t.session)).sort((a,b)=>winRate(b[1])-winRate(a[1]))[0];
-  const bestDay = Object.entries(groupBy(trips.filter(t=>t.dayOfWeek),t=>t.dayOfWeek)).filter(([,a])=>a.length>=2).sort((a,b)=>winRate(b[1])-winRate(a[1]))[0];
-
-  document.getElementById('insightsSub').textContent = `${trips.length} round-trip trades across ${new Set(trips.map(t=>t.ticker)).size} tickers`;
-
-  // Hero stats
-  document.getElementById('heroStats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Round Trips</div><div class="stat-value">${trips.length}</div><div class="stat-sub">${w.length}W / ${l.length}L</div></div>
-    <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value" style="color:${wr>=50?'var(--green)':'var(--red)'}">${wr}%</div><div class="stat-sub">Target: 50%+</div></div>
-    <div class="stat-card"><div class="stat-label">Total P&L</div><div class="stat-value" style="color:${tp>=0?'var(--green)':'var(--red)'}">${tp>=0?'+':''}$${tp.toFixed(0)}</div><div class="stat-sub">Avg win $${avgW.toFixed(0)} / Avg loss $${avgL.toFixed(0)}</div></div>
-    <div class="stat-card"><div class="stat-label">Best Ticker</div><div class="stat-value" style="font-size:20px">${bestTicker?bestTicker[0]:'—'}</div><div class="stat-sub">${bestTicker?'$'+totalPnl(bestTicker[1]).toFixed(0)+' P&L':''}</div></div>
-    <div class="stat-card"><div class="stat-label">Best Session</div><div class="stat-value" style="font-size:18px">${bestSession?bestSession[0]:'—'}</div><div class="stat-sub">${bestSession?winRate(bestSession[1])+'% WR':''}</div></div>
-  `;
-
-  // Show analyze bar
-  document.getElementById('analyzeBar').style.display = 'block';
-  if(STATE.analyzed){
-    document.getElementById('analyzeLabel').textContent='ICT Setup Detection Complete';
-    document.getElementById('analyzeDesc').textContent=`${trips.filter(t=>t.ictConcept&&t.ictConcept!=='NONE').length} of ${trips.length} trades matched to ICT concepts`;
-    document.getElementById('analyzeBtn').textContent='Re-Analyze';
-  }
-
-  // Top insight
-  const topModel = scoreModels(trips)[0];
-  document.getElementById('topInsight').innerHTML = topModel ? `
-    <div class="insight"><div class="insight-title">Top Model Recommendation</div>
-    <div class="insight-text">Based on your trading patterns, you should focus on the <strong>${topModel.model.name}</strong> model.
-    ${topModel.reasons.join(' ')}</div></div>` : '';
-
-  // ICT Concept breakdown (if analyzed)
-  renderConceptBreakdown(trips);
-
-  // Ticker chart
-  const tickerGroups = Object.entries(groupBy(trips,t=>t.ticker)).sort((a,b)=>b[1].length-a[1].length).slice(0,10);
-  renderBars(document.getElementById('chartTicker'),
-    tickerGroups.map(([k,arr])=>({ label:k, value:winRate(arr), meta:`${arr.length}t / $${totalPnl(arr).toFixed(0)}`, color:winRate(arr)>=50?'var(--sage)':'var(--red)' })), 100);
-
-  // Session chart
-  const sessGroups = Object.entries(groupBy(trips.filter(t=>t.session),t=>t.session)).sort((a,b)=>b[1].length-a[1].length);
-  renderBars(document.getElementById('chartSession'),
-    sessGroups.map(([k,arr])=>({ label:k, value:winRate(arr), meta:`${arr.length} trades`, color:winRate(arr)>=50?'var(--sage)':'var(--red)' })), 100);
-
-  // Day chart
-  const dayData = DAYS.map(d=>{ const arr=trips.filter(t=>t.dayOfWeek===d); return { label:d, value:arr.length?winRate(arr):0, meta:arr.length?`${arr.length} trades`:'0', color:winRate(arr)>=50?'var(--sage)':winRate(arr)>=40?'var(--amber)':'var(--red)' }; });
-  renderBars(document.getElementById('chartDay'), dayData, 100);
-
-  // Calls vs Puts
-  const calls=trips.filter(t=>t.optionType==='CALL'), puts=trips.filter(t=>t.optionType==='PUT');
-  renderBars(document.getElementById('chartType'), [
-    { label:'Calls', value:winRate(calls), meta:`${calls.length}t / $${totalPnl(calls).toFixed(0)}`, color:'var(--sage)' },
-    { label:'Puts', value:winRate(puts), meta:`${puts.length}t / $${totalPnl(puts).toFixed(0)}`, color:'var(--blue)' }
-  ], 100);
-
-  // Heatmap
-  renderHeatmap(trips);
-
-  // Weaknesses
-  renderWeaknesses(trips);
-}
-
-function renderTradeList(arr){
-  return arr.sort((a,b)=>new Date(b.entryDate)-new Date(a.entryDate)).map(t=>{
-    const tfBadge = t.detectionTF==='1H' ? '<span class="tf-badge tf-hourly">1H</span>' : t.detectionTF ? '<span class="tf-badge tf-daily">Daily</span>' : '';
-    return `<div class="trade-item">
-      <span class="ti-date">${t.entryDate}</span>
-      <span class="ti-ticker">${t.ticker}</span>
-      <span class="ti-type"><span class="tag ${t.optionType==='CALL'?'tag-sage':'tag-blue'}">${t.optionType}</span></span>
-      <span class="ti-prices">$${t.strike} · $${t.entryPremium.toFixed(2)} → $${t.exitPremium.toFixed(2)} · ${t.holdDays}d hold ${tfBadge}</span>
-      <span class="ti-pnl" style="color:${t.win?'var(--green)':'var(--red)'}">${t.win?'+':''}$${t.pnl.toFixed(0)}</span>
-      <span class="ti-meta">${t.ictConceptDetail||''}</span>
-    </div>`;
-  }).join('');
-}
-
-function toggleTradeList(el){
-  el.classList.toggle('expanded');
-}
-
-function renderConceptBreakdown(trips){
-  const el = document.getElementById('conceptBreakdown');
-  if(!STATE.analyzed){ el.innerHTML=''; return; }
-  const classified = trips.filter(t=>t.ictConcept&&t.ictConcept!=='NONE'&&t.ictConcept!=='UNKNOWN');
-  const unmatched = trips.filter(t=>!t.ictConcept||t.ictConcept==='NONE'||t.ictConcept==='UNKNOWN');
-
-  // Concept distribution
-  const concepts = {};
-  classified.forEach(t=>{ const k=t.ictConceptLabel||t.ictConcept; if(!concepts[k]) concepts[k]=[]; concepts[k].push(t); });
-  const sorted = Object.entries(concepts).sort((a,b)=>b[1].length-a[1].length);
-
-  // Model distribution
-  const models = {};
-  trips.filter(t=>t.ictModel).forEach(t=>{ const m=MODELS.find(x=>x.id===t.ictModel); const k=m?m.name:t.ictModel; if(!models[k]) models[k]=[]; models[k].push(t); });
-  const modelSorted = Object.entries(models).sort((a,b)=>b[1].length-a[1].length);
-
-  // Zone distribution
-  const zones = {};
-  trips.filter(t=>t.entryZone).forEach(t=>{ if(!zones[t.entryZone]) zones[t.entryZone]=[]; zones[t.entryZone].push(t); });
-
-  // Count timeframe distribution
-  const dailyCount = classified.filter(t=>t.detectionTF==='daily').length;
-  const hourlyCount = classified.filter(t=>t.detectionTF==='1H').length;
-
-  el.innerHTML = `
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Entry Concept (Auto-Detected)</div>
-        ${hourlyCount?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Detection: <span class="tf-badge tf-daily">Daily</span> ${dailyCount} · <span class="tf-badge tf-hourly">1H</span> ${hourlyCount} — click rows to see trades</div>`:'<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click any row to see matching trades</div>'}
-        ${sorted.length ? sorted.map(([k,arr])=>{
-          const wr=winRate(arr);
-          const pct=Math.round(arr.length/trips.length*100);
-          const id = 'concept_'+k.replace(/[^a-zA-Z]/g,'');
-          return `<div class="bar-row clickable" onclick="toggleTradeList(this)">
-            <div class="bar-label">${k}</div>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.max(pct,5)}%;background:${wr>=50?'var(--sage)':'var(--red)'}">${arr.length} (${pct}%)</div></div>
-            <div class="bar-meta"><span class="tag ${wr>=50?'tag-green':'tag-red'}">${wr}% WR</span></div>
-          </div>
-          <div class="trade-list">${renderTradeList(arr)}</div>`;
-        }).join('') : '<div style="color:var(--text-muted);font-size:13px">Run analysis to detect concepts</div>'}
-        ${unmatched.length?`<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">${unmatched.length} trades had no clear ICT setup detected</div>`:''}
-      </div>
-      <div class="card">
-        <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Detected Model (Auto-Assigned)</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click any row to see matching trades</div>
-        ${modelSorted.length ? modelSorted.map(([k,arr])=>{
-          const wr=winRate(arr);
-          return `<div class="bar-row clickable" onclick="toggleTradeList(this)">
-            <div class="bar-label">${k}</div>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(arr.length/trips.length*100),5)}%;background:${wr>=50?'var(--sage)':'var(--red)'}">${arr.length}</div></div>
-            <div class="bar-meta"><span class="tag ${wr>=50?'tag-green':'tag-red'}">${wr}% WR</span></div>
-          </div>
-          <div class="trade-list">${renderTradeList(arr)}</div>`;
-        }).join('') : '<div style="color:var(--text-muted);font-size:13px">Run analysis to assign models</div>'}
-      </div>
-    </div>
-    ${Object.keys(zones).length ? `<div class="card">
-      <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>Premium vs Discount</div>
-      <div class="grid-2">
-      ${Object.entries(zones).map(([k,arr])=>`<div style="text-align:center;padding:16px;cursor:pointer" onclick="this.querySelector('.trade-list').style.display=this.querySelector('.trade-list').style.display==='block'?'none':'block'">
-        <div style="font-size:24px;font-weight:800;color:${winRate(arr)>=50?'var(--green)':'var(--red)'}">${winRate(arr)}%</div>
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-top:4px">${k} (${arr.length} trades)</div>
-        <div style="font-size:11px;color:var(--text-sec);margin-top:2px">P&L: ${totalPnl(arr)>=0?'+':''}$${totalPnl(arr).toFixed(0)} — click to see trades</div>
-        <div class="trade-list" style="display:none;padding-left:0;text-align:left">${renderTradeList(arr)}</div>
-      </div>`).join('')}
-      </div>
-    </div>` : ''}`;
-}
-
-function renderHeatmap(trips){
-  const wrap = document.getElementById('heatmap');
-  let html = '<div class="heatmap" style="grid-template-columns:80px repeat(5,1fr)">';
-  html += '<div class="hm-label"></div>';
-  DAYS.forEach(d=>html+=`<div class="hm-label">${d}</div>`);
-  SESSIONS.forEach(sess=>{
-    html+=`<div class="hm-label">${sess}</div>`;
-    DAYS.forEach(day=>{
-      const cell = trips.filter(t=>t.session===sess&&t.dayOfWeek===day);
-      const wr = cell.length ? winRate(cell) : null;
-      const bg = wr===null?'var(--card-alt)':wr>=60?'rgba(34,197,94,0.35)':wr>=50?'rgba(34,197,94,0.15)':wr>=35?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.15)';
-      html+=`<div class="hm-cell" style="background:${bg}" title="${sess} ${day}: ${cell.length} trades">${wr!==null?wr+'%':''}<div class="hm-count">${cell.length||''}</div></div>`;
-    });
-  });
-  html+='</div>';
-  wrap.innerHTML=html;
-}
-
-function renderWeaknesses(trips){
-  const el = document.getElementById('weaknesses');
-  if(trips.length<5){ el.innerHTML=''; return; }
-  const alerts = [];
-
-  // Worst session
-  const sessPerf = Object.entries(groupBy(trips.filter(t=>t.session),t=>t.session)).filter(([,a])=>a.length>=3);
-  sessPerf.forEach(([k,arr])=>{ if(winRate(arr)<35) alerts.push(`Your <strong>${k}</strong> session has a <strong>${winRate(arr)}%</strong> win rate across ${arr.length} trades. Consider avoiding this window.`); });
-
-  // Worst day
-  DAYS.forEach(d=>{ const arr=trips.filter(t=>t.dayOfWeek===d); if(arr.length>=3&&winRate(arr)<35) alerts.push(`<strong>${d}</strong> is your weakest day at <strong>${winRate(arr)}%</strong> win rate. Consider sitting out.`); });
-
-  // Calls vs puts imbalance
-  const calls=trips.filter(t=>t.optionType==='CALL'), puts=trips.filter(t=>t.optionType==='PUT');
-  if(calls.length>=3&&puts.length>=3){
-    if(winRate(calls)>winRate(puts)+20) alerts.push(`Your calls win at <strong>${winRate(calls)}%</strong> vs puts at <strong>${winRate(puts)}%</strong>. You have a strong bullish edge — consider focusing on call setups.`);
-    if(winRate(puts)>winRate(calls)+20) alerts.push(`Your puts win at <strong>${winRate(puts)}%</strong> vs calls at <strong>${winRate(calls)}%</strong>. You have a strong bearish edge — consider focusing on put setups.`);
-  }
-
-  // Hold time insight
-  const quick=trips.filter(t=>t.holdDays<=1), swing=trips.filter(t=>t.holdDays>1&&t.holdDays<=7), long=trips.filter(t=>t.holdDays>7);
-  if(quick.length>=3&&swing.length>=3){
-    if(winRate(quick)>winRate(swing)+15) alerts.push(`Quick trades (0-1 days) win at <strong>${winRate(quick)}%</strong> vs swings at <strong>${winRate(swing)}%</strong>. You execute better on shorter timeframes.`);
-    if(winRate(swing)>winRate(quick)+15) alerts.push(`Swing trades (2-7 days) win at <strong>${winRate(swing)}%</strong> vs quick trades at <strong>${winRate(quick)}%</strong>. Give your trades more time to work.`);
-  }
-
-  // Avg loss > avg win
-  const avgW=Math.abs(avgPnl(trips.filter(t=>t.win))), avgLoss=Math.abs(avgPnl(trips.filter(t=>!t.win)));
-  if(avgLoss>avgW*1.5&&trips.length>=5) alerts.push(`Your average loss (<strong>$${avgLoss.toFixed(0)}</strong>) is ${(avgLoss/avgW).toFixed(1)}x your average win (<strong>$${avgW.toFixed(0)}</strong>). Cut losers faster or let winners run longer.`);
-
-  el.innerHTML = alerts.map(a=>`<div class="weakness">${a}</div>`).join('');
-}
-
-// ─── MODEL SCORING ───
-function scoreModels(trips){
-  if(!trips.length) return [];
-
-  // If we have real ICT classifications, use them
-  const hasICT = STATE.analyzed && trips.some(t=>t.ictModel);
-
-  const results = MODELS.map(model=>{
-    let totalScore=0;
-    const reasons=[];
-
-    if(hasICT){
-      // Score from real auto-detected classifications
-      const realMatches = trips.filter(t=>t.ictModel===model.id);
-      const realWins = realMatches.filter(t=>t.win);
-      if(realMatches.length>=2){
-        const wr = winRate(realMatches);
-        totalScore += realMatches.length * 2; // volume bonus
-        totalScore += wr >= 50 ? wr/10 : -2; // win rate bonus/penalty
-        totalScore += avgPnl(realMatches) > 0 ? 3 : 0;
-        reasons.push(`<strong>${realMatches.length}</strong> of your trades auto-detected as this model with <strong>${wr}%</strong> win rate.`);
-        if(wr>=60) reasons.push(`Strong edge — ${wr}% WR across ${realMatches.length} trades.`);
-      } else if(realMatches.length===1){
-        totalScore += realMatches[0].win ? 2 : -1;
-        reasons.push(`1 trade detected — ${realMatches[0].win?'a win':'a loss'}. Need more data.`);
-      }
-
-      // Concept match bonus
-      const conceptMap = {'VOID_CE':['void-to-void','weekly-xamd','wednesday-manip'],'VOID':['void-to-void','weekly-xamd'],'FVG':['daily-amd'],'BPR':['bpr-entry'],'OB':['daily-amd','tf-alignment'],'LIQUIDITY':['agree-liq','disagree-liq']};
-      for(const[concept, modelIds] of Object.entries(conceptMap)){
-        if(modelIds.includes(model.id)){
-          const conceptTrades = trips.filter(t=>t.ictConcept===concept);
-          if(conceptTrades.length>=2 && winRate(conceptTrades)>=50){
-            totalScore += 2;
-            reasons.push(`You win ${winRate(conceptTrades)}% at <strong>${concept.replace('_',' ')}</strong> entries.`);
-          }
-        }
-      }
-    }
-
-    // Timing pattern scoring (always applies)
-    const scores = trips.map(t=>model.match(t));
-    const avgSess = scores.reduce((s,sc)=>s+sc.session,0)/scores.length;
-    const avgDay = scores.reduce((s,sc)=>s+sc.day,0)/scores.length;
-    const avgHold = scores.reduce((s,sc)=>s+sc.hold,0)/scores.length;
-    totalScore += avgSess + avgDay + avgHold;
-
-    const bestSess = mode(trips.filter(t=>t.session).map(t=>t.session));
-    if(model.params.Session&&model.params.Session.includes(bestSess)) reasons.push(`You trade most in <strong>${bestSess}</strong>, this model's ideal session.`);
-
-    if(model.params.Day&&model.params.Day.includes('Wed')){
-      const wedT = trips.filter(t=>t.dayOfWeek==='Wed');
-      if(wedT.length>=3&&winRate(wedT)>=50) reasons.push(`Your Wed win rate is <strong>${winRate(wedT)}%</strong>.`);
-    }
-
-    const avgHoldDays = trips.reduce((s,t)=>s+t.holdDays,0)/trips.length;
-    if(model.cat==='INTRADAY'&&avgHoldDays<=2) reasons.push(`Avg hold <strong>${avgHoldDays.toFixed(1)}d</strong> fits intraday.`);
-    if(model.cat==='SWING'&&avgHoldDays>=3) reasons.push(`Avg hold <strong>${avgHoldDays.toFixed(1)}d</strong> fits swing.`);
-
-    return { model, score: totalScore, reasons };
-  });
-
-  return results.sort((a,b)=>b.score-a.score);
-}
-
-// ─── MODEL FIT ───
-function renderModelFit(){
-  const trips = rt();
-  const el = document.getElementById('modelFitCards');
-  if(!trips.length){ el.innerHTML='<div class="card" style="text-align:center;padding:40px;color:var(--text-muted)">Upload trades to get model recommendations</div>'; return; }
-
-  const scored = scoreModels(trips);
-  const top5 = scored.slice(0,5);
-
-  el.innerHTML = top5.map((s,i)=>{
-    const m = s.model;
-    const realMatches = STATE.analyzed ? trips.filter(t=>t.ictModel===m.id) : [];
-    const timingMatches = trips.filter((t,j)=>{const sc=m.match(t); return (sc.session+sc.day+sc.hold+sc.dte)>=5;});
-    const matchingTrades = realMatches.length ? realMatches : timingMatches;
-    const mWR = matchingTrades.length>=2 ? winRate(matchingTrades) : null;
-    const isReal = realMatches.length > 0;
-    return `<div class="model-card ${i===0?'recommended':''}" onclick="this.classList.toggle('expanded')">
-      <div class="mc-head">
-        <div class="mc-name">${i===0?'#1 ':''}${m.name}</div>
-        <span class="mc-cat" style="background:${m.color}22;color:${m.color}">${m.cat}</span>
-      </div>
-      <div class="mc-desc">${m.desc}</div>
-      <div class="mc-stats">
-        ${mWR!==null?`<div><div class="mc-stat-val" style="color:${mWR>=50?'var(--green)':'var(--red)'}">${mWR}%</div><div class="mc-stat-lbl">${isReal?'Detected':'Timing'} WR</div></div>`:''}
-        <div><div class="mc-stat-val">${matchingTrades.length}</div><div class="mc-stat-lbl">${isReal?'Detected':'Timing'}</div></div>
-        <div><div class="mc-stat-val">${totalPnl(matchingTrades)>=0?'+':''}$${totalPnl(matchingTrades).toFixed(0)}</div><div class="mc-stat-lbl">P&L</div></div>
-      </div>
-      ${s.reasons.length?`<div class="mc-why">${s.reasons.slice(0,2).join(' ')}</div>`:''}
-      <div class="mc-detail">
-        <div style="font-weight:700;font-size:13px;margin-bottom:8px">Setup Checklist</div>
-        ${m.checklist.map(c=>`<div class="checklist-item">${c}</div>`).join('')}
-        <div style="font-weight:700;font-size:13px;margin:12px 0 8px">Ideal Parameters</div>
-        <div class="mc-params">${Object.entries(m.params).map(([k,v])=>`<div class="mc-param"><div class="mc-param-label">${k}</div><div class="mc-param-val">${v}</div></div>`).join('')}</div>
-      </div>
-    </div>`;
-  }).join('');
 }
 
 // ─── LIBRARY ───
 function renderLibrary(){
-  const trips = rt();
-  document.getElementById('libraryGrid').innerHTML = MODELS.map(m=>{
-    const matching = trips.filter(t=>{const sc=m.match(t); return (sc.session+sc.day+sc.hold+sc.dte)>=5;});
-    const mWR = matching.length>=2 ? winRate(matching) : null;
-    return `<div class="model-card" onclick="this.classList.toggle('expanded')">
+  document.getElementById('libraryGrid').innerHTML = MODELS.map(m=>`
+    <div class="model-card" onclick="this.classList.toggle('expanded')">
       <div class="mc-head">
         <div class="mc-name">${m.name}</div>
-        <span class="mc-cat" style="background:${m.color}22;color:${m.color}">${m.cat}</span>
+        <span class="mc-cat" style="background:${m.color}18;color:${m.color}">${m.cat}</span>
       </div>
       <div class="mc-desc">${m.desc}</div>
-      <div class="mc-stats">
-        ${mWR!==null?`<div><div class="mc-stat-val" style="color:${mWR>=50?'var(--green)':'var(--red)'}">${mWR}%</div><div class="mc-stat-lbl">Your WR</div></div>`:''}
-        <div><div class="mc-stat-val">${matching.length}</div><div class="mc-stat-lbl">Matches</div></div>
-      </div>
       <div class="mc-detail">
         <div style="font-weight:700;font-size:13px;margin-bottom:8px">Setup Checklist</div>
         ${m.checklist.map(c=>`<div class="checklist-item">${c}</div>`).join('')}
         <div style="font-weight:700;font-size:13px;margin:12px 0 8px">Ideal Parameters</div>
         <div class="mc-params">${Object.entries(m.params).map(([k,v])=>`<div class="mc-param"><div class="mc-param-label">${k}</div><div class="mc-param-val">${v}</div></div>`).join('')}</div>
       </div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
 }
-
-// ─── KEYBOARD ───
-document.addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
-  if(e.key==='1') go('insights');
-  if(e.key==='2') go('models');
-  if(e.key==='3') go('library');
-  if(e.key==='4') go('upload');
-});
 
 // ─── INIT ───
 load();
 setupUpload();
-if(STATE.roundTrips.length) go('insights');
+if(STATE.roundTrips.length) go('story');
 else go('upload');
 </script>
 </body>
