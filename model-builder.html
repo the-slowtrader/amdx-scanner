@@ -141,6 +141,25 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 /* GRID */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:800px){.grid-2{grid-template-columns:1fr}}
+
+/* TRADE DRILL-DOWN */
+.bar-row.clickable{cursor:pointer;transition:background .15s}
+.bar-row.clickable:hover{background:var(--sage-light)}
+.bar-row.clickable .bar-label::after{content:'▸';margin-left:4px;font-size:10px;opacity:.4;transition:transform .2s}
+.bar-row.clickable.expanded .bar-label::after{content:'▾'}
+.trade-list{display:none;padding:4px 0 8px 112px}
+.bar-row.expanded+.trade-list{display:block}
+.trade-item{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:11px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.trade-item:last-child{border:none}
+.trade-item .ti-date{width:70px;color:var(--text-sec);flex-shrink:0}
+.trade-item .ti-ticker{width:50px;font-weight:700;flex-shrink:0}
+.trade-item .ti-type{width:40px;flex-shrink:0}
+.trade-item .ti-prices{flex:1;color:var(--text-sec)}
+.trade-item .ti-pnl{width:65px;text-align:right;font-weight:700;flex-shrink:0}
+.trade-item .ti-meta{font-size:10px;color:var(--text-muted)}
+.tf-badge{display:inline-flex;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.tf-daily{background:var(--blue-bg);color:var(--blue)}
+.tf-hourly{background:var(--purple-bg);color:var(--purple)}
 </style>
 </head>
 <body>
@@ -439,6 +458,21 @@ async function fetchOHLCV(ticker, from, to){
   return candles;
 }
 
+async function fetchOHLCV1H(ticker, from, to){
+  const cache = getOHLCVCache();
+  const key = `${ticker}_1h_${from}_${to}`;
+  if(cache[key]) return cache[key];
+  const url = `https://financialmodelingprep.com/stable/historical-chart/1hour?symbol=${ticker}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
+  const res = await fetch(url);
+  if(!res.ok) return [];
+  const data = await res.json();
+  if(!Array.isArray(data)||!data.length) return [];
+  const candles = data.map(c=>({...c, date:c.date||c.datetime?.slice(0,10)||''})).sort((a,b)=>(a.datetime||a.date).localeCompare(b.datetime||b.date));
+  cache[key] = candles;
+  setOHLCVCache(cache);
+  return candles;
+}
+
 // ─── ICT CONCEPT ENGINE ───
 function detectVoids(candles){
   const voids = [];
@@ -541,84 +575,109 @@ function getPremiumDiscount(candles, tradeDate){
   return { zone: price>ce?'PREMIUM':'DISCOUNT', ce, rangeHigh, rangeLow, price };
 }
 
-// ─── TRADE CLASSIFIER ───
-function classifyTradeICT(trade, candles){
-  const tradeDate = toISO(trade.entryDate);
-  const idx = candles.findIndex(c=>c.date>=tradeDate);
-  if(idx<5) return { concept:'UNKNOWN', model:null, details:{} };
+// ─── TRADE CLASSIFIER (multi-timeframe) ───
+function runDetectionOnCandles(candles, tradeDate, stockMid){
+  const idx = candles.findIndex(c=>(c.date||c.datetime?.slice(0,10)||'')>=tradeDate);
+  if(idx<5) return null;
 
   const priorCandles = candles.slice(0, idx+1);
-  const dayCandle = candles[idx];
-  const stockMid = (dayCandle.high+dayCandle.low)/2;
+  const tol = stockMid * 0.005;
 
-  // Detect all concepts up to trade date
   const voids = detectVoids(priorCandles).filter(v=>v.idx<idx);
   const fvgs = detectFVGs(priorCandles).filter(f=>f.idx<idx);
   const obs = detectOrderBlocks(priorCandles).filter(o=>o.idx<idx);
   const liq = detectLiquidityLevels(candles, tradeDate);
-  const pd = getPremiumDiscount(candles, tradeDate);
 
-  // Check which active levels the stock price is near (within level range or 0.5%)
-  const tol = stockMid * 0.005;
-
-  // Check voids - only recent active ones (last 20 candles)
   const activeVoids = voids.filter(v=>idx-v.idx<=20);
-  const atVoid = activeVoids.find(v=>stockMid>=v.lower-tol && stockMid<=v.upper+tol);
   const atVoidCE = activeVoids.find(v=>Math.abs(stockMid-v.ce)<=tol);
-
-  // Check FVGs
+  const atVoid = activeVoids.find(v=>stockMid>=v.lower-tol && stockMid<=v.upper+tol);
   const activeFVGs = fvgs.filter(f=>idx-f.idx<=20);
   const atFVG = activeFVGs.find(f=>stockMid>=f.lower-tol && stockMid<=f.upper+tol);
-
-  // Check Order Blocks
   const activeOBs = obs.filter(o=>idx-o.idx<=15);
   const atOB = activeOBs.find(o=>stockMid>=o.lower-tol && stockMid<=o.upper+tol);
-
-  // Check liquidity levels
   const atLiquidity = liq.find(l=>Math.abs(stockMid-l.price)<=tol);
 
-  // Determine primary concept
-  let concept = 'NONE', conceptLabel = 'No Clear Setup', conceptDetail = '';
-  if(atVoidCE){ concept='VOID_CE'; conceptLabel='Void CE Entry'; conceptDetail=`Stock near void CE at $${atVoidCE.ce.toFixed(2)} (${atVoidCE.dir})`; }
-  else if(atVoid){ concept='VOID'; conceptLabel='Void Entry'; conceptDetail=`Stock inside void $${atVoid.lower.toFixed(2)}-$${atVoid.upper.toFixed(2)}`; }
-  else if(atFVG){ concept='FVG'; conceptLabel='FVG Entry'; conceptDetail=`Stock inside FVG $${atFVG.lower.toFixed(2)}-$${atFVG.upper.toFixed(2)} (${atFVG.dir})`; }
-  else if(atOB){ concept='OB'; conceptLabel='Order Block Entry'; conceptDetail=`Stock at OB $${atOB.lower.toFixed(2)}-$${atOB.upper.toFixed(2)} (${atOB.dir})`; }
-  else if(atLiquidity){ concept='LIQUIDITY'; conceptLabel=`${atLiquidity.label}`; conceptDetail=`Stock near ${atLiquidity.label} at $${atLiquidity.price.toFixed(2)}`; }
+  let concept='NONE', conceptLabel='No Clear Setup', conceptDetail='';
+  if(atVoidCE){ concept='VOID_CE'; conceptLabel='Void CE Entry'; conceptDetail=`Near void CE $${atVoidCE.ce.toFixed(2)} (${atVoidCE.dir})`; }
+  else if(atVoid){ concept='VOID'; conceptLabel='Void Entry'; conceptDetail=`Inside void $${atVoid.lower.toFixed(2)}-$${atVoid.upper.toFixed(2)}`; }
+  else if(atFVG){ concept='FVG'; conceptLabel='FVG Entry'; conceptDetail=`Inside FVG $${atFVG.lower.toFixed(2)}-$${atFVG.upper.toFixed(2)} (${atFVG.dir})`; }
+  else if(atOB){ concept='OB'; conceptLabel='Order Block Entry'; conceptDetail=`At OB $${atOB.lower.toFixed(2)}-$${atOB.upper.toFixed(2)} (${atOB.dir})`; }
+  else if(atLiquidity){ concept='LIQUIDITY'; conceptLabel=atLiquidity.label; conceptDetail=`Near ${atLiquidity.label} $${atLiquidity.price.toFixed(2)}`; }
+
+  // Check for BPR (FVG that was closed through)
+  if(concept==='FVG' && atFVG){
+    const afterFVG = candles.slice(atFVG.idx, idx);
+    const closedThrough = afterFVG.some(c=> atFVG.dir==='BULL'?c.close<atFVG.lower:c.close>atFVG.upper);
+    if(closedThrough){ concept='BPR'; conceptLabel='BPR Entry (Balanced FVG)'; }
+  }
+
+  return { concept, conceptLabel, conceptDetail, voidCount:activeVoids.length, fvgCount:activeFVGs.length, obCount:activeOBs.length, liqLevels:liq.length };
+}
+
+function classifyTradeICT(trade, dailyCandles, hourlyCandles){
+  const tradeDate = toISO(trade.entryDate);
+  const dailyIdx = dailyCandles.findIndex(c=>c.date>=tradeDate);
+  if(dailyIdx<5) return { concept:'UNKNOWN', model:null, details:{}, tf:'daily' };
+
+  const dayCandle = dailyCandles[dailyIdx];
+  const stockMid = (dayCandle.high+dayCandle.low)/2;
+  const pd = getPremiumDiscount(dailyCandles, tradeDate);
+
+  // Run detection on daily candles
+  const dailyResult = runDetectionOnCandles(dailyCandles, tradeDate, stockMid);
+
+  // Run detection on 1H candles if available
+  let hourlyResult = null;
+  let bestTF = 'daily';
+  if(hourlyCandles && hourlyCandles.length >= 10){
+    hourlyResult = runDetectionOnCandles(hourlyCandles, tradeDate, stockMid);
+  }
+
+  // Pick best timeframe: prefer 1H for short holds, daily for swings
+  // If 1H found a concept and daily didn't, use 1H
+  // If both found concepts, prefer 1H for holds <= 2 days, daily for longer
+  let result = dailyResult || { concept:'NONE', conceptLabel:'No Clear Setup', conceptDetail:'' };
+  if(hourlyResult && hourlyResult.concept !== 'NONE'){
+    if(!dailyResult || dailyResult.concept === 'NONE'){
+      result = hourlyResult; bestTF = '1H';
+    } else if(trade.holdDays <= 2){
+      result = hourlyResult; bestTF = '1H';
+    }
+  }
+
+  const concept = result.concept;
+  const day = trade.dayOfWeek, sess = trade.session;
 
   // Determine model from concept + timing
   let model = null;
-  const day = trade.dayOfWeek, sess = trade.session;
   if(concept==='VOID_CE'||concept==='VOID'){
     if(day==='Wed'&&sess==='NY AM') model='wednesday-manip';
     else if(trade.holdDays>=2) model='void-to-void';
     else model='daily-amd';
   } else if(concept==='FVG'){
-    // Check if this FVG was previously closed through (BPR)
-    const fvgObj = atFVG;
-    const afterFVG = candles.slice(fvgObj.idx, idx);
-    const closedThrough = afterFVG.some(c=> fvgObj.dir==='BULL'?c.close<fvgObj.lower:c.close>fvgObj.upper);
-    if(closedThrough){ concept='BPR'; conceptLabel='BPR Entry (Balanced FVG)'; model='bpr-entry'; }
-    else { model = sess==='NY AM'?'daily-amd':'agree-liq'; }
+    model = sess==='NY AM'?'daily-amd':'agree-liq';
+  } else if(concept==='BPR'){
+    model='bpr-entry';
   } else if(concept==='OB'){
     model = trade.holdDays>=3?'tf-alignment':'daily-amd';
   } else if(concept==='LIQUIDITY'){
-    // Check if it's a sweep (price wicked through and reversed)
-    if(dayCandle.close > dayCandle.open && atLiquidity.type==='PDL') model='disagree-liq';
-    else if(dayCandle.close < dayCandle.open && atLiquidity.type==='PDH') model='disagree-liq';
+    if(dayCandle.close > dayCandle.open && result.conceptLabel.includes('Low')) model='disagree-liq';
+    else if(dayCandle.close < dayCandle.open && result.conceptLabel.includes('High')) model='disagree-liq';
     else model='agree-liq';
   }
 
-  // Weekly phase from day of week
+  // Intraday scalp override: short hold + 1H detection
+  if(bestTF==='1H' && trade.holdDays<=1 && (concept==='VOID_CE'||concept==='FVG'||concept==='OB'))
+    model='intraday-scalp';
+
   const weeklyPhase = day==='Mon'||day==='Tue'?'A':day==='Wed'?'M':'D';
 
   return {
-    concept, conceptLabel, conceptDetail, model,
-    weeklyPhase,
+    concept, conceptLabel: result.conceptLabel, conceptDetail: result.conceptDetail, model,
+    weeklyPhase, tf: bestTF,
     zone: pd?pd.zone:null,
-    voidCount: activeVoids.length,
-    fvgCount: activeFVGs.length,
-    obCount: activeOBs.length,
-    liqLevels: liq.length
+    voidCount: result.voidCount||0, fvgCount: result.fvgCount||0,
+    obCount: result.obCount||0, liqLevels: result.liqLevels||0
   };
 }
 
@@ -639,14 +698,13 @@ async function runAnalysis(){
   const status = document.getElementById('analyzeStatus');
   btn.disabled=true; btn.textContent='Analyzing...'; prog.style.display='block';
 
-  // Group trades by ticker
   const tickers = [...new Set(trips.map(t=>t.ticker))];
-  const ohlcvData = {};
+  const dailyData = {}, hourlyData = {};
 
-  // Fetch OHLCV for each ticker
+  // Fetch daily + 1H OHLCV for each ticker
   for(let i=0;i<tickers.length;i++){
     const sym = tickers[i];
-    status.textContent = `Fetching ${sym} (${i+1}/${tickers.length})...`;
+    status.textContent = `Fetching ${sym} daily + 1H (${i+1}/${tickers.length})...`;
     bar.style.width = `${(i/tickers.length)*50}%`;
     try {
       const earliest = trips.filter(t=>t.ticker===sym).sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate))[0];
@@ -654,25 +712,32 @@ async function runAnalysis(){
       from.setDate(from.getDate()-90);
       const fromStr = from.toISOString().slice(0,10);
       const toStr = new Date().toISOString().slice(0,10);
-      ohlcvData[sym] = await fetchOHLCV(sym, fromStr, toStr);
-    } catch(e){ console.warn(`Failed: ${sym}`, e); ohlcvData[sym]=[]; }
+      dailyData[sym] = await fetchOHLCV(sym, fromStr, toStr);
+      await new Promise(r=>setTimeout(r,250));
+      // Fetch 1H candles (last 30 days of data is typical FMP limit for free)
+      const from1H = new Date(earliest.entryDate);
+      from1H.setDate(from1H.getDate()-30);
+      hourlyData[sym] = await fetchOHLCV1H(sym, from1H.toISOString().slice(0,10), toStr);
+    } catch(e){ console.warn(`Failed: ${sym}`, e); dailyData[sym]=[]; hourlyData[sym]=[]; }
     await new Promise(r=>setTimeout(r,350));
   }
 
-  // Classify each trade
+  // Classify each trade using both timeframes
   for(let i=0;i<trips.length;i++){
     const t = trips[i];
     status.textContent = `Classifying trade ${i+1}/${trips.length}...`;
     bar.style.width = `${50+(i/trips.length)*50}%`;
-    const candles = ohlcvData[t.ticker]||[];
-    if(candles.length>=10){
-      const result = classifyTradeICT(t, candles);
+    const daily = dailyData[t.ticker]||[];
+    const hourly = hourlyData[t.ticker]||[];
+    if(daily.length>=10){
+      const result = classifyTradeICT(t, daily, hourly.length>=10?hourly:null);
       t.ictConcept = result.concept;
       t.ictConceptLabel = result.conceptLabel;
       t.ictConceptDetail = result.conceptDetail;
       t.ictModel = result.model;
       t.weeklyPhase = result.weeklyPhase;
       t.entryZone = result.zone;
+      t.detectionTF = result.tf;
       t.voidCount = result.voidCount;
       t.fvgCount = result.fvgCount;
       t.obCount = result.obCount;
@@ -907,6 +972,24 @@ function renderInsights(){
   renderWeaknesses(trips);
 }
 
+function renderTradeList(arr){
+  return arr.sort((a,b)=>new Date(b.entryDate)-new Date(a.entryDate)).map(t=>{
+    const tfBadge = t.detectionTF==='1H' ? '<span class="tf-badge tf-hourly">1H</span>' : t.detectionTF ? '<span class="tf-badge tf-daily">Daily</span>' : '';
+    return `<div class="trade-item">
+      <span class="ti-date">${t.entryDate}</span>
+      <span class="ti-ticker">${t.ticker}</span>
+      <span class="ti-type"><span class="tag ${t.optionType==='CALL'?'tag-sage':'tag-blue'}">${t.optionType}</span></span>
+      <span class="ti-prices">$${t.strike} · $${t.entryPremium.toFixed(2)} → $${t.exitPremium.toFixed(2)} · ${t.holdDays}d hold ${tfBadge}</span>
+      <span class="ti-pnl" style="color:${t.win?'var(--green)':'var(--red)'}">${t.win?'+':''}$${t.pnl.toFixed(0)}</span>
+      <span class="ti-meta">${t.ictConceptDetail||''}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleTradeList(el){
+  el.classList.toggle('expanded');
+}
+
 function renderConceptBreakdown(trips){
   const el = document.getElementById('conceptBreakdown');
   if(!STATE.analyzed){ el.innerHTML=''; return; }
@@ -918,7 +1001,7 @@ function renderConceptBreakdown(trips){
   classified.forEach(t=>{ const k=t.ictConceptLabel||t.ictConcept; if(!concepts[k]) concepts[k]=[]; concepts[k].push(t); });
   const sorted = Object.entries(concepts).sort((a,b)=>b[1].length-a[1].length);
 
-  // Model distribution (from real detection)
+  // Model distribution
   const models = {};
   trips.filter(t=>t.ictModel).forEach(t=>{ const m=MODELS.find(x=>x.id===t.ictModel); const k=m?m.name:t.ictModel; if(!models[k]) models[k]=[]; models[k].push(t); });
   const modelSorted = Object.entries(models).sort((a,b)=>b[1].length-a[1].length);
@@ -927,40 +1010,50 @@ function renderConceptBreakdown(trips){
   const zones = {};
   trips.filter(t=>t.entryZone).forEach(t=>{ if(!zones[t.entryZone]) zones[t.entryZone]=[]; zones[t.entryZone].push(t); });
 
+  // Count timeframe distribution
+  const dailyCount = classified.filter(t=>t.detectionTF==='daily').length;
+  const hourlyCount = classified.filter(t=>t.detectionTF==='1H').length;
+
   el.innerHTML = `
     <div class="grid-2">
       <div class="card">
         <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Entry Concept (Auto-Detected)</div>
+        ${hourlyCount?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Detection: <span class="tf-badge tf-daily">Daily</span> ${dailyCount} · <span class="tf-badge tf-hourly">1H</span> ${hourlyCount} — click rows to see trades</div>`:'<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click any row to see matching trades</div>'}
         ${sorted.length ? sorted.map(([k,arr])=>{
           const wr=winRate(arr);
           const pct=Math.round(arr.length/trips.length*100);
-          return `<div class="bar-row">
+          const id = 'concept_'+k.replace(/[^a-zA-Z]/g,'');
+          return `<div class="bar-row clickable" onclick="toggleTradeList(this)">
             <div class="bar-label">${k}</div>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.max(pct,5)}%;background:${wr>=50?'var(--sage)':'var(--red)'}">${pct}%</div></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.max(pct,5)}%;background:${wr>=50?'var(--sage)':'var(--red)'}">${arr.length} (${pct}%)</div></div>
             <div class="bar-meta"><span class="tag ${wr>=50?'tag-green':'tag-red'}">${wr}% WR</span></div>
-          </div>`;
+          </div>
+          <div class="trade-list">${renderTradeList(arr)}</div>`;
         }).join('') : '<div style="color:var(--text-muted);font-size:13px">Run analysis to detect concepts</div>'}
         ${unmatched.length?`<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">${unmatched.length} trades had no clear ICT setup detected</div>`:''}
       </div>
       <div class="card">
         <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Detected Model (Auto-Assigned)</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Click any row to see matching trades</div>
         ${modelSorted.length ? modelSorted.map(([k,arr])=>{
           const wr=winRate(arr);
-          return `<div class="bar-row">
+          return `<div class="bar-row clickable" onclick="toggleTradeList(this)">
             <div class="bar-label">${k}</div>
             <div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(arr.length/trips.length*100),5)}%;background:${wr>=50?'var(--sage)':'var(--red)'}">${arr.length}</div></div>
             <div class="bar-meta"><span class="tag ${wr>=50?'tag-green':'tag-red'}">${wr}% WR</span></div>
-          </div>`;
+          </div>
+          <div class="trade-list">${renderTradeList(arr)}</div>`;
         }).join('') : '<div style="color:var(--text-muted);font-size:13px">Run analysis to assign models</div>'}
       </div>
     </div>
     ${Object.keys(zones).length ? `<div class="card">
       <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>Premium vs Discount</div>
       <div class="grid-2">
-      ${Object.entries(zones).map(([k,arr])=>`<div style="text-align:center;padding:16px">
+      ${Object.entries(zones).map(([k,arr])=>`<div style="text-align:center;padding:16px;cursor:pointer" onclick="this.querySelector('.trade-list').style.display=this.querySelector('.trade-list').style.display==='block'?'none':'block'">
         <div style="font-size:24px;font-weight:800;color:${winRate(arr)>=50?'var(--green)':'var(--red)'}">${winRate(arr)}%</div>
         <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-top:4px">${k} (${arr.length} trades)</div>
-        <div style="font-size:11px;color:var(--text-sec);margin-top:2px">P&L: ${totalPnl(arr)>=0?'+':''}$${totalPnl(arr).toFixed(0)}</div>
+        <div style="font-size:11px;color:var(--text-sec);margin-top:2px">P&L: ${totalPnl(arr)>=0?'+':''}$${totalPnl(arr).toFixed(0)} — click to see trades</div>
+        <div class="trade-list" style="display:none;padding-left:0;text-align:left">${renderTradeList(arr)}</div>
       </div>`).join('')}
       </div>
     </div>` : ''}`;
