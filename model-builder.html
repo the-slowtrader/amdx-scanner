@@ -190,6 +190,13 @@ Upload CSV</a>
 
 <!-- YOUR STORY -->
 <div class="section" id="sec-story">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;max-width:720px">
+<div id="storyFileLabel" style="font-size:12px;color:var(--text-muted)"></div>
+<button class="btn" onclick="document.getElementById('fileInput2').click()">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+Upload New CSV</button>
+<input type="file" id="fileInput2" accept=".csv" style="display:none">
+</div>
 <div class="story" id="storyContent">
 <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
 <p style="font-size:15px;font-weight:600;margin-bottom:4px">No trades loaded yet</p>
@@ -764,11 +771,13 @@ function matchesProfile(trade, profile){
 // ─── UPLOAD ───
 function setupUpload(){
   const zone=document.getElementById('uploadZone'), input=document.getElementById('fileInput');
+  const input2=document.getElementById('fileInput2');
   zone.addEventListener('click',()=>input.click());
   zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover');});
   zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));
   zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');handleFile(e.dataTransfer.files[0]);});
-  input.addEventListener('change',e=>{if(e.target.files[0]) handleFile(e.target.files[0]);});
+  input.addEventListener('change',e=>{if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value='';});
+  input2.addEventListener('change',e=>{if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value='';});
 }
 
 function handleFile(file){
@@ -777,9 +786,8 @@ function handleFile(file){
   reader.onload=e=>{
     const raw=parseSchwabCSV(e.target.result);
     const trips=matchTrades(raw);
-    STATE.rawTrades=raw;
-    STATE.roundTrips=trips;
-    STATE.lastFile=file.name;
+    // Fresh state each upload
+    STATE = { rawTrades:raw, roundTrips:trips, lastFile:file.name };
     save();
     document.getElementById('parseStatus').innerHTML=`
       <div class="story-callout"><div class="sc-label">Import Complete</div>
@@ -794,7 +802,10 @@ function go(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.s===id));
-  if(id==='story') document.getElementById('storyContent').innerHTML = generateStory(STATE.roundTrips);
+  if(id==='story'){
+    document.getElementById('storyContent').innerHTML = generateStory(STATE.roundTrips);
+    document.getElementById('storyFileLabel').textContent = STATE.lastFile ? `Loaded: ${STATE.lastFile}` : '';
+  }
   if(id==='library') renderLibrary();
 }
 
