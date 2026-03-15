@@ -8,53 +8,47 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#f7f7f8;--card:#ffffff;--card-alt:#fafafa;
+  --bg:#f0f1ec;--card:#ffffff;--card-alt:#f8f9f5;
   --border:rgba(0,0,0,0.06);--border-strong:rgba(0,0,0,0.1);
-  --text:#111111;--text-sec:#6b7280;--text-muted:#9ca3af;
-  --sage:#6d7e5e;--sage-bg:rgba(109,126,94,0.08);--sage-light:rgba(109,126,94,0.05);
+  --text:#1a1a1a;--text-sec:#6b7280;--text-muted:#9ca3af;
+  --sage:#6d7e5e;--sage-bg:rgba(109,126,94,0.08);--sage-light:rgba(109,126,94,0.04);
   --green:#22c55e;--green-bg:rgba(34,197,94,0.08);
   --red:#ef4444;--red-bg:rgba(239,68,68,0.06);
   --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.08);
   --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.08);
   --purple:#8b5cf6;--purple-bg:rgba(139,92,246,0.08);
-  --sidebar-bg:#111111;--sidebar-text:rgba(255,255,255,0.65);
-  --sidebar-active:rgba(255,255,255,0.95);--sidebar-hover:rgba(255,255,255,0.08);
-  --sidebar-w:220px;--radius:12px;--radius-sm:8px;--radius-xs:6px;
-  --shadow:0 1px 2px rgba(0,0,0,0.04);--shadow-md:0 1px 3px rgba(0,0,0,0.06),0 4px 12px rgba(0,0,0,0.04);
+  --yellow:#e2e857;
+  --sidebar-w:72px;--radius:16px;--radius-sm:10px;--radius-xs:8px;
+  --shadow:0 1px 3px rgba(0,0,0,0.03);--shadow-md:0 2px 8px rgba(0,0,0,0.05),0 8px 24px rgba(0,0,0,0.03);
   --sans:'Inter',system-ui,-apple-system,sans-serif;
 }
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;font-size:14px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;font-size:14px;-webkit-font-smoothing:antialiased}
 
-/* SIDEBAR */
-.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--sidebar-bg);z-index:200;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.06)}
-.sidebar-logo{padding:24px 20px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06)}
-.sidebar-logo .logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--sage),#8a9e78);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#fff}
-.sidebar-logo .logo-text{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.3px}
-.sidebar-logo .logo-sub{font-size:10px;color:rgba(255,255,255,0.35);font-weight:500;margin-top:1px}
-.sidebar-nav{flex:1;padding:16px 12px}
-.nav-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.25);padding:0 12px;margin-bottom:8px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);color:var(--sidebar-text);cursor:pointer;transition:all .15s;font-size:13px;font-weight:500;margin-bottom:2px}
-.nav-item:hover{background:var(--sidebar-hover);color:var(--sidebar-active)}
-.nav-item.active{background:rgba(109,126,94,0.15);color:var(--sidebar-active)}
-.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.5}
-.nav-item.active svg,.nav-item:hover svg{opacity:.9}
-.sidebar-bottom{padding:16px;border-top:1px solid rgba(255,255,255,0.06);font-size:10px;color:rgba(255,255,255,0.2);padding:12px 20px}
+/* ICON SIDEBAR */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--card);z-index:200;display:flex;flex-direction:column;align-items:center;padding:20px 0;border-right:1px solid var(--border)}
+.sidebar-logo{width:40px;height:40px;border-radius:12px;background:var(--sage);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#fff;margin-bottom:32px;letter-spacing:-.5px}
+.nav-item{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;margin-bottom:6px;color:var(--text-muted);position:relative}
+.nav-item:hover{background:var(--card-alt);color:var(--text)}
+.nav-item.active{background:var(--sage-bg);color:var(--sage)}
+.nav-item svg{width:20px;height:20px}
+.nav-item .tooltip{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--text);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+.nav-item:hover .tooltip{opacity:1}
 
 /* MOBILE */
 .sidebar-toggle{display:none;position:fixed;top:16px;left:16px;z-index:300;width:40px;height:40px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);cursor:pointer;align-items:center;justify-content:center;box-shadow:var(--shadow-md)}
-@media(max-width:900px){
+@media(max-width:768px){
   .sidebar{transform:translateX(-100%);transition:transform .3s}.sidebar.open{transform:translateX(0)}
-  .sidebar-toggle{display:flex}.main{margin-left:0!important}
+  .sidebar-toggle{display:flex}.main{margin-left:0!important;padding:24px 16px!important}
 }
 
 /* MAIN */
-.main{margin-left:var(--sidebar-w);min-height:100vh;padding:32px;max-width:900px}
+.main{margin-left:var(--sidebar-w);min-height:100vh;padding:40px 48px;max-width:960px}
 
 /* UPLOAD */
-.upload-zone{border:2px dashed var(--border-strong);border-radius:var(--radius);padding:60px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card)}
+.upload-zone{border:2px dashed var(--border-strong);border-radius:var(--radius);padding:72px 32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card)}
 .upload-zone:hover,.upload-zone.dragover{border-color:var(--sage);background:var(--sage-light)}
-.upload-zone .uz-icon{width:56px;height:56px;margin:0 auto 16px;color:var(--text-muted)}
-.upload-zone .uz-title{font-size:17px;font-weight:700;margin-bottom:4px}
+.upload-zone .uz-icon{width:48px;height:48px;margin:0 auto 20px;color:var(--text-muted);opacity:.5}
+.upload-zone .uz-title{font-size:18px;font-weight:700;margin-bottom:6px;letter-spacing:-.2px}
 .upload-zone .uz-sub{font-size:13px;color:var(--text-sec)}
 
 /* SECTION */
@@ -62,57 +56,57 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 
 /* STORY */
 .story{max-width:720px}
-.story-hero{margin-bottom:40px}
-.story-hero h1{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1.2;margin-bottom:8px}
-.story-hero .hero-sub{font-size:15px;color:var(--text-sec);line-height:1.6}
+.story-hero{margin-bottom:48px}
+.story-hero h1{font-size:36px;font-weight:800;letter-spacing:-.8px;line-height:1.15;margin-bottom:12px}
+.story-hero .hero-sub{font-size:15px;color:var(--text-sec);line-height:1.7}
 
-.story-section{margin-bottom:40px}
-.story-section h2{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px;display:flex;align-items:center;gap:10px}
-.story-section h2 .section-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--sage);color:#fff;font-size:12px;font-weight:800;flex-shrink:0}
-.story-section .section-intro{font-size:13px;color:var(--text-sec);margin-bottom:16px}
-.story-p{font-size:14px;line-height:1.8;margin-bottom:12px;color:var(--text)}
+.story-section{margin-bottom:48px}
+.story-section h2{font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.story-section h2::before{content:'';width:24px;height:2px;background:var(--sage);border-radius:1px}
+.story-p{font-size:15px;line-height:1.85;margin-bottom:14px;color:var(--text)}
 .story-p strong{font-weight:700}
-.story-p .hl{background:rgba(109,126,94,0.12);padding:1px 6px;border-radius:4px;font-weight:700}
+.story-p .hl{background:rgba(226,232,87,0.25);padding:1px 6px;border-radius:4px;font-weight:700}
 .story-p .hl-red{background:var(--red-bg);padding:1px 6px;border-radius:4px;font-weight:700;color:#dc2626}
 .story-p .hl-green{background:var(--green-bg);padding:1px 6px;border-radius:4px;font-weight:700;color:#16a34a}
 
-.story-stat-row{display:flex;gap:12px;margin:16px 0;flex-wrap:wrap}
-.story-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;min-width:120px;flex:1}
-.story-stat .ss-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
-.story-stat .ss-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-top:2px}
+.story-stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:24px 0}
+.story-stat{background:var(--card);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow)}
+.story-stat .ss-val{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1}
+.story-stat .ss-label{font-size:11px;font-weight:600;color:var(--text-muted);margin-top:6px;letter-spacing:.3px}
 
-.story-callout{background:linear-gradient(135deg,#f0f7ed,#e8f0e4);border:1px solid rgba(109,126,94,0.15);border-radius:var(--radius);padding:20px 24px;margin:20px 0}
-.story-callout .sc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:6px}
-.story-callout .sc-text{font-size:15px;font-weight:600;line-height:1.6}
+.story-callout{background:var(--card);border-radius:var(--radius);padding:24px 28px;margin:24px 0;box-shadow:var(--shadow);border-left:4px solid var(--sage)}
+.story-callout .sc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:8px}
+.story-callout .sc-text{font-size:16px;font-weight:600;line-height:1.6;letter-spacing:-.2px}
 
-.story-warning{background:var(--amber-bg);border:1px solid rgba(245,158,11,0.15);border-radius:var(--radius);padding:16px 20px;margin:16px 0;font-size:13px;line-height:1.7}
+.story-warning{background:var(--card);border-left:4px solid var(--amber);border-radius:var(--radius);padding:18px 24px;margin:16px 0;font-size:14px;line-height:1.7;box-shadow:var(--shadow)}
 
-.story-model{background:var(--card);border:2px solid var(--sage);border-radius:var(--radius);padding:24px;margin:20px 0}
-.story-model .sm-rank{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:4px}
-.story-model .sm-name{font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
-.story-model .sm-cat{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:10px}
-.story-model .sm-desc{font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:14px}
-.story-model .sm-why{font-size:14px;line-height:1.7;margin-bottom:14px}
+.story-model{background:var(--card);border-radius:var(--radius);padding:28px 32px;margin:20px 0;box-shadow:var(--shadow);border:1px solid var(--border)}
+.story-model .sm-rank{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sage);margin-bottom:6px}
+.story-model .sm-name{font-size:24px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px}
+.story-model .sm-cat{display:inline-flex;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:14px}
+.story-model .sm-desc{font-size:14px;color:var(--text-sec);line-height:1.6;margin-bottom:16px}
+.story-model .sm-why{font-size:14px;line-height:1.7;margin-bottom:16px}
 .story-model .sm-checklist{list-style:none;padding:0}
-.story-model .sm-checklist li{display:flex;align-items:flex-start;gap:8px;padding:5px 0;font-size:12px;color:var(--text-sec)}
-.story-model .sm-checklist li::before{content:'';width:14px;height:14px;border:2px solid var(--border-strong);border-radius:3px;flex-shrink:0;margin-top:2px}
-.story-model .sm-params{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-.story-model .sm-param{background:var(--card-alt);border-radius:var(--radius-xs);padding:8px 10px}
-.story-model .sm-param-label{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-muted)}
-.story-model .sm-param-val{font-size:12px;font-weight:600;margin-top:2px}
+.story-model .sm-checklist li{display:flex;align-items:flex-start;gap:10px;padding:6px 0;font-size:13px;color:var(--text-sec)}
+.story-model .sm-checklist li::before{content:'';width:16px;height:16px;border:2px solid var(--border-strong);border-radius:4px;flex-shrink:0;margin-top:1px}
+.story-model .sm-params{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.story-model .sm-param{background:var(--card-alt);border-radius:var(--radius-xs);padding:10px 14px}
+.story-model .sm-param-label{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px}
+.story-model .sm-param-val{font-size:13px;font-weight:600;margin-top:3px}
 
-.story-model.secondary{border-color:var(--border-strong);border-width:1px}
+.story-model.secondary{border-color:var(--border)}
 .story-model.secondary .sm-rank{color:var(--text-muted)}
+.story-model.secondary .sm-name{font-size:20px}
 
-.story-trades{margin-top:14px;border-top:1px solid var(--border);padding-top:14px}
-.story-trades summary{font-size:12px;font-weight:700;color:var(--sage);cursor:pointer;margin-bottom:8px}
-.st-row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:center;flex-wrap:wrap}
+.story-trades{margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
+.story-trades summary{font-size:12px;font-weight:700;color:var(--sage);cursor:pointer;margin-bottom:10px;letter-spacing:.2px}
+.st-row{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:center;flex-wrap:wrap}
 .st-row:last-child{border:none}
-.st-date{width:65px;color:var(--text-sec);flex-shrink:0}
-.st-ticker{width:45px;font-weight:700;flex-shrink:0}
-.st-type{width:36px;flex-shrink:0}
+.st-date{width:70px;color:var(--text-sec);flex-shrink:0}
+.st-ticker{width:48px;font-weight:700;flex-shrink:0}
+.st-type{width:32px;flex-shrink:0}
 .st-detail{flex:1;color:var(--text-sec)}
-.st-pnl{width:60px;text-align:right;font-weight:700;flex-shrink:0}
+.st-pnl{width:64px;text-align:right;font-weight:700;flex-shrink:0}
 .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
 .tag-green{background:var(--green-bg);color:#16a34a}
 .tag-red{background:var(--red-bg);color:#dc2626}
@@ -122,25 +116,25 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .tag-purple{background:var(--purple-bg);color:var(--purple)}
 
 /* MODEL LIBRARY */
-.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-.model-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s;cursor:pointer}
-.model-card:hover{border-color:var(--sage);box-shadow:var(--shadow-md)}
-.model-card .mc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-.model-card .mc-name{font-size:15px;font-weight:700;letter-spacing:-.2px}
-.model-card .mc-cat{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:4px}
-.model-card .mc-desc{font-size:12px;color:var(--text-sec);line-height:1.5;margin-bottom:12px}
-.model-card .mc-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.model-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;transition:all .2s;cursor:pointer;box-shadow:var(--shadow)}
+.model-card:hover{border-color:var(--sage);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.model-card .mc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.model-card .mc-name{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.model-card .mc-cat{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:6px;letter-spacing:.3px}
+.model-card .mc-desc{font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:12px}
+.model-card .mc-detail{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
 .model-card.expanded .mc-detail{display:block}
-.checklist-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;font-size:12px;color:var(--text-sec)}
-.checklist-item::before{content:'';width:14px;height:14px;border:2px solid var(--border-strong);border-radius:3px;flex-shrink:0;margin-top:2px}
-.mc-params{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.mc-param{background:var(--card-alt);border-radius:var(--radius-xs);padding:8px 10px}
+.checklist-item{display:flex;align-items:flex-start;gap:10px;padding:5px 0;font-size:12px;color:var(--text-sec)}
+.checklist-item::before{content:'';width:14px;height:14px;border:2px solid var(--border-strong);border-radius:4px;flex-shrink:0;margin-top:2px}
+.mc-params{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.mc-param{background:var(--card-alt);border-radius:var(--radius-xs);padding:10px 12px}
 .mc-param-label{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-muted)}
-.mc-param-val{font-size:12px;font-weight:600;margin-top:2px}
+.mc-param-val{font-size:12px;font-weight:600;margin-top:3px}
 
 /* BTN */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);transition:all .15s}
-.btn:hover{border-color:var(--sage);color:var(--sage)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);transition:all .15s;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--sage);color:var(--sage);box-shadow:var(--shadow-md)}
 .btn-primary{background:var(--sage);color:#fff;border-color:var(--sage)}
 .btn-primary:hover{background:#5e6e50}
 </style>
@@ -152,54 +146,47 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 </button>
 
 <div class="sidebar" id="sidebar">
-<div class="sidebar-logo">
-<div class="logo-mark">ICT</div>
-<div><div class="logo-text">Model Builder</div><div class="logo-sub">TBT Incubator</div></div>
-</div>
-<nav class="sidebar-nav">
-<div class="nav-section-label" style="margin-top:8px">Navigate</div>
+<div class="sidebar-logo">ICT</div>
 <a class="nav-item active" onclick="go('story')" data-s="story">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-Your Story</a>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+<span class="tooltip">Your Story</span></a>
 <a class="nav-item" onclick="go('library')" data-s="library">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-Model Library</a>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+<span class="tooltip">Model Library</span></a>
 <a class="nav-item" onclick="go('upload')" data-s="upload">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-Upload CSV</a>
-</nav>
-<div class="sidebar-bottom">Based on Matt Reese's TBT Incubator</div>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+<span class="tooltip">Upload CSV</span></a>
 </div>
 
 <div class="main">
 
 <!-- UPLOAD -->
 <div class="section" id="sec-upload">
-<div style="max-width:600px">
-<h1 style="font-size:24px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px">Upload Your Trades</h1>
-<p style="font-size:14px;color:var(--text-sec);margin-bottom:24px">Drop your Schwab Account Statement CSV. We'll find patterns in your winning trades and match you to an ICT model.</p>
+<div style="max-width:560px">
+<h1 style="font-size:32px;font-weight:800;letter-spacing:-.6px;margin-bottom:8px;line-height:1.2">Upload your trades</h1>
+<p style="font-size:15px;color:var(--text-sec);margin-bottom:32px;line-height:1.6">Drop your Schwab Account Statement CSV. We'll find patterns in your winning trades and match you to an ICT model.</p>
 <div class="upload-zone" id="uploadZone">
 <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
 <div class="uz-title">Drop Schwab Account Statement CSV</div>
 <div class="uz-sub">We'll parse your BOT/SOLD trades, match them into round trips, and build your story</div>
 </div>
 <input type="file" id="fileInput" accept=".csv" style="display:none">
-<div id="parseStatus" style="margin-top:16px"></div>
+<div id="parseStatus" style="margin-top:20px"></div>
 </div>
 </div>
 
 <!-- YOUR STORY -->
 <div class="section" id="sec-story">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;max-width:720px">
-<div id="storyFileLabel" style="font-size:12px;color:var(--text-muted)"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;max-width:720px">
+<div id="storyFileLabel" style="font-size:12px;color:var(--text-muted);font-weight:500"></div>
 <button class="btn" onclick="document.getElementById('fileInput2').click()">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
 Upload New CSV</button>
 <input type="file" id="fileInput2" accept=".csv" style="display:none">
 </div>
 <div class="story" id="storyContent">
-<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
-<p style="font-size:15px;font-weight:600;margin-bottom:4px">No trades loaded yet</p>
+<div style="text-align:center;padding:80px 20px;color:var(--text-muted)">
+<p style="font-size:16px;font-weight:600;margin-bottom:6px">No trades loaded yet</p>
 <p style="font-size:13px">Upload your Schwab CSV to generate your trading story</p>
 </div>
 </div>
@@ -207,8 +194,8 @@ Upload New CSV</button>
 
 <!-- MODEL LIBRARY -->
 <div class="section" id="sec-library">
-<h1 style="font-size:22px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px">ICT Model Library</h1>
-<p style="font-size:13px;color:var(--text-sec);margin-bottom:24px">All 13 models from the TBT Incubator — click any card to see the full checklist</p>
+<h1 style="font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px">ICT Model Library</h1>
+<p style="font-size:14px;color:var(--text-sec);margin-bottom:28px">All 13 models from the TBT Incubator — click any card to see the full checklist</p>
 <div class="model-grid" id="libraryGrid"></div>
 </div>
 
@@ -315,9 +302,7 @@ function parseExpDate(s){
 function daysBetween(a,b){ const da=new Date(a),db=new Date(b); return isNaN(da)||isNaN(db)?0:Math.round((db-da)/(864e5)); }
 
 // ─── SESSION / DAY ───
-// Non-equity tickers — NY AM doesn't apply to these
 const NON_EQUITY = new Set(['VIX','UVXY','SVXY','VXX','VIXY','/ES','/NQ','/CL','/GC','/SI','/ZB','/ZN','SPX','NDX','RUT','DJX','XSP']);
-
 function isEquity(ticker){ return !NON_EQUITY.has((ticker||'').toUpperCase()); }
 
 function classifySession(timeStr, ticker){
@@ -326,9 +311,8 @@ function classifySession(timeStr, ticker){
   if(!m) return '';
   let h = parseInt(m[1]);
   if(m[4]){ if(m[4].toUpperCase()==='PM'&&h!==12) h+=12; if(m[4].toUpperCase()==='AM'&&h===12) h=0; }
-  h += 1; // CST → ET
+  h += 1; // CST to ET
   if(h>=24) h-=24;
-  // NY AM only applies to equities
   if(!isEquity(ticker)){
     if(h>=9&&h<16) return 'NY Open';
     if(h<9) return 'Pre-Market';
@@ -455,7 +439,7 @@ function scoreModels(trips){
       const sessMatch = p.sessions.includes(w.session);
       const nyAMModel = p.sessions.includes('NY AM') && p.sessions.length<=2;
       if(sessMatch && (!nyAMModel || isEquity(w.ticker))) tradeScore += 3;
-      else if(nyAMModel && !isEquity(w.ticker)) tradeScore += 0; // neutral for non-equity
+      else if(nyAMModel && !isEquity(w.ticker)) tradeScore += 0;
       else if(w.session) tradeScore -= 1;
 
       // Day fit
@@ -472,29 +456,24 @@ function scoreModels(trips){
       score += tradeScore;
     });
 
-    // Normalize by number of wins
     score = score / wins.length;
 
-    // Bonus for high match rate among wins
     const matchRate = matchingWins.length / wins.length;
     if(matchRate >= 0.5) score += 5;
     else if(matchRate >= 0.3) score += 3;
 
-    // Bonus for P&L of matching wins
     if(matchingWins.length >= 2){
       const matchPnl = totalPnl(matchingWins);
       if(matchPnl > 0) score += 2;
     }
 
     // Build reasons
-    // Session
     const sessGroups = groupBy(wins.filter(w=>w.session), w=>w.session);
     const topSess = Object.entries(sessGroups).sort((a,b)=>b[1].length-a[1].length)[0];
     if(topSess && p.sessions.includes(topSess[0])){
       reasons.push(`${pct(topSess[1].length, wins.length)}% of your wins come in <strong>${topSess[0]}</strong>, this model's ideal session.`);
     }
 
-    // Day
     const dayGroups = groupBy(wins, w=>w.dayOfWeek);
     if(model.id === 'wednesday-manip'){
       const wedWins = dayGroups['Wed']||[];
@@ -505,13 +484,11 @@ function scoreModels(trips){
       reasons.push(`Your best winning day is <strong>${topDay[0]}</strong>, which aligns with this model.`);
     }
 
-    // Hold
     const avgHold = wins.reduce((s,w)=>s+w.holdDays,0)/wins.length;
     if(avgHold >= p.holdMin && avgHold <= p.holdMax){
       reasons.push(`Your avg winning hold of <strong>${avgHold.toFixed(1)} days</strong> fits this model's ${p.holdMin}-${p.holdMax} day range.`);
     }
 
-    // Match count
     if(matchingWins.length >= 2){
       reasons.push(`<strong>${matchingWins.length} of your ${wins.length} wins</strong> (${pct(matchingWins.length, wins.length)}%) match this model's profile.`);
     }
@@ -530,11 +507,9 @@ function generateStory(trips){
   const tp = totalPnl(trips);
   const tickers = [...new Set(trips.map(t=>t.ticker))];
 
-  // ── Pattern analysis on WINS ──
   const winSessions = groupBy(wins.filter(w=>w.session), w=>w.session);
   const winDays = groupBy(wins, w=>w.dayOfWeek);
   const winTickers = groupBy(wins, w=>w.ticker);
-  const winTypes = groupBy(wins, w=>w.optionType);
 
   const bestSess = best(winSessions);
   const worstSess = worst(groupBy(trips.filter(t=>t.session), t=>t.session));
@@ -552,27 +527,24 @@ function generateStory(trips){
   const puts = trips.filter(t=>t.optionType==='PUT');
   const callWR = winRate(calls), putWR = winRate(puts);
 
-  // Hold duration buckets
   const quickWins = wins.filter(w=>w.holdDays<=1);
   const swingWins = wins.filter(w=>w.holdDays>=2 && w.holdDays<=7);
   const longWins = wins.filter(w=>w.holdDays>7);
 
-  // Score models
   const scored = scoreModels(trips);
   const top3 = scored.slice(0,3);
 
-  // ── Build the story ──
   let html = '';
 
   // HERO
   html += `<div class="story-hero">
-    <h1>${tp>=0 ? 'Your winning edge, decoded.' : 'Finding your edge.'}</h1>
+    <h1>${tp>=0 ? 'Your winning edge,<br>decoded.' : 'Finding your edge.'}</h1>
     <div class="hero-sub">We analyzed <strong>${trips.length} round-trip trades</strong> across <strong>${tickers.length} tickers</strong> to find the patterns hiding in your winners.</div>
   </div>`;
 
   // 1. THE OVERVIEW
   html += `<div class="story-section">
-    <h2><span class="section-num">1</span>The Overview</h2>
+    <h2>The Overview</h2>
     <div class="story-stat-row">
       <div class="story-stat"><div class="ss-val">${trips.length}</div><div class="ss-label">Round Trips</div></div>
       <div class="story-stat"><div class="ss-val" style="color:${wr>=50?'var(--green)':'var(--red)'}">${wr}%</div><div class="ss-label">Win Rate</div></div>
@@ -584,8 +556,7 @@ function generateStory(trips){
 
   // 2. WHEN YOU WIN
   html += `<div class="story-section">
-    <h2><span class="section-num">2</span>When You Win</h2>
-    <div class="section-intro">We looked at the session and day-of-week of every winning trade.</div>`;
+    <h2>When You Win</h2>`;
 
   if(bestSess){
     const bsArr = bestSess[1], bsName = bestSess[0];
@@ -606,7 +577,6 @@ function generateStory(trips){
     else html += `</p>`;
   }
 
-  // Session + Day combo for ALL trades (to find blind spots)
   if(worstSess && worstSess[1].length>=3 && winRate(worstSess[1])<35){
     html += `<div class="story-warning"><strong>Blind spot:</strong> Your ${worstSess[0]} session win rate is just <strong>${winRate(worstSess[1])}%</strong> across ${worstSess[1].length} trades. Consider sitting this session out entirely — it's dragging down your overall edge.</div>`;
   }
@@ -618,10 +588,8 @@ function generateStory(trips){
 
   // 3. HOW YOU WIN
   html += `<div class="story-section">
-    <h2><span class="section-num">3</span>How You Win</h2>
-    <div class="section-intro">The structure of your winning trades — hold time, DTE, direction.</div>`;
+    <h2>How You Win</h2>`;
 
-  // Hold duration
   let holdStory = '';
   if(quickWins.length >= swingWins.length && quickWins.length >= longWins.length){
     holdStory = `You're a <span class="hl">quick-flip trader</span> — ${quickWins.length} of your ${wins.length} wins are held 0-1 days. Your winning edge is in fast execution, not patience.`;
@@ -632,7 +600,6 @@ function generateStory(trips){
   }
   html += `<p class="story-p">${holdStory} Your average winning hold is <strong>${avgWinHold.toFixed(1)} days</strong>${avgLossHold>avgWinHold*1.5&&losses.length>=3 ? `, but your average losing hold is <strong>${avgLossHold.toFixed(1)} days</strong> — you hold losers too long` : ''}.</p>`;
 
-  // Calls vs Puts
   if(calls.length >= 2 && puts.length >= 2){
     const bias = callWR > putWR + 10 ? 'bullish' : putWR > callWR + 10 ? 'bearish' : 'balanced';
     html += `<p class="story-p">`;
@@ -646,10 +613,8 @@ function generateStory(trips){
     html += `<p class="story-p">You trade almost exclusively <span class="hl-red">puts</span> (${puts.length} of ${trips.length} trades) with a <strong>${putWR}%</strong> win rate.</p>`;
   }
 
-  // DTE
   html += `<p class="story-p">Your winning trades average <strong>${avgWinDTE.toFixed(0)} DTE</strong> at entry. ${avgWinDTE<=7 ? 'Short-dated options — you need precision timing.' : avgWinDTE<=21 ? 'Medium-dated — enough theta runway without overpaying for time.' : 'Longer-dated — you buy time, which forgives entry imprecision.'}</p>`;
 
-  // Best ticker
   if(bestTicker && bestTicker[1].length >= 2){
     html += `<p class="story-p">Your most consistent winner is <span class="hl">${bestTicker[0]}</span> with <strong>${bestTicker[1].length} wins</strong> and <strong>+$${totalPnl(bestTicker[1]).toFixed(0)}</strong> P&L. You know this name — keep trading it.</p>`;
   }
@@ -658,15 +623,12 @@ function generateStory(trips){
 
   // 4. YOUR MODEL
   html += `<div class="story-section">
-    <h2><span class="section-num">4</span>Your Model</h2>
-    <div class="section-intro">Based on the characteristics of your winning trades, these ICT models fit you best.</div>`;
+    <h2>Your Model</h2>`;
 
-  // Build "why" narrative for top model
   const topModel = top3[0];
   if(topModel && topModel.matchingWins.length >= 1){
     const tm = topModel.model;
     const mw = topModel.matchingWins;
-    const mwWR = mw.length>=2 ? winRate(mw.concat(trips.filter(t=>!t.win&&matchesProfile(t,tm.profile)))) : null;
 
     html += `<div class="story-callout">
       <div class="sc-label">Your #1 Model Match</div>
@@ -681,7 +643,7 @@ function generateStory(trips){
       <div class="sm-why">
         ${topModel.reasons.map(r=>`<p class="story-p">${r}</p>`).join('')}
       </div>
-      <div style="font-weight:700;font-size:13px;margin-bottom:8px">Setup Checklist</div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">Setup Checklist</div>
       <ul class="sm-checklist">${tm.checklist.map(c=>`<li>${c}</li>`).join('')}</ul>
       <div class="sm-params">${Object.entries(tm.params).map(([k,v])=>`<div class="sm-param"><div class="sm-param-label">${k}</div><div class="sm-param-val">${v}</div></div>`).join('')}</div>
       <div class="story-trades">
@@ -698,7 +660,6 @@ function generateStory(trips){
     </div>`;
   }
 
-  // #2 and #3 models
   top3.slice(1).forEach((s,i)=>{
     if(s.matchingWins.length < 1) return;
     const m = s.model;
@@ -726,11 +687,10 @@ function generateStory(trips){
 
   // 5. WHAT TO FOCUS ON
   html += `<div class="story-section">
-    <h2><span class="section-num">5</span>What to Focus On</h2>`;
+    <h2>What to Focus On</h2>`;
 
   const actions = [];
 
-  // Session focus
   if(bestSess){
     const otherSess = Object.entries(winSessions).filter(([k])=>k!==bestSess[0]);
     if(otherSess.length && bestSess[1].length >= wins.length*0.4){
@@ -738,29 +698,24 @@ function generateStory(trips){
     }
   }
 
-  // Day focus
   if(bestDay && bestDay[1].length >= 3){
     actions.push(`<strong>Day selection:</strong> Your ${bestDay[0]} win rate is ${winRate(bestDay[1])}%. ${bestDay[0]==='Wed'?'This aligns perfectly with the Wednesday Manipulation model.':'Consider sizing up on this day.'}`);
   }
 
-  // Loss management
   if(losses.length >= 3 && Math.abs(avgLossPnl) > avgWinPnl * 1.3){
     actions.push(`<strong>Cut losses faster:</strong> Your avg loss ($${Math.abs(avgLossPnl).toFixed(0)}) is ${(Math.abs(avgLossPnl)/avgWinPnl).toFixed(1)}x your avg win ($${avgWinPnl.toFixed(0)}). Set a hard stop at 50% of premium paid.`);
   }
 
-  // Hold time
   if(avgLossHold > avgWinHold * 1.5 && losses.length >= 3){
     actions.push(`<strong>Time stops:</strong> You hold losers an average of ${avgLossHold.toFixed(1)} days vs ${avgWinHold.toFixed(1)} days for winners. If a trade isn't working in ${Math.ceil(avgWinHold)} days, cut it.`);
   }
 
-  // Direction
   if(calls.length>=3 && puts.length>=3 && Math.abs(callWR-putWR)>15){
     const stronger = callWR>putWR ? 'calls' : 'puts';
     const weaker = callWR>putWR ? 'puts' : 'calls';
     actions.push(`<strong>Directional focus:</strong> Stop trading ${weaker} until your win rate there improves. You win ${Math.max(callWR,putWR)}% on ${stronger} vs ${Math.min(callWR,putWR)}% on ${weaker}.`);
   }
 
-  // Top model action
   if(top3[0] && top3[0].matchingWins.length >= 2){
     actions.push(`<strong>Study the ${top3[0].model.name}:</strong> ${top3[0].matchingWins.length} of your wins already match this model's profile. Learn the full checklist and start grading your entries against it.`);
   }
@@ -800,7 +755,6 @@ function handleFile(file){
   reader.onload=e=>{
     const raw=parseSchwabCSV(e.target.result);
     const trips=matchTrades(raw);
-    // Fresh state each upload
     STATE = { rawTrades:raw, roundTrips:trips, lastFile:file.name };
     save();
     document.getElementById('parseStatus').innerHTML=`
@@ -833,9 +787,9 @@ function renderLibrary(){
       </div>
       <div class="mc-desc">${m.desc}</div>
       <div class="mc-detail">
-        <div style="font-weight:700;font-size:13px;margin-bottom:8px">Setup Checklist</div>
+        <div style="font-weight:700;font-size:13px;margin-bottom:10px">Setup Checklist</div>
         ${m.checklist.map(c=>`<div class="checklist-item">${c}</div>`).join('')}
-        <div style="font-weight:700;font-size:13px;margin:12px 0 8px">Ideal Parameters</div>
+        <div style="font-weight:700;font-size:13px;margin:14px 0 10px">Ideal Parameters</div>
         <div class="mc-params">${Object.entries(m.params).map(([k,v])=>`<div class="mc-param"><div class="mc-param-label">${k}</div><div class="mc-param-val">${v}</div></div>`).join('')}</div>
       </div>
     </div>`).join('');
