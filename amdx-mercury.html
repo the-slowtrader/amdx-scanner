@@ -1,0 +1,2833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMDX — Trading Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f7f7f8;
+  --sidebar:#1b1b1f;
+  --sidebar-hover:rgba(255,255,255,0.06);
+  --sidebar-active:rgba(124,58,237,0.15);
+  --sidebar-text:rgba(255,255,255,0.5);
+  --sidebar-text-active:#fff;
+  --card:#ffffff;
+  --card-border:rgba(0,0,0,0.06);
+  --text:#27272a;
+  --text-sec:#78788a;
+  --text-muted:#a8a8b8;
+  --purple:#7c3aed;
+  --purple-light:#ede9fe;
+  --purple-dark:#5b21b6;
+  --green:#10b981;
+  --green-light:#d1fae5;
+  --green-dark:#065f46;
+  --red:#ef4444;
+  --red-light:#fee2e2;
+  --red-dark:#991b1b;
+  --amber:#f59e0b;
+  --amber-light:#fef3c7;
+  --amber-dark:#92400e;
+  --blue:#3b82f6;
+  --blue-light:#dbeafe;
+  --sage:#6d7e5e;
+  --sage-light:rgba(109,126,94,0.1);
+  --burgundy:#8b4049;
+  --burgundy-light:rgba(139,64,73,0.1);
+  --terracotta:#b57652;
+  --terracotta-light:rgba(181,118,82,0.1);
+  --camel:#c4a97a;
+  --camel-light:rgba(196,169,122,0.1);
+  --radius:16px;
+  --radius-md:12px;
+  --radius-sm:8px;
+  --radius-xs:6px;
+  --shadow:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,0.04),0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg:0 10px 15px rgba(0,0,0,0.04),0 4px 6px rgba(0,0,0,0.06);
+  --font:'Inter',system-ui,-apple-system,sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ── Sidebar ── */
+.sidebar{width:240px;background:var(--sidebar);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100;overflow-y:auto;overflow-x:hidden}
+.sidebar::-webkit-scrollbar{width:0}
+.sidebar-brand{padding:24px 20px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.sidebar-logo{width:36px;height:36px;border-radius:10px;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;letter-spacing:-0.5px;flex-shrink:0}
+.sidebar-brand-text h1{font-size:16px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.sidebar-brand-text p{font-size:10px;color:var(--sidebar-text);font-weight:500;letter-spacing:0.5px;text-transform:uppercase;margin-top:1px}
+.sidebar-section{padding:16px 12px 8px}
+.sidebar-section-label{font-size:10px;font-weight:600;color:var(--sidebar-text);letter-spacing:0.8px;text-transform:uppercase;padding:0 8px 8px}
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);color:var(--sidebar-text);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;text-decoration:none;border:none;background:none;width:100%;text-align:left;font-family:var(--font)}
+.nav-item:hover{background:var(--sidebar-hover);color:rgba(255,255,255,0.8)}
+.nav-item.active{background:var(--sidebar-active);color:var(--sidebar-text-active)}
+.nav-item.active svg{color:var(--purple)}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;color:inherit;opacity:0.7}
+.nav-item.active svg{opacity:1}
+.nav-item .badge-count{margin-left:auto;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
+.nav-item.active .badge-count{background:rgba(124,58,237,0.3);color:var(--purple)}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06)}
+.sidebar-footer p{font-size:10px;color:rgba(255,255,255,0.25);text-align:center}
+.sidebar-tagline{font-size:11px;color:rgba(255,255,255,0.3);font-style:italic;text-align:center;padding:8px 20px 16px}
+
+/* ── Main Content ── */
+.main{margin-left:240px;flex:1;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(247,247,248,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--card-border);position:relative}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-title{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.topbar-subtitle{font-size:12px;color:var(--text-sec)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;font-weight:500;color:var(--text-sec);cursor:pointer;transition:all .15s}
+.topbar-btn:hover{border-color:rgba(0,0,0,0.15);color:var(--text)}
+.topbar-btn.primary{background:var(--purple);color:#fff;border-color:var(--purple)}
+.topbar-btn.primary:hover{background:var(--purple-dark)}
+.topbar-btn svg{width:16px;height:16px}
+.search-input{padding:8px 14px 8px 36px;background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;color:var(--text);outline:none;width:260px;transition:all .15s}
+.search-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,0.1)}
+.search-input::placeholder{color:var(--text-muted)}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-muted)}
+
+.content{padding:24px 32px}
+
+/* ── Market Pulse Strip ── */
+.pulse-strip{display:flex;gap:8px;margin-bottom:24px;overflow-x:auto;padding-bottom:4px}
+.pulse-strip::-webkit-scrollbar{height:0}
+.pulse-pill{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);white-space:nowrap;flex-shrink:0}
+.pulse-sym{font-size:12px;font-weight:700;color:var(--text)}
+.pulse-phase{font-size:11px;font-weight:600;padding:0;color:var(--text-sec)}
+.pulse-phase.acc{color:var(--green-dark)}
+.pulse-phase.exp{color:var(--text-sec)}
+.pulse-phase.manip{color:var(--amber-dark)}
+.pulse-phase.dist{color:var(--red-dark)}
+.pulse-sep{color:var(--text-muted);font-size:10px;margin:0 2px}
+.pulse-price{font-size:11px;color:var(--text-sec);font-weight:500}
+.pulse-change{font-size:11px;font-weight:600}
+.pulse-change.up{color:var(--green)}
+.pulse-change.down{color:var(--red)}
+
+/* ── Summary Cards Grid ── */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.summary-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.summary-card:hover{box-shadow:var(--shadow-md);border-color:rgba(0,0,0,0.1)}
+.summary-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.summary-card.daily::before{background:var(--purple)}
+.summary-card.weekly::before{background:var(--sage)}
+.summary-card.monthly::before{background:var(--terracotta)}
+.summary-card.quarterly::before{background:var(--camel)}
+.summary-card.leap::before{background:var(--burgundy)}
+.sc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:12px}
+.sc-row{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.sc-num{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1}
+.sc-unit{font-size:13px;font-weight:500;color:var(--text-sec)}
+.sc-detail{font-size:11px;color:var(--text-muted);margin-top:8px}
+.sc-bar{height:4px;background:rgba(0,0,0,0.04);border-radius:2px;margin-top:12px;overflow:hidden}
+.sc-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.sc-bar-fill.acc{background:var(--sage)}
+.sc-bar-fill.exp{background:var(--terracotta)}
+
+/* ── Top 5 Setups ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:16px;font-weight:700;letter-spacing:-0.3px}
+.section-subtitle{font-size:12px;color:var(--text-sec)}
+.section-action{font-size:12px;font-weight:600;color:var(--purple);cursor:pointer;text-decoration:none}
+.section-action:hover{text-decoration:underline}
+
+/* Mercury-style: single list card, not a grid of cards */
+.top5-list{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:32px}
+.top5-list-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--card-border)}
+.top5-list-header .section-title{font-size:14px}
+.top5-row{display:flex;align-items:center;gap:0;padding:14px 24px;border-bottom:1px solid rgba(0,0,0,0.04);transition:background .12s}
+.top5-row:last-child{border-bottom:none}
+.top5-row:hover{background:rgba(0,0,0,0.015)}
+/* Left: rank + ticker */
+.top5-left{display:flex;align-items:center;gap:14px;min-width:140px}
+.top5-rank{font-size:12px;font-weight:600;color:var(--text-muted);width:16px;flex-shrink:0}
+.top5-ticker{display:flex;align-items:center;gap:10px}
+.top5-ticker .ticker-icon{width:28px;height:28px;border-radius:7px;font-size:9px;border:1px solid var(--card-border)}
+.top5-sym{font-size:14px;font-weight:700;letter-spacing:-0.2px}
+/* Center: phase indicators */
+.top5-phases{display:flex;align-items:center;gap:16px;flex:1;padding:0 24px}
+.top5-phase{display:flex;align-items:center;gap:5px;font-size:12px}
+.top5-phase-label{color:var(--text-muted);font-weight:500}
+.top5-phase-value{font-weight:600}
+.top5-phase-value.acc{color:var(--green-dark)}
+.top5-phase-value.exp{color:var(--text-sec)}
+.top5-signal{font-size:11px;color:var(--text-muted);margin-left:auto;padding-right:24px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+/* Right: score + grade (hero metric) */
+.top5-right{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.top5-score-block{display:flex;align-items:baseline;gap:4px}
+.top5-score-num{font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1}
+.top5-score-num.high{color:var(--green-dark)}
+.top5-score-num.mid{color:var(--amber-dark)}
+.top5-score-num.low{color:var(--text-sec)}
+.top5-score-max{font-size:12px;font-weight:500;color:var(--text-muted)}
+.top5-grade{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--radius-sm);font-size:13px;font-weight:800;letter-spacing:-0.3px}
+.top5-grade.g-a-plus{background:var(--green-light);color:var(--green-dark)}
+.top5-grade.g-a{background:var(--green-light);color:var(--green-dark)}
+.top5-grade.g-b{background:var(--amber-light);color:var(--amber-dark)}
+.top5-grade.g-c{background:var(--red-light);color:var(--red-dark)}
+.top5-grade.g-d{background:var(--bg);color:var(--text-muted)}
+.top5-empty{padding:40px 24px;text-align:center;color:var(--text-muted);font-size:13px}
+
+/* ── Data Table ── */
+.table-container{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--card-border)}
+.table-toolbar-left{display:flex;align-items:center;gap:12px}
+.table-toolbar-right{display:flex;align-items:center;gap:8px}
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap}
+.filter-chip{padding:6px 12px;border-radius:var(--radius-xs);font-size:11px;font-weight:600;background:transparent;border:1px solid transparent;color:var(--text-muted);cursor:pointer;transition:all .15s;font-family:var(--font);display:flex;align-items:center;gap:4px}
+.filter-chip:hover{color:var(--text)}
+.filter-chip.active{background:var(--bg);color:var(--text);border-color:var(--card-border)}
+.filter-chip .chip-count{font-size:10px;opacity:0.6}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 16px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);background:var(--bg);border-bottom:1px solid var(--card-border);cursor:pointer;white-space:nowrap;user-select:none;transition:color .15s}
+thead th:hover{color:var(--text)}
+thead th.sorted{color:var(--purple)}
+thead th .sort-arrow{margin-left:4px;font-size:8px}
+tbody tr{border-bottom:1px solid rgba(0,0,0,0.03);transition:background .1s}
+tbody tr:hover{background:rgba(0,0,0,0.015)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:10px 16px;font-size:13px;white-space:nowrap}
+.ticker-cell{display:flex;align-items:center;gap:8px}
+.ticker-icon{width:28px;height:28px;border-radius:8px;overflow:hidden;flex-shrink:0;position:relative;background:var(--bg)}
+.ticker-icon img{width:100%;height:100%;object-fit:contain;display:block;position:relative;z-index:1}
+.ticker-icon img.errored{display:none}
+.ti-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;border-radius:8px;z-index:0}
+.ticker-info .sym{font-weight:700;font-size:13px}
+.ticker-info .name{font-size:10px;color:var(--text-muted)}
+
+/* Badges */
+/* Mercury-style: clean text indicators, no colored pill backgrounds */
+.badge{display:inline-flex;align-items:center;padding:0;font-size:12px;font-weight:600;gap:5px}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.badge.acc{color:var(--green-dark)}.badge.acc::before{background:var(--green)}
+.badge.exp{color:var(--text-sec)}.badge.exp::before{background:var(--text-muted)}
+.badge.manip{color:var(--amber-dark)}.badge.manip::before{background:var(--amber)}
+.badge.dist{color:var(--red-dark)}.badge.dist::before{background:var(--red)}
+.badge.neutral{color:var(--text-muted)}.badge.neutral::before{background:var(--text-muted);opacity:0.3}
+.badge.swept{color:var(--green-dark)}.badge.swept::before{background:var(--green)}
+.badge.below{color:var(--red-dark)}.badge.below::before{background:var(--red)}
+.badge.agree{color:var(--green-dark)}.badge.agree::before{background:var(--green)}
+.badge.disagree{color:var(--red-dark)}.badge.disagree::before{background:var(--red)}
+
+/* Score bar */
+.score-bar{display:flex;align-items:center;gap:8px}
+.score-dots{display:flex;gap:3px}
+.score-dot{width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,0.06)}
+.score-dot.filled{background:var(--purple)}
+.score-dot.filled.high{background:var(--green)}
+.score-num{font-size:12px;font-weight:700;color:var(--text)}
+
+/* ── Confluence View Extras ── */
+.confluence-score{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+.confluence-score.high{color:var(--green)}
+.confluence-score.med{color:var(--amber)}
+.confluence-score.low{color:var(--text-muted)}
+
+/* ── Dealer Intel Panel ── */
+.dealer-panel{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:24px}
+.dealer-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.dealer-title{font-size:15px;font-weight:700}
+.dealer-subtitle{font-size:12px;color:var(--text-sec)}
+.oi-bar{height:24px;border-radius:4px;overflow:hidden;display:flex;margin:8px 0}
+.oi-bar .puts{background:var(--red);height:100%}
+.oi-bar .calls{background:var(--green);height:100%}
+.oi-legend{display:flex;gap:16px;font-size:11px;color:var(--text-sec)}
+.oi-legend span{display:flex;align-items:center;gap:4px}
+.oi-legend .dot{width:8px;height:8px;border-radius:50%}
+.strike-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.03)}
+.strike-row:last-child{border-bottom:none}
+.strike-price{font-size:13px;font-weight:600;width:70px}
+.strike-bar-wrap{flex:1;height:8px;background:rgba(0,0,0,0.04);border-radius:4px;overflow:hidden}
+.strike-bar{height:100%;border-radius:4px}
+.strike-oi{font-size:11px;color:var(--text-sec);width:80px;text-align:right}
+.gex-indicator{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600}
+.gex-indicator.positive{background:var(--green-light);color:var(--green-dark)}
+.gex-indicator.negative{background:var(--red-light);color:var(--red-dark)}
+
+/* ── Sweep Radar ── */
+.sweep-row{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.03)}
+.sweep-row:last-child{border-bottom:none}
+.sweep-dist{font-size:20px;font-weight:800;letter-spacing:-0.5px;width:60px;text-align:right}
+.sweep-dist.close{color:var(--red)}
+.sweep-dist.mid{color:var(--amber)}
+.sweep-dist.far{color:var(--text-muted)}
+
+/* ── Snapshot Export ── */
+.snapshot-card{background:var(--sidebar);color:#fff;border-radius:var(--radius);padding:24px;font-family:var(--font);max-width:360px}
+.snapshot-card .snap-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.snapshot-card .snap-sym{font-size:18px;font-weight:800}
+.snapshot-card .snap-grade{font-size:16px;font-weight:800;color:var(--green)}
+.snapshot-card .snap-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
+.snapshot-card .snap-label{color:rgba(255,255,255,0.5)}
+.snapshot-card .snap-value{font-weight:600}
+.snapshot-card .snap-footer{margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1);font-size:10px;color:rgba(255,255,255,0.3);text-align:center}
+
+/* ── Inline Scan Progress (topbar strip) ── */
+.scan-progress-strip{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,0.04);overflow:hidden;opacity:0;transition:opacity .2s}
+.scan-progress-strip.active{opacity:1}
+.scan-progress-strip .bar{height:100%;background:var(--purple);border-radius:0 2px 2px 0;transition:width .3s ease;width:0%}
+.scan-status{display:none;align-items:center;gap:8px;font-size:11px;color:var(--purple);font-weight:600}
+.scan-status.active{display:flex}
+.scan-status .dot{width:6px;height:6px;border-radius:50%;background:var(--purple);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Breaker/OB badge ── */
+.badge.breaker{color:var(--purple-dark)}.badge.breaker::before{background:var(--purple)}
+.zone-range{font-family:'SF Mono','Menlo',monospace;font-size:11px;letter-spacing:-0.3px}
+/* Reversal pipeline steps */
+.rev-steps{display:flex;align-items:center;gap:2px;flex:1}
+.rev-step{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;background:var(--bg);color:var(--text-muted);transition:all .15s}
+.rev-step.done{background:var(--green-light);color:var(--green-dark)}
+.rev-step.active{background:var(--amber-light);color:var(--amber-dark)}
+.rev-arrow{color:var(--text-muted);font-size:10px;opacity:0.4}
+.rev-tf{font-size:10px;color:var(--text-muted);padding:2px 6px;background:var(--bg);border-radius:3px}
+
+/* ── View Containers ── */
+.view{display:none}
+.view.active{display:block}
+
+/* ── Responsive ── */
+@media(max-width:1400px){.summary-grid{grid-template-columns:repeat(3,1fr)}.top5-phases{gap:10px}.top5-signal{display:none}}
+@media(max-width:1024px){.sidebar{width:64px}.sidebar-brand-text,.sidebar-section-label,.nav-item span,.nav-item .badge-count{display:none}.sidebar-brand{padding:16px 14px;justify-content:center}.sidebar-logo{width:32px;height:32px;font-size:11px}.nav-item{justify-content:center;padding:10px}.sidebar-tagline,.sidebar-footer p{display:none}.main{margin-left:64px}.top5-phases{gap:6px}.top5-phase-label{display:none}}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.content{padding:16px}.summary-grid{grid-template-columns:1fr 1fr}.topbar{padding:12px 16px}.top5-row{flex-wrap:wrap;gap:8px}.top5-left{min-width:auto}.top5-phases{padding:0;order:3;width:100%}}
+
+/* Privacy mode */
+body.privacy-mode .sensitive{filter:blur(8px);user-select:none;transition:filter .3s}
+body.privacy-mode .sensitive:hover{filter:blur(4px)}
+</style>
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-logo">AX</div>
+    <div class="sidebar-brand-text">
+      <h1>AMDX</h1>
+      <p>Trading Intelligence</p>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Overview</div>
+  </div>
+  <div class="sidebar-nav">
+    <button class="nav-item active" onclick="showView('dashboard')" data-view="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-item" onclick="showView('scanner')" data-view="scanner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span>Scanner</span>
+      <span class="badge-count" id="scannerCount">—</span>
+    </button>
+    <button class="nav-item" onclick="showView('confluence')" data-view="confluence">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93 4.93 19.07"/></svg>
+      <span>Confluence</span>
+    </button>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Intelligence</div>
+  </div>
+  <div class="sidebar-nav">
+    <button class="nav-item" onclick="showView('dealer')" data-view="dealer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+      <span>Dealer Intel</span>
+    </button>
+    <button class="nav-item" onclick="showView('sweep')" data-view="sweep">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      <span>Sweep Radar</span>
+    </button>
+    <button class="nav-item" onclick="showView('leap')" data-view="leap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <span>LEAP Hunter</span>
+    </button>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Tools</div>
+  </div>
+  <div class="sidebar-nav">
+    <button class="nav-item" onclick="showView('watchlist')" data-view="watchlist">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+      <span>Watchlist</span>
+    </button>
+    <button class="nav-item" onclick="showView('models')" data-view="models">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Models</span>
+    </button>
+    <button class="nav-item" onclick="showView('alerts')" data-view="alerts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      <span>Alerts</span>
+    </button>
+  </div>
+
+  <div class="sidebar-tagline">"Read the Candle."</div>
+  <div class="sidebar-footer">
+    <p>AMDX v2.0 &middot; The Slow Trader</p>
+  </div>
+</nav>
+
+<!-- Main Content Area -->
+<div class="main">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="topbar-title" id="viewTitle">Dashboard</div>
+        <div class="topbar-subtitle" id="viewSubtitle">Market overview &middot; <span id="currentDate"></span></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" class="search-input" placeholder="Search tickers..." id="globalSearch" oninput="handleSearch(this.value)">
+      </div>
+      <button class="topbar-btn" onclick="togglePrivacy()" id="privacyBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Privacy
+      </button>
+      <div class="scan-status" id="scanStatus"><span class="dot"></span><span id="scanStatusText">Scanning...</span></div>
+      <button class="topbar-btn primary" onclick="runScan()" id="scanBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+        Scan Now
+      </button>
+    </div>
+  </div>
+
+  <!-- Inline scan progress (inside topbar) -->
+  <div class="scan-progress-strip" id="scanStrip"><div class="bar" id="scanBar"></div></div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- VIEW: Dashboard (Home)                      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="content">
+    <div class="view active" id="view-dashboard">
+
+      <!-- Summary Cards -->
+      <div class="summary-grid" id="summaryGrid">
+        <div class="summary-card daily" onclick="showView('models')">
+          <div class="sc-label">PDH / PDL Sweeps</div>
+          <div class="sc-row">
+            <span class="sc-num" id="scPdhDisagree">—</span>
+            <span class="sc-unit">disagree</span>
+          </div>
+          <div class="sc-detail" id="scPdhSub">— sweeps detected today</div>
+          <div class="sc-bar"><div class="sc-bar-fill" id="scPdhBar" style="width:0%;background:var(--purple)"></div></div>
+        </div>
+        <div class="summary-card weekly" onclick="showView('sweep')">
+          <div class="sc-label">PWH / PWL Sweeps</div>
+          <div class="sc-row">
+            <span class="sc-num" id="scPwhDisagree">—</span>
+            <span class="sc-unit">disagree</span>
+          </div>
+          <div class="sc-detail" id="scPwhSub">— sweeps this week</div>
+          <div class="sc-bar"><div class="sc-bar-fill" id="scPwhBar" style="width:0%;background:var(--purple)"></div></div>
+        </div>
+        <div class="summary-card monthly" onclick="showView('sweep')">
+          <div class="sc-label">PMH / PML Sweeps</div>
+          <div class="sc-row">
+            <span class="sc-num" id="scPmhDisagree">—</span>
+            <span class="sc-unit">disagree</span>
+          </div>
+          <div class="sc-detail" id="scPmhSub">— sweeps this month</div>
+          <div class="sc-bar"><div class="sc-bar-fill" id="scPmhBar" style="width:0%;background:var(--purple)"></div></div>
+        </div>
+        <div class="summary-card" onclick="showView('dealer')" style="border-top:3px solid var(--purple)">
+          <div class="sc-label">Active Breakers</div>
+          <div class="sc-row">
+            <span class="sc-num" id="scBreakers">—</span>
+            <span class="sc-unit">zones</span>
+          </div>
+          <div class="sc-detail" id="scBreakerSub">— OBs near price</div>
+          <div class="sc-bar"><div class="sc-bar-fill" id="scBreakerBar" style="width:0%;background:var(--purple)"></div></div>
+        </div>
+      </div>
+
+      <!-- Top Setups — sweep disagrees across all timeframes -->
+      <div class="top5-list" id="disagreeGrid">
+        <div class="top5-list-header">
+          <div>
+            <div class="section-title">Top Setups</div>
+            <div class="section-subtitle" style="margin-top:2px">Liquidity swept &amp; closed back inside</div>
+          </div>
+          <a class="section-action" onclick="showView('models')">View all &rarr;</a>
+        </div>
+        <div class="top5-empty">Run scan to detect sweeps</div>
+      </div>
+
+      <!-- Reversal Signatures -->
+      <div class="top5-list" id="reversalGrid" style="margin-bottom:24px">
+        <div class="top5-list-header">
+          <div>
+            <div class="section-title">Reversal Signatures</div>
+            <div class="section-subtitle" style="margin-top:2px">DOL → BPR → CISD → BMS → Entry</div>
+          </div>
+        </div>
+        <div class="top5-empty" id="reversalEmpty">Run scan to detect reversal signatures</div>
+      </div>
+
+      <!-- Quick Stats Row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px">
+        <div class="table-container">
+          <div class="table-toolbar">
+            <div class="section-title" style="font-size:14px">Sweep Activity</div>
+            <a class="section-action" onclick="showView('sweep')">View radar &rarr;</a>
+          </div>
+          <div style="padding:16px 20px" id="sweepSummary">
+            <div style="color:var(--text-muted);font-size:13px">Run scan to see sweep data</div>
+          </div>
+        </div>
+        <div class="table-container">
+          <div class="table-toolbar">
+            <div class="section-title" style="font-size:14px">LEAP Reclaims</div>
+            <a class="section-action" onclick="showView('leap')">View all &rarr;</a>
+          </div>
+          <div style="padding:16px 20px" id="leapSummary">
+            <div style="color:var(--text-muted);font-size:13px">Run scan to see LEAP data</div>
+          </div>
+        </div>
+        <div class="table-container">
+          <div class="table-toolbar">
+            <div class="section-title" style="font-size:14px">Dealer Zones</div>
+            <a class="section-action" onclick="showView('dealer')">View all &rarr;</a>
+          </div>
+          <div style="padding:16px 20px" id="dealerSummary">
+            <div style="color:var(--text-muted);font-size:13px">Run scan to see OB/breaker data</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Scanner                               -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-scanner">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips" id="scannerTimeframeTabs">
+              <button class="filter-chip active" onclick="switchTimeframe('daily',this)">Daily</button>
+              <button class="filter-chip" onclick="switchTimeframe('weekly',this)">Weekly</button>
+              <button class="filter-chip" onclick="switchTimeframe('monthly',this)">Monthly</button>
+              <button class="filter-chip" onclick="switchTimeframe('quarterly',this)">Quarterly</button>
+            </div>
+            <div style="width:1px;height:24px;background:var(--card-border)"></div>
+            <div class="filter-chips" id="scannerFilterTabs">
+              <!-- Populated by JS based on timeframe -->
+            </div>
+          </div>
+          <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted)" id="scannerTickerCount"></span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead id="scannerThead">
+              <!-- Populated by JS -->
+            </thead>
+            <tbody id="scannerTbody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Confluence                            -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-confluence">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips" id="confluenceFilterTabs">
+              <button class="filter-chip active" onclick="filterConfluence('all',this)">All</button>
+              <button class="filter-chip" onclick="filterConfluence('3+',this)">3+ Aligned</button>
+              <button class="filter-chip" onclick="filterConfluence('acc',this)">All Accumulating</button>
+              <button class="filter-chip" onclick="filterConfluence('high',this)">High Conviction</button>
+            </div>
+          </div>
+          <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted)" id="confluenceCount"></span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Daily</th>
+                <th>Weekly</th>
+                <th>Monthly</th>
+                <th>Quarterly</th>
+                <th>LEAP</th>
+                <th onclick="sortConfluenceView('score',this)" class="sorted">Score <span class="sort-arrow">▼</span></th>
+              </tr>
+            </thead>
+            <tbody id="confluenceTbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Dealer Intel                          -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-dealer">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips" id="dealerTypeTabs">
+              <button class="filter-chip active" onclick="filterDealer('all',this)">All</button>
+              <button class="filter-chip" onclick="filterDealer('bullish',this)">Bullish</button>
+              <button class="filter-chip" onclick="filterDealer('bearish',this)">Bearish</button>
+              <button class="filter-chip" onclick="filterDealer('breakers',this)">Breakers Only</button>
+            </div>
+            <div style="width:1px;height:24px;background:var(--card-border)"></div>
+            <div class="filter-chips" id="dealerTfTabs">
+              <button class="filter-chip active" onclick="filterDealerTf('all',this)">All TF</button>
+              <button class="filter-chip" onclick="filterDealerTf('weekly',this)">Weekly</button>
+              <button class="filter-chip" onclick="filterDealerTf('monthly',this)">Monthly</button>
+            </div>
+          </div>
+          <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted)" id="dealerCount"></span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Timeframe</th>
+                <th>Type</th>
+                <th>Zone</th>
+                <th>Distance</th>
+                <th>Status</th>
+                <th>Formed</th>
+              </tr>
+            </thead>
+            <tbody id="dealerTbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Sweep Radar                           -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-sweep">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips">
+              <button class="filter-chip active" onclick="filterSweep('all',this)">All Levels</button>
+              <button class="filter-chip" onclick="filterSweep('ssl',this)">SSL (Sell Stops)</button>
+              <button class="filter-chip" onclick="filterSweep('bsl',this)">BSL (Buy Stops)</button>
+              <button class="filter-chip" onclick="filterSweep('close',this)">Within 1%</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Nearest Level</th>
+                <th>Type</th>
+                <th>Distance</th>
+                <th>Timeframe</th>
+                <th>AMDX Phase</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="sweepTbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: LEAP Hunter                           -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-leap">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips" id="leapFilterTabs">
+              <button class="filter-chip active" onclick="filterLeap('all',this)">All</button>
+              <button class="filter-chip" onclick="filterLeap('reclaimed',this)">Reclaimed</button>
+              <button class="filter-chip" onclick="filterLeap('swept',this)">Below PYL</button>
+            </div>
+          </div>
+          <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted)" id="leapCount"></span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Status</th>
+                <th>Prior Year Low</th>
+                <th>Q1 Low</th>
+                <th>Current Price</th>
+                <th>Sweep Depth</th>
+                <th>Recovery</th>
+                <th>Dist from PYL</th>
+              </tr>
+            </thead>
+            <tbody id="leapTbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Watchlist                             -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-watchlist">
+      <div class="table-container" style="margin-bottom:24px">
+        <div class="table-toolbar">
+          <div>
+            <div class="section-title" style="font-size:14px">Add Tickers</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Added tickers will be included in the next scan</div>
+          </div>
+        </div>
+        <div style="padding:16px 20px;display:flex;gap:8px;align-items:center">
+          <input id="addTickerInput" type="text" class="search-input" placeholder="Enter ticker symbol (e.g. AMZN)" style="width:260px;padding-left:14px" onkeydown="if(event.key==='Enter')addCustomTicker()">
+          <button class="topbar-btn primary" onclick="addCustomTicker()">Add</button>
+          <span id="addTickerMsg" style="font-size:12px;margin-left:8px"></span>
+        </div>
+      </div>
+      <div class="table-container" style="margin-bottom:24px">
+        <div class="table-toolbar">
+          <div class="section-title" style="font-size:14px">Custom Tickers</div>
+          <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted)" id="customTickerCount"></span>
+          </div>
+        </div>
+        <div id="customTickerList" style="padding:16px 20px">
+          <div style="color:var(--text-muted);font-size:13px">No custom tickers added yet</div>
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="section-title" style="font-size:14px">Full Watchlist</div>
+          <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted)" id="watchlistCount"></span>
+          </div>
+        </div>
+        <div id="fullWatchlistGrid" style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Models                                -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-models">
+      <!-- PDH/PDL Sweep Model -->
+      <div class="table-container" style="margin-bottom:24px">
+        <div class="table-toolbar">
+          <div>
+            <div class="section-title" style="font-size:14px">PDH / PDL Sweep Model</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Cookie's end-of-day swing model · 24H timeframe · Targeting Mon/Tue expansion</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="text-align:right">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Win Rate</div>
+              <div style="font-size:20px;font-weight:800;color:var(--green-dark);letter-spacing:-0.5px" id="modelWinRate">—</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Trades</div>
+              <div style="font-size:20px;font-weight:800;letter-spacing:-0.5px" id="modelTradeCount">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:24px">
+          <!-- Model Overview -->
+          <div style="background:var(--bg);border-radius:var(--radius-sm);padding:20px;margin-bottom:24px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px">Model Thesis</div>
+            <div style="font-size:13px;color:var(--text-sec);line-height:1.7">
+              Catch Monday or Tuesday expansion by entering end-of-day on a <strong>PDH or PDL sweep</strong> using the 24H timeframe. When you see <strong>disagreement at a major level on HTF</strong>, enter immediately on the sweep — no need to wait for a breaker/FVG retest. When there's <strong>agreement for direction</strong>, set alerts and wait for a better entry on a breaker or FVG. Expansion comes on X, M &amp; D days in the AMDX cycle.
+            </div>
+          </div>
+
+          <!-- Entry Checklist -->
+          <div style="font-size:13px;font-weight:700;margin-bottom:16px">Entry Checklist</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+
+            <!-- Step 1 -->
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:20px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">1</div>
+                <div style="font-size:13px;font-weight:700">HTF Context</div>
+              </div>
+              <div style="font-size:12px;color:var(--text-sec);line-height:1.7">
+                Check <strong>Weekly &amp; Monthly A/X</strong> classification. Is this ticker accumulating? What phase are we in on the quarterly AMDX cycle? Know the HTF bias before looking at the 24H chart.
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--card-border);font-size:11px;color:var(--text-muted)">
+                ✦ W+M Accumulating = strongest setup<br>
+                ✦ Look for X, M, or D days for expansion
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:20px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">2</div>
+                <div style="font-size:13px;font-weight:700">Identify PDH / PDL on 24H TF</div>
+              </div>
+              <div style="font-size:12px;color:var(--text-sec);line-height:1.7">
+                Mark the <strong>Prior Day High (PDH)</strong> and <strong>Prior Day Low (PDL)</strong> on the 24-hour timeframe. Also note the <strong>0.5 equilibrium</strong> level (midpoint of the prior day range).
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--card-border);font-size:11px;color:var(--text-muted)">
+                ✦ PDH = Buy-side liquidity (stops above)<br>
+                ✦ PDL = Sell-side liquidity (stops below)
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:20px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">3</div>
+                <div style="font-size:13px;font-weight:700">Wait for the Sweep</div>
+              </div>
+              <div style="font-size:12px;color:var(--text-sec);line-height:1.7">
+                Wait for price to <strong>sweep PDH or PDL</strong> — taking out the liquidity sitting at those levels. This is the manipulation phase. The sweep should happen on <strong>Monday or early Tuesday</strong> for optimal expansion timing.
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--card-border);font-size:11px;color:var(--text-muted)">
+                ✦ PDL sweep → look for long (bullish)<br>
+                ✦ PDH sweep → look for short (bearish)
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:20px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">4</div>
+                <div style="font-size:13px;font-weight:700">Entry Decision</div>
+              </div>
+              <div style="font-size:12px;color:var(--text-sec);line-height:1.7">
+                <strong>Disagreement at HTF level?</strong> → Enter immediately on the sweep. No need to wait for retest.<br><br>
+                <strong>Agreement for direction?</strong> → Set alert. Wait for breaker or FVG entry for better R:R. Price will give you a better entry.
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--card-border);font-size:11px;color:var(--text-muted)">
+                ✦ End-of-day entries = just hop in<br>
+                ✦ Target: 10+ swings per week for data
+              </div>
+            </div>
+          </div>
+
+          <!-- Key Rules -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px">
+            <div style="background:var(--green-light);border-radius:var(--radius-sm);padding:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Edge</div>
+              <div style="font-size:12px;color:var(--green-dark);line-height:1.6">
+                84% win rate on swings. 90% on 8HR model. The sweep takes liquidity — price has no reason to stay past the level.
+              </div>
+            </div>
+            <div style="background:var(--amber-light);border-radius:var(--radius-sm);padding:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--amber-dark);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Validation</div>
+              <div style="font-size:12px;color:var(--amber-dark);line-height:1.6">
+                Need 100+ trades to validate any model. Track every entry. 10 swings/week minimum to build your data set.
+              </div>
+            </div>
+            <div style="background:var(--purple-light);border-radius:var(--radius-sm);padding:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--purple-dark);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Timing</div>
+              <div style="font-size:12px;color:var(--purple-dark);line-height:1.6">
+                Enter Monday or Tuesday EOD. Expansion comes on X, M &amp; D days. Catch the weekly open expansion move.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDH/PDL Sweep Scanner -->
+      <div class="table-container" style="margin-bottom:24px">
+        <div class="table-toolbar">
+          <div>
+            <div class="section-title" style="font-size:14px">All Liquidity Sweeps</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">PDH/L · PWH/L · PMH/L across all timeframes · Disagree = setup</div>
+          </div>
+          <div class="table-toolbar-right">
+            <div class="filter-chips" id="pdhFilterTabs">
+              <button class="filter-chip active" onclick="filterPdhPdl('all',this)">All</button>
+              <button class="filter-chip" onclick="filterPdhPdl('disagree',this)">Disagree</button>
+              <button class="filter-chip" onclick="filterPdhPdl('daily',this)">Daily</button>
+              <button class="filter-chip" onclick="filterPdhPdl('weekly',this)">Weekly</button>
+              <button class="filter-chip" onclick="filterPdhPdl('monthly',this)">Monthly</button>
+              <button class="filter-chip" onclick="filterPdhPdl('pdh',this)">Highs</button>
+              <button class="filter-chip" onclick="filterPdhPdl('pdl',this)">Lows</button>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted)" id="pdhSweepCount"></span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Level</th>
+                <th>Prior H</th>
+                <th>Prior L</th>
+                <th>0.5 Eq</th>
+                <th>Close</th>
+                <th>Reaction</th>
+                <th>Timeframe</th>
+              </tr>
+            </thead>
+            <tbody id="pdhPdlTbody">
+            </tbody>
+          </table>
+        </div>
+        <div id="pdhPdlEmpty" style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">
+          Run scan to detect PDH/PDL sweeps
+        </div>
+      </div>
+
+      <!-- Trade Log -->
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="section-title" style="font-size:14px">PDH/PDL Trade Log</div>
+          <div class="table-toolbar-right">
+            <button class="topbar-btn" onclick="document.getElementById('tradeLogForm').style.display=document.getElementById('tradeLogForm').style.display==='none'?'flex':'none'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
+              Log Trade
+            </button>
+          </div>
+        </div>
+        <!-- Trade entry form (hidden by default) -->
+        <div id="tradeLogForm" style="display:none;padding:16px 20px;border-bottom:1px solid var(--card-border);flex-wrap:wrap;gap:8px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Ticker</label>
+            <input id="tradeSymInput" type="text" class="search-input" placeholder="AAPL" style="width:80px;padding-left:10px">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Direction</label>
+            <select id="tradeDirInput" class="search-input" style="width:90px;padding-left:10px">
+              <option value="long">Long</option>
+              <option value="short">Short</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Sweep</label>
+            <select id="tradeSweepInput" class="search-input" style="width:80px;padding-left:10px">
+              <option value="PDL">PDL</option>
+              <option value="PDH">PDH</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Entry</label>
+            <input id="tradeEntryInput" type="number" step="0.01" class="search-input" placeholder="0.00" style="width:90px;padding-left:10px">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Result</label>
+            <select id="tradeResultInput" class="search-input" style="width:90px;padding-left:10px">
+              <option value="win">Win ✓</option>
+              <option value="loss">Loss ✗</option>
+              <option value="open">Open</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Notes</label>
+            <input id="tradeNotesInput" type="text" class="search-input" placeholder="e.g. EOD Monday, disagreement" style="width:200px;padding-left:10px">
+          </div>
+          <button class="topbar-btn primary" onclick="logTrade()">Save</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Ticker</th>
+                <th>Dir</th>
+                <th>Sweep</th>
+                <th>Entry</th>
+                <th>Result</th>
+                <th>Notes</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tradeLogTbody">
+            </tbody>
+          </table>
+        </div>
+        <div id="tradeLogEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
+          No trades logged yet. Click "Log Trade" to start building your data set.
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Alerts                                -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-alerts">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="section-title" style="font-size:14px">Alert Center</div>
+        </div>
+        <div style="padding:40px;text-align:center;color:var(--text-muted)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48" style="margin-bottom:12px;opacity:0.3"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px">Phase Transition Alerts</div>
+          <div style="font-size:12px">Get notified when tickers change AMDX phase, sweep levels, or hit confluence thresholds</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════════════
+// AMDX Mercury Dashboard — Core Engine
+// Reuses scan logic from index.html, new UI layer
+// ══════════════════════════════════════════════════════
+
+const FMP_KEY = '9ZZSogafEDXEw5Z3NQnbK4i0NRuQz8yZ';
+const BATCH_SIZE = 5;
+const FETCH_DELAY = 300;
+const MID_TOL = 0.001; // 0.1% mid-price tolerance for A/X
+
+const DEFAULT_WATCHLIST = [
+  'AMDL','NFXL','MSFL','CRWV','INTC','AAPL','KHC','AFRM','AVGO','MNST',
+  'APP','NVDA','TSLA','EVGO','ZS','HOOD','DLO','SOUN','CSCO','META',
+  'MARA','SBUX','PYPL','SMCI','ASML','SRPT','FANG','LULU','RCAT','NEON',
+  'IBKR','MDLZ','AEVA','NBIS','IBIT','PANW','AMAT','ARM','MCHP','SBET',
+  'ABNB','MU','INTU','XRPT','QRVO','AVAV','IREN','CIFR','MRVL','COIN',
+  'COST','FIVE','OPEN','TLN','CEG','MSFT','EYE','ALAB','DPRO','SLNH',
+  'LYTS','DUOL','FSLR','FTNT','JD','PLTR','MKTX','ABAT','USLM','RIVN',
+  'RXRX','RGTI','FRHC','LSCC','ENPH','SOFI','KTOS','DOMO','MSTR','DOCU',
+  'CRWD','DKNG','MDLN','ZM','TEM','RIOT','GOOGL','DAVE','AXTI','LCID',
+  'EOSE','AMD','NFLX','DNTH','USAR','CELH','TTWO','MSTX','POOL','SNDK',
+  'HIVE','MELI','DDOG','CLSK','ASTS','MSFU','ORCX','AAPU',
+  'JPM','HD','PFE','LLY','TGT','XOM','UPS','NVO','HIMS','PATH',
+  'KLAR','CAT','AXP','MIR','CHWY','MCD','UNH','KBH','DIS','NKE',
+  'LUMN','MA','CRM','BA','MET','CI','FUBO','LMND','PLD','OXY',
+  'DEO','ONTO','NIO','U','FN','AIG','TDOC','CMG','FLR','TSM',
+  'TWLO','DELL','NU','HLT','SG','FIG','BBY','GNRC','DHI','PRIM',
+  'SNOW','FDX','DE','RGR','ORCL','AI','CVX','W','JOBY','GS',
+  'VST','AON','CVNA','WRBY','BP','BBAI','LMT','AES','SNAP','CRCL',
+  'MP','WELL','SPOT','ABBV','TOST','BIRK','JNJ','GLW','OKLO','UI',
+  'IOT','NOW','CAVA','IONQ','OSCR','DRI','CNC','M','RBLX','HAL',
+  'RCL','NET','WFC','KO','DG','RDDT','COP','EOG','UBER',
+  'SPY','QQQ','DIA','IWM','UVXY','SQQQ','TQQQ','SOXL','BULL',
+  'XLV','XLP','XLE','XLF','XLU','XLY','XLI','XLK','XLRE',
+  'NVOX','UUUU','TGEN','GDX','SMH','TLT','TSLL',
+  'GLD','SLV','LIT','USO',
+  'ETHU','ETHA','IBIT',
+  'ES=F','NQ=F','YM=F','RTY=F'
+];
+// Merge defaults with user-added tickers from localStorage
+const userTickers=JSON.parse(localStorage.getItem('mercury_custom_tickers')||'[]');
+const WATCHLIST=[...new Set([...DEFAULT_WATCHLIST,...userTickers])];
+
+const INDEX_ETFS = ['SPY','QQQ','DIA','IWM'];
+const FUTURES_MAP = {'ES=F':'SPY','NQ=F':'QQQ','YM=F':'DIA','RTY=F':'IWM'};
+const FUTURES = Object.keys(FUTURES_MAP);
+const FMP_MAP = {'BRK.B':'BRK-B'};
+function fmpSym(s){ return FMP_MAP[s]||s; }
+
+const tickerColors={TSLA:'#c62828',RIVN:'#558b2f',XOM:'#e65100',SPY:'#1565c0',NVDA:'#76b900',AMD:'#ed1c24',AAPL:'#555',MSFT:'#00a4ef',AMZN:'#ff9900',LULU:'#d42020',JNJ:'#d51920',JPM:'#003d79',AVGO:'#cc092f',NKE:'#111',DIS:'#006e99',PFE:'#0093d0',GLD:'#c4a97a',IWM:'#6d7e5e',META:'#0668E1',GOOGL:'#4285F4',NFLX:'#E50914',PLTR:'#1a1a2e',COIN:'#0052FF',SNOW:'#29B5E8',CRWD:'#FF4F00'};
+function gc(t){ if(tickerColors[t]) return tickerColors[t]; let h=0; for(let i=0;i<t.length;i++) h=t.charCodeAt(i)+((h<<5)-h); return `hsl(${((h%360)+360)%360},45%,42%)`; }
+function tickerIcon(sym){
+  const bg=gc(sym), letters=sym.slice(0,2);
+  return `<div class="ticker-icon"><img src="https://assets.parqet.com/logos/symbol/${sym}" alt="${sym}" onerror="this.src='https://financialmodelingprep.com/image-stock/${fmpSym(sym)}.png';this.onerror=function(){this.classList.add('errored')}"><span class="ti-fallback" style="background:${bg}">${letters}</span></div>`;
+}
+
+// ── State ──
+let dailyResults={}, weeklyResults={}, monthlyResults={}, quarterlyResults={}, leapResults={};
+let obResults={};
+let pdhPdlResults={};
+let emaResults={};
+let reversalResults={};
+let currentView='dashboard';
+let currentTimeframe='daily';
+let scannerFilter='all';
+let confluenceFilter='all';
+let dealerFilter='all';
+let dealerTfFilter='all';
+let confluenceSort={col:'score',dir:'desc'};
+let isScanning=false;
+
+// ── Date Utils ──
+function dateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d; }
+function formatDate(d){ return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
+
+// ── Init ──
+document.getElementById('currentDate').textContent = formatDate(new Date());
+
+// ── Navigation ──
+function showView(view, sub){
+  currentView = view;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.toggle('active', n.dataset.view===view);
+  });
+  const titles = {
+    dashboard: ['Dashboard', 'Market overview'],
+    scanner: ['Scanner', 'Multi-timeframe AMDX detection'],
+    confluence: ['Confluence', 'Cross-timeframe alignment scoring'],
+    dealer: ['Dealer Intel', 'HTF order block &amp; breaker zone detection'],
+    sweep: ['Sweep Radar', 'Proximity to key liquidity levels'],
+    leap: ['LEAP Hunter', 'Prior year low sweep & reclaim tracker'],
+    models: ['Trading Models', 'Entry checklists &amp; trade tracking'],
+    watchlist: ['Watchlist', 'Your tracked tickers'],
+    alerts: ['Alert Center', 'Phase transition notifications']
+  };
+  const t = titles[view] || ['AMDX',''];
+  document.getElementById('viewTitle').textContent = t[0];
+  document.getElementById('viewSubtitle').innerHTML = t[1] + ' &middot; <span id="currentDate">'+formatDate(new Date())+'</span>';
+  if(sub && view==='scanner') switchTimeframe(sub);
+  if(view==='watchlist') renderWatchlistView();
+  if(view==='models'){renderPdhPdlView();renderTradeLog();}
+}
+
+function togglePrivacy(){
+  document.body.classList.toggle('privacy-mode');
+  const btn = document.getElementById('privacyBtn');
+  btn.classList.toggle('primary', document.body.classList.contains('privacy-mode'));
+}
+
+function handleSearch(q){
+  const query = q.toLowerCase().trim();
+  document.querySelectorAll('tbody tr').forEach(tr=>{
+    if(!query){ tr.style.display=''; return; }
+    const ticker = tr.dataset?.ticker || tr.textContent;
+    tr.style.display = ticker.toLowerCase().includes(query) ? '' : 'none';
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// FMP API & Data Fetching (same logic as index.html)
+// ══════════════════════════════════════════════════════
+
+async function fetchJSON(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(`${r.status}`);
+  return r.json();
+}
+
+async function fetchEOD(sym, from, to){
+  const url = `https://financialmodelingprep.com/stable/historical-price-eod/full?symbol=${fmpSym(sym)}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
+  const data = await fetchJSON(url);
+  if(!Array.isArray(data)) return [];
+  return data.sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+async function fetchIntraday(sym, tf, from, to){
+  const url = `https://financialmodelingprep.com/stable/historical-chart/${tf}?symbol=${fmpSym(sym)}&from=${from}&to=${to}${tf==='1hour'?'&extended=true':''}&apikey=${FMP_KEY}`;
+  return fetchJSON(url);
+}
+
+// ── Aggregation ──
+function aggregateToWeekly(daily){
+  const weeks=[];
+  let cur=null;
+  daily.forEach(d=>{
+    const dt=new Date(d.date+'T12:00:00');
+    const day=dt.getDay();
+    if(day===1||!cur){ // Monday or first bar
+      if(cur) weeks.push(cur);
+      cur={open:d.open,high:d.high,low:d.low,close:d.close,date:d.date,monday:{high:d.high,low:d.low,open:d.open,close:d.close}};
+    } else {
+      cur.high=Math.max(cur.high,d.high);
+      cur.low=Math.min(cur.low,d.low);
+      cur.close=d.close;
+    }
+  });
+  if(cur) weeks.push(cur);
+  return weeks;
+}
+
+// ── Classification ──
+function classifyWeeklyAX(weekly){
+  if(weekly.length<2) return null;
+  const c0=weekly[weekly.length-1]; // current week
+  const c1=weekly[weekly.length-2]; // prior week
+  const range1=c1.high-c1.low;
+  const tol=range1*MID_TOL;
+  const isA = c0.high <= (c1.high+tol) && c0.low >= (c1.low-tol);
+  // Sweep detection — use >= / <= so touching the level counts (stops sit AT the level)
+  const sweptHigh = c0.high >= c1.high;
+  const sweptLow = c0.low <= c1.low;
+  // Manipulation candle
+  let manip={status:'none'};
+  if(c0.monday){
+    const mH=c0.monday.high, mL=c0.monday.low, mC=c0.monday.close;
+    if(mH>c1.high){
+      manip={status:'resolved',grabbed:'high',agreed:mC>c1.high,day:'Mon'};
+    } else if(mL<c1.low){
+      manip={status:'resolved',grabbed:'low',agreed:mC<c1.low,day:'Mon'};
+    }
+  }
+  return {
+    ax: isA?'A':'X', c0, c1, monday:c0.monday,
+    pmh:c1.high, pml:c1.low, cmh:c0.high, cml:c0.low,
+    sweptHigh, sweptLow,
+    agreedHigh:sweptHigh&&c0.close>c1.high, disagreedHigh:sweptHigh&&c0.close<=c1.high,
+    agreedLow:sweptLow&&c0.close<c1.low, disagreedLow:sweptLow&&c0.close>=c1.low,
+    manip,
+    range: range1>0 ? ((c0.high-c0.low)/range1*100).toFixed(1)+'%' : '—'
+  };
+}
+
+function classifyMonthlyAX(weekly){
+  if(weekly.length<5) return null;
+  // Find month boundaries
+  const months=[];
+  let curMonth=null;
+  weekly.forEach(w=>{
+    const m=w.date.slice(0,7);
+    if(m!==curMonth){
+      curMonth=m;
+      months.push({month:m, weeks:[w]});
+    } else {
+      months[months.length-1].weeks.push(w);
+    }
+  });
+  if(months.length<2) return null;
+  const cur=months[months.length-1];
+  const prior=months[months.length-2];
+
+  // Reference candle = last week of prior month
+  const priorLastWeek=prior.weeks[prior.weeks.length-1];
+  const pmh=priorLastWeek.high;
+  const pml=priorLastWeek.low;
+
+  // Monthly AMDX/XAMD: 4-phase cycle across weeks of the month
+  // W1 vs last week of prior month determines A or X start
+  const sequence=[];
+  let prev=priorLastWeek;
+  for(let i=0;i<cur.weeks.length&&i<4;i++){
+    const wk=cur.weeks[i];
+    const tol=(prev.high-prev.low)*MID_TOL;
+    const isA=wk.high<=(prev.high+tol)&&wk.low>=(prev.low-tol);
+    sequence.push(isA?'A':'X');
+    prev=wk;
+  }
+
+  let cycleType='—';
+  if(sequence[0]==='A') cycleType='AMDX';
+  else if(sequence[0]==='X') cycleType='XAMD';
+  const cycle=cycleType==='AMDX'?['A','M','D','X']:cycleType==='XAMD'?['X','A','M','D']:[];
+  let currentPhase=Math.min(cur.weeks.length,4);
+  const cpIdx=currentPhase-1;
+  const stage=cpIdx<cycle.length?cycle[cpIdx]:'—';
+
+  // Aggregate current month candle for sweep detection
+  const cH=Math.max(...cur.weeks.map(w=>w.high));
+  const cL=Math.min(...cur.weeks.map(w=>w.low));
+  const cC=cur.weeks[cur.weeks.length-1].close;
+
+  // Sweep detection against prior month's last week
+  const sweptHigh=cH>=pmh;
+  const sweptLow=cL<=pml;
+
+  // Manipulation: did W1 grab a level?
+  const w1=cur.weeks[0];
+  let manip={status:'none'};
+  if(w1){
+    if(w1.high>pmh) manip={status:'resolved',grabbed:'high',agreed:w1.close>pmh,week:'W1'};
+    else if(w1.low<pml) manip={status:'resolved',grabbed:'low',agreed:w1.close<pml,week:'W1'};
+  }
+
+  return {
+    ax:cycleType, stage, sequence, currentPhase,
+    c0:{high:cH,low:cL,close:cC,open:cur.weeks[0].open},
+    c1:{high:pmh,low:pml},
+    pmh, pml, cmh:cH, cml:cL,
+    sweptHigh, sweptLow,
+    // Agree/Disagree on sweeps
+    agreedHigh:sweptHigh&&cC>pmh, disagreedHigh:sweptHigh&&cC<=pmh,
+    agreedLow:sweptLow&&cC<pml, disagreedLow:sweptLow&&cC>=pml,
+    manip,
+    range: (pmh-pml)>0 ? ((cH-cL)/(pmh-pml)*100).toFixed(1)+'%' : '—'
+  };
+}
+
+// ── HTF Order Block & Breaker Detection ──
+
+function buildMonthlyCandles(weekly){
+  const monthMap={};
+  weekly.forEach(w=>{
+    const m=w.date.slice(0,7);
+    if(!monthMap[m]){
+      monthMap[m]={open:w.open,high:w.high,low:w.low,close:w.close,date:m};
+    } else {
+      monthMap[m].high=Math.max(monthMap[m].high,w.high);
+      monthMap[m].low=Math.min(monthMap[m].low,w.low);
+      monthMap[m].close=w.close;
+    }
+  });
+  return Object.values(monthMap).sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+function calcEMA(bars,period){
+  if(bars.length<period) return [];
+  const mult=2/(period+1);
+  const ema=[];
+  // Seed with SMA
+  let sum=0;
+  for(let i=0;i<period;i++) sum+=bars[i].close;
+  ema.push(sum/period);
+  for(let i=period;i<bars.length;i++){
+    ema.push(bars[i].close*mult+ema[ema.length-1]*(1-mult));
+  }
+  return ema;
+}
+
+function detectEMACross(bars){
+  if(!Array.isArray(bars)||bars.length<22) return null;
+  bars.sort((a,b)=>a.date.localeCompare(b.date));
+  const ema9=calcEMA(bars,9);
+  const ema21=calcEMA(bars,21);
+  if(!ema9.length||!ema21.length) return null;
+
+  // Align: ema21 starts at index 21, ema9 starts at index 9
+  // Both relative to end of bars array
+  const len=Math.min(ema9.length,ema21.length);
+  const e9=ema9.slice(-len);
+  const e21=ema21.slice(-len);
+
+  if(len<2) return null;
+  const cur9=e9[e9.length-1], cur21=e21[e21.length-1];
+  const prev9=e9[e9.length-2], prev21=e21[e21.length-2];
+
+  let cross='none';
+  if(prev9<=prev21 && cur9>cur21) cross='bullish';
+  else if(prev9>=prev21 && cur9<cur21) cross='bearish';
+
+  return {
+    ema9:cur9.toFixed(2),
+    ema21:cur21.toFixed(2),
+    spread:((cur9-cur21)/cur21*100).toFixed(2),
+    cross,
+    above:cur9>cur21 // 9 EMA is above 21 EMA = bullish posture
+  };
+}
+
+// ── Reversal Signature Detection ──
+// Top-down: DOL (higher TF) → BPR → CISD → BMS (structure TF) → Entry (lower TF)
+
+function findSwings(bars,lookback){
+  const lb=lookback||2;
+  const swingHighs=[],swingLows=[];
+  for(let i=lb;i<bars.length-lb;i++){
+    let isH=true,isL=true;
+    for(let j=1;j<=lb;j++){
+      if(bars[i].high<=bars[i-j].high||bars[i].high<=bars[i+j].high) isH=false;
+      if(bars[i].low>=bars[i-j].low||bars[i].low>=bars[i+j].low) isL=false;
+    }
+    if(isH) swingHighs.push({idx:i,price:bars[i].high,date:bars[i].date});
+    if(isL) swingLows.push({idx:i,price:bars[i].low,date:bars[i].date});
+  }
+  return {swingHighs,swingLows};
+}
+
+function detectBPR(bars,startIdx,dir){
+  // BPR = 3-candle Fair Value Gap:
+  // Candle 1 and Candle 3 have NO overlap — the gap between them is the BPR zone
+  // Candle 2 (middle) is the displacement candle
+  // Bullish: candle3.low > candle1.high (gap up)
+  // Bearish: candle3.high < candle1.low (gap down)
+  for(let i=Math.max(startIdx,2);i<bars.length;i++){
+    const c1=bars[i-2];
+    const c3=bars[i];
+    if(dir==='bullish'&&c3.low>c1.high){
+      return {found:true,idx:i,high:c3.low,low:c1.high,date:bars[i-1].date};
+    }
+    if(dir==='bearish'&&c3.high<c1.low){
+      return {found:true,idx:i,high:c1.low,low:c3.high,date:bars[i-1].date};
+    }
+  }
+  return {found:false};
+}
+
+function detectCISD(bars,dispIdx,dir){
+  // Last opposing candle before displacement = OB
+  for(let i=dispIdx-1;i>=Math.max(0,dispIdx-5);i--){
+    const c=bars[i];
+    if(dir==='bullish'&&c.close<c.open) return {found:true,idx:i,high:c.open,low:c.close,date:c.date};
+    if(dir==='bearish'&&c.close>c.open) return {found:true,idx:i,high:c.close,low:c.open,date:c.date};
+  }
+  return {found:false};
+}
+
+function detectBMS(bars,afterIdx,dir,swings){
+  if(!swings) return {found:false};
+  if(dir==='bullish'){
+    const sh=swings.swingHighs.filter(s=>s.idx<afterIdx).pop();
+    if(!sh) return {found:false};
+    for(let i=afterIdx;i<bars.length;i++) if(bars[i].high>sh.price) return {found:true,idx:i,price:sh.price,date:bars[i].date};
+  } else {
+    const sl=swings.swingLows.filter(s=>s.idx<afterIdx).pop();
+    if(!sl) return {found:false};
+    for(let i=afterIdx;i<bars.length;i++) if(bars[i].low<sl.price) return {found:true,idx:i,price:sl.price,date:bars[i].date};
+  }
+  return {found:false};
+}
+
+function detectReversalSignature(structureBars,sweepDir){
+  if(!structureBars||structureBars.length<6) return null;
+  const sorted=[...structureBars].sort((a,b)=>a.date.localeCompare(b.date));
+  const swings=findSwings(sorted,2);
+
+  // The reversal signature must form RECENTLY — within the last few bars only.
+  // For 4H bars: last 6 bars (~1 day)
+  // For daily bars: last 5 bars (~1 week)
+  // For weekly bars: last 3 bars (~3 weeks)
+  // Too wide a window produces false positives (CRWV-type issue)
+  const recentCount=Math.min(sorted.length,sorted.length>20?6:sorted.length>10?5:3);
+  const searchStart=Math.max(1,sorted.length-recentCount);
+
+  // Find the extreme point within the recent window
+  let extremeIdx=searchStart;
+  if(sweepDir==='bearish'){
+    let maxH=0;
+    for(let i=searchStart;i<sorted.length;i++){if(sorted[i].high>maxH){maxH=sorted[i].high;extremeIdx=i;}}
+  } else {
+    let minL=Infinity;
+    for(let i=searchStart;i<sorted.length;i++){if(sorted[i].low<minL){minL=sorted[i].low;extremeIdx=i;}}
+  }
+
+  // BPR must form at or after the extreme — not before it
+  const bprStart=Math.max(searchStart,extremeIdx);
+  const bpr=detectBPR(sorted,bprStart,sweepDir);
+  const cisd=bpr.found?detectCISD(sorted,bpr.idx,sweepDir):{found:false};
+  const bms=bpr.found?detectBMS(sorted,bpr.idx,sweepDir,swings):{found:false};
+  return {
+    steps:[
+      {name:'DOL',done:true},
+      {name:'BPR',done:bpr.found,data:bpr.found?{high:bpr.high,low:bpr.low}:null},
+      {name:'CISD',done:cisd.found,data:cisd.found?{high:cisd.high,low:cisd.low}:null},
+      {name:'BMS',done:bms.found,data:bms.found?{price:bms.price}:null},
+      {name:'Entry',done:bms.found}
+    ],
+    score:1+(bpr.found?1:0)+(cisd.found?1:0)+(bms.found?1:0)+(bms.found?1:0),
+    direction:sweepDir
+  };
+}
+
+function detectPDHPDLSweep(eod){
+  // Needs at least 2 days of data
+  if(eod.length<2) return null;
+  const today=eod[eod.length-1];
+  const yesterday=eod[eod.length-2];
+  const pdh=yesterday.high;
+  const pdl=yesterday.low;
+  const eq=(pdh+pdl)/2; // 0.5 equilibrium
+
+  const sweptPDH=today.high>=pdh;
+  const sweptPDL=today.low<=pdl;
+
+  // Disagreement = swept the level but closed back inside prior day range
+  const agreedPDH=sweptPDH && today.close>pdh; // stayed above = agreed
+  const agreedPDL=sweptPDL && today.close<pdl; // stayed below = agreed
+  const disagreedPDH=sweptPDH && today.close<=pdh; // swept high, closed back inside
+  const disagreedPDL=sweptPDL && today.close>=pdl; // swept low, closed back inside
+
+  if(!sweptPDH&&!sweptPDL) return null;
+
+  // Both swept = indecisive, null out disagrees
+  const indecisive=sweptPDH&&sweptPDL;
+
+  return {
+    pdh,pdl,eq,
+    todayHigh:today.high,todayLow:today.low,todayClose:today.close,todayOpen:today.open,
+    todayDate:today.date,yesterdayDate:yesterday.date,
+    sweptPDH,sweptPDL,indecisive,
+    agreedPDH:indecisive?false:agreedPDH,
+    agreedPDL:indecisive?false:agreedPDL,
+    disagreedPDH:indecisive?false:disagreedPDH,
+    disagreedPDL:indecisive?false:disagreedPDL,
+    // Distance from current close to PDH/PDL
+    distFromPDH:((today.close-pdh)/pdh*100).toFixed(2),
+    distFromPDL:((today.close-pdl)/pdl*100).toFixed(2)
+  };
+}
+
+function findOrderBlocks(candles,currentPrice,lookback){
+  const empty={bullish:[],bearish:[],breakers:[],nearestBullish:null,nearestBearish:null};
+  if(candles.length<3) return empty;
+
+  const startIdx=Math.max(0,candles.length-lookback-1);
+  const obs=[];
+
+  // Phase 1: Identify OB candidates
+  for(let i=startIdx;i<candles.length-1;i++){
+    const prev=candles[i];
+    const curr=candles[i+1];
+
+    // Bullish OB: bearish candle → next candle closes above its high (displacement up)
+    if(prev.close<prev.open && curr.close>prev.high){
+      obs.push({
+        type:'bullish',status:'unmitigated',
+        high:prev.open, low:prev.close, // body of bearish candle
+        wickHigh:prev.high, wickLow:prev.low,
+        date:prev.date, candleIdx:i
+      });
+    }
+
+    // Bearish OB: bullish candle → next candle closes below its low (displacement down)
+    if(prev.close>prev.open && curr.close<prev.low){
+      obs.push({
+        type:'bearish',status:'unmitigated',
+        high:prev.close, low:prev.open, // body of bullish candle
+        wickHigh:prev.high, wickLow:prev.low,
+        date:prev.date, candleIdx:i
+      });
+    }
+  }
+
+  // Phase 2: Walk forward — check mitigation & breaker status
+  for(const ob of obs){
+    let broken=false;
+    for(let j=ob.candleIdx+2;j<candles.length;j++){
+      const c=candles[j];
+      if(ob.type==='bullish'){
+        if(c.low<=ob.high){
+          ob.status='mitigated';
+          if(c.low<ob.low) broken=true;
+        }
+        if(broken && c.close>ob.high){
+          ob.status='breaker'; break;
+        }
+      } else {
+        if(c.high>=ob.low){
+          ob.status='mitigated';
+          if(c.high>ob.high) broken=true;
+        }
+        if(broken && c.close<ob.low){
+          ob.status='breaker'; break;
+        }
+      }
+    }
+
+    // Distance from current price
+    if(ob.type==='bullish'){
+      ob.distFromPrice=((currentPrice-ob.high)/currentPrice*100).toFixed(1);
+    } else {
+      ob.distFromPrice=((ob.low-currentPrice)/currentPrice*100).toFixed(1);
+    }
+  }
+
+  // Phase 3: Filter & organize
+  const bullish=obs.filter(o=>o.type==='bullish'&&o.status==='unmitigated')
+    .sort((a,b)=>b.high-a.high);
+  const bearish=obs.filter(o=>o.type==='bearish'&&o.status==='unmitigated')
+    .sort((a,b)=>a.low-b.low);
+  const breakers=obs.filter(o=>o.status==='breaker');
+
+  const nearestBullish=bullish.find(o=>o.high<currentPrice)||null;
+  const nearestBearish=bearish.find(o=>o.low>currentPrice)||null;
+
+  return {bullish,bearish,breakers,nearestBullish,nearestBearish};
+}
+
+function aggregateToQuarterlyPhases(dailyData){
+  const now=new Date();
+  const curQ=Math.floor(now.getMonth()/3);
+  const curYear=now.getFullYear();
+  const qStart=new Date(curYear,curQ*3,1);
+  const prevQStart=new Date(curYear,curQ*3-3,1);
+  const prevQEnd=new Date(curYear,curQ*3,0);
+  const curDays=dailyData.filter(d=>{const dt=new Date(d.date);return dt>=qStart&&dt<=now;});
+  const prevDays=dailyData.filter(d=>{const dt=new Date(d.date);return dt>=prevQStart&&dt<=prevQEnd;});
+  if(curDays.length<4||prevDays.length<4) return null;
+  // Split current quarter into 4 phases
+  const n=curDays.length;
+  const base=Math.floor(n/4);
+  const rem=n%4;
+  const sizes=[base,base,base,base];
+  for(let i=3;i>=4-rem&&rem>0;i--) sizes[i]++;
+  const phases=[];
+  let idx=0;
+  for(let p=0;p<4;p++){
+    const slice=curDays.slice(idx,idx+sizes[p]);
+    if(slice.length===0){phases.push(null);continue;}
+    phases.push({
+      high:Math.max(...slice.map(d=>d.high)),
+      low:Math.min(...slice.map(d=>d.low)),
+      open:slice[0].open,
+      close:slice[slice.length-1].close
+    });
+    idx+=sizes[p];
+  }
+  // Prior quarter last phase
+  const pn=prevDays.length;
+  const pBase=Math.floor(pn/4);
+  const pSlice=prevDays.slice(pBase*3);
+  const priorLast=pSlice.length?{
+    high:Math.max(...pSlice.map(d=>d.high)),
+    low:Math.min(...pSlice.map(d=>d.low)),
+    open:pSlice[0].open,
+    close:pSlice[pSlice.length-1].close
+  }:null;
+  return {phases, priorLast};
+}
+
+function classifyQuarterlyAMDX(qData){
+  if(!qData) return null;
+  const {phases,priorLast}=qData;
+  const sequence=[];
+  let prev=priorLast;
+  for(let i=0;i<4;i++){
+    if(!phases[i]||!prev){sequence.push(null);continue;}
+    const tol=(prev.high-prev.low)*MID_TOL;
+    const isA=phases[i].high<=(prev.high+tol)&&phases[i].low>=(prev.low-tol);
+    sequence.push(isA?'A':'X');
+    prev=phases[i];
+  }
+  let cycleType='—';
+  if(sequence[0]==='A') cycleType='AMDX';
+  else if(sequence[0]==='X') cycleType='XAMD';
+  const cycle=cycleType==='AMDX'?['A','M','D','X']:cycleType==='XAMD'?['X','A','M','D']:[];
+  let currentPhase=1;
+  for(let i=3;i>=0;i--){if(phases[i]){currentPhase=i+1;break;}}
+  const cpIdx=currentPhase-1;
+  const stage=cpIdx<cycle.length?cycle[cpIdx]:'—';
+  return {ax:cycleType, stage, sequence, currentPhase, phases, priorLast};
+}
+
+function classifyLeapHunter(dailyData){
+  const now=new Date();
+  const thisYear=now.getFullYear();
+  const priorYearDays=dailyData.filter(d=>{const y=new Date(d.date).getFullYear();return y===thisYear-1;});
+  const q1Days=dailyData.filter(d=>{const dt=new Date(d.date);return dt.getFullYear()===thisYear&&dt.getMonth()<3;});
+  if(priorYearDays.length<20||q1Days.length<5) return null;
+  const priorYearLow=Math.min(...priorYearDays.map(d=>d.low));
+  const q1Low=Math.min(...q1Days.map(d=>d.low));
+  const currentPrice=dailyData[dailyData.length-1].close;
+  if(q1Low>=priorYearLow) return null; // no sweep
+  const swept=q1Low<priorYearLow;
+  const reclaimed=currentPrice>priorYearLow;
+  return {
+    status:reclaimed?'reclaimed':'swept',
+    priorYearLow: priorYearLow.toFixed(2),
+    q1Low: q1Low.toFixed(2),
+    currentPrice: currentPrice.toFixed(2),
+    sweepDepth: ((q1Low-priorYearLow)/priorYearLow*100).toFixed(1),
+    recovery: ((currentPrice-q1Low)/q1Low*100).toFixed(1),
+    distFromPYL: ((currentPrice-priorYearLow)/priorYearLow*100).toFixed(1)
+  };
+}
+
+// Daily AMDX (intraday phases)
+function group4HByDay(bars, targetDate){
+  const dayBars=bars.filter(b=>b.date.startsWith(targetDate));
+  // Equity session: 4H bars → 4 phases
+  const phases=[null,null,null,null];
+  dayBars.forEach((b,i)=>{
+    if(i<4) phases[i]={high:b.high,low:b.low,open:b.open,close:b.close};
+  });
+  return phases;
+}
+function aggregateTo6H(bars, targetDate){
+  const dayBars=bars.filter(b=>b.date.startsWith(targetDate));
+  const windows=[[],[],[],[]]; // 6H windows
+  dayBars.forEach(b=>{
+    const h=new Date(b.date).getHours();
+    const w=Math.floor(h/6);
+    if(w<4) windows[w].push(b);
+  });
+  return windows.map(w=>{
+    if(!w.length) return null;
+    return {high:Math.max(...w.map(b=>b.high)),low:Math.min(...w.map(b=>b.low)),open:w[0].open,close:w[w.length-1].close};
+  });
+}
+function aggregateFutures6H(bars, targetDate){
+  // Futures 24h: 18:00 prior day → 17:59 target day
+  const td=new Date(targetDate+'T00:00:00');
+  const pd=new Date(td); pd.setDate(pd.getDate()-1);
+  const pdStr=dateStr(pd);
+  const sessionBars=bars.filter(b=>{
+    const ds=b.date.slice(0,10);
+    const h=new Date(b.date).getHours();
+    return (ds===pdStr&&h>=18)||(ds===targetDate&&h<18);
+  });
+  const windows=[[],[],[],[]];
+  sessionBars.forEach(b=>{
+    const h=new Date(b.date).getHours();
+    let sessionHour;
+    if(h>=18) sessionHour=h-18;
+    else sessionHour=h+6;
+    const w=Math.floor(sessionHour/6);
+    if(w<4) windows[w].push(b);
+  });
+  return windows.map(w=>{
+    if(!w.length) return null;
+    return {high:Math.max(...w.map(b=>b.high)),low:Math.min(...w.map(b=>b.low)),open:w[0].open,close:w[w.length-1].close};
+  });
+}
+
+function classifyDailyAMDX(todayPhases, priorLastPhase, isFutures){
+  const sequence=[];
+  let prev=priorLastPhase;
+  for(let i=0;i<todayPhases.length;i++){
+    if(!todayPhases[i]||!prev){sequence.push(null);continue;}
+    const tol=(prev.high-prev.low)*MID_TOL;
+    const isA=todayPhases[i].high<=(prev.high+tol)&&todayPhases[i].low>=(prev.low-tol);
+    sequence.push(isA?'A':'X');
+    prev=todayPhases[i];
+  }
+  let cycleType='—';
+  if(sequence[0]==='A') cycleType='AMDX';
+  else if(sequence[0]==='X') cycleType='XAMD';
+  const cycle=cycleType==='AMDX'?['A','M','D','X']:cycleType==='XAMD'?['X','A','M','D']:[];
+  let currentPhase=1;
+  for(let i=todayPhases.length-1;i>=0;i--){if(todayPhases[i]){currentPhase=i+1;break;}}
+  const cpIdx=currentPhase-1;
+  const stage=cpIdx<cycle.length?cycle[cpIdx]:'—';
+  return {ax:cycleType, stage, cycle, sequence, currentPhase};
+}
+
+// ── Cache ──
+function loadCache(key){ try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;} }
+function saveCache(key,data){ try{localStorage.setItem(key,JSON.stringify({timestamp:Date.now(),data}));}catch(e){} }
+function isCacheFresh(key,maxAge=6*60*60*1000){ const c=loadCache(key); return c&&(Date.now()-c.timestamp)<maxAge; }
+
+// ══════════════════════════════════════════════════════
+// MAIN SCAN
+// ══════════════════════════════════════════════════════
+async function runScan(){
+  if(isScanning) return;
+  isScanning=true;
+  const strip=document.getElementById('scanStrip');
+  const bar=document.getElementById('scanBar');
+  const status=document.getElementById('scanStatus');
+  const statusText=document.getElementById('scanStatusText');
+  const btn=document.getElementById('scanBtn');
+  strip.classList.add('active');
+  status.classList.add('active');
+  btn.disabled=true;
+  btn.textContent='Scanning...';
+  function updateProgress(pct, msg){ bar.style.width=pct+'%'; if(msg) statusText.textContent=msg; }
+
+  const nonFutures=WATCHLIST.filter(s=>!FUTURES.includes(s));
+  const today=dateStr(new Date());
+  const from500=dateStr(daysAgo(500));
+
+  try{
+    // Phase 1: EOD data
+    updateProgress(0,'Fetching historical data...');
+    const weeklyKey='mercury_weekly_'+today;
+    const monthlyKey='mercury_monthly_'+today;
+    const quarterlyKey='mercury_quarterly_'+today;
+    const leapKey='mercury_leap_'+today;
+    const obKey='mercury_ob_'+today;
+    const pdhKey='mercury_pdh_'+today;
+
+    if(isCacheFresh(weeklyKey)){
+      weeklyResults=loadCache(weeklyKey).data;
+      monthlyResults=loadCache(monthlyKey).data;
+      quarterlyResults=loadCache(quarterlyKey).data;
+      leapResults=loadCache(leapKey).data;
+      obResults=(loadCache(obKey)||{}).data||{};
+      pdhPdlResults=(loadCache(pdhKey)||{}).data||{};
+      reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
+      updateProgress(50,'Loaded from cache...');
+    } else {
+      weeklyResults={};monthlyResults={};quarterlyResults={};leapResults={};obResults={};pdhPdlResults={};reversalResults={};
+      for(let i=0;i<nonFutures.length;i+=BATCH_SIZE){
+        const batch=nonFutures.slice(i,i+BATCH_SIZE);
+        const promises=batch.map(async sym=>{
+          try{
+            const eod=await fetchEOD(sym,from500,today);
+            if(!eod.length) return;
+            const weekly=aggregateToWeekly(eod);
+            weeklyResults[sym]=classifyWeeklyAX(weekly);
+            monthlyResults[sym]=classifyMonthlyAX(weekly);
+            const qData=aggregateToQuarterlyPhases(eod);
+            quarterlyResults[sym]=classifyQuarterlyAMDX(qData);
+            leapResults[sym]=classifyLeapHunter(eod);
+            // OB & Breaker detection
+            const currentPrice=eod[eod.length-1].close;
+            const monthlyCandles=buildMonthlyCandles(weekly);
+            obResults[sym]={
+              weekly:findOrderBlocks(weekly,currentPrice,26),
+              monthly:findOrderBlocks(monthlyCandles,currentPrice,12)
+            };
+            // PDH/PDL sweep detection
+            pdhPdlResults[sym]=detectPDHPDLSweep(eod);
+            // Reversal signature: Monthly DOL → Weekly structure
+            const m=monthlyResults[sym];
+            if(m&&(m.disagreedHigh||m.disagreedLow)){
+              const dir=m.disagreedLow?'bullish':'bearish';
+              if(!reversalResults[sym]) reversalResults[sym]={};
+              reversalResults[sym].monthly={dolTf:'Monthly',structureTf:'Weekly',entryTf:'Daily',level:m.disagreedLow?'PML':'PMH',...detectReversalSignature(weekly,dir)};
+            }
+            // Reversal signature: Weekly DOL → Daily structure
+            const w=weeklyResults[sym];
+            if(w&&(w.disagreedHigh||w.disagreedLow)){
+              const dir=w.disagreedLow?'bullish':'bearish';
+              if(!reversalResults[sym]) reversalResults[sym]={};
+              reversalResults[sym].weekly={dolTf:'Weekly',structureTf:'Daily',entryTf:'4H',level:w.disagreedLow?'PWL':'PWH',...detectReversalSignature(eod.slice(-20),dir)};
+            }
+          }catch(e){ console.warn('EOD failed:',sym,e.message); }
+        });
+        await Promise.all(promises);
+        const pct=Math.min(((i+BATCH_SIZE)/nonFutures.length)*50,50);
+        updateProgress(pct,`Historical: ${Math.min(i+BATCH_SIZE,nonFutures.length)} / ${nonFutures.length}`);
+        if(i+BATCH_SIZE<nonFutures.length) await new Promise(r=>setTimeout(r,FETCH_DELAY));
+      }
+      saveCache(weeklyKey,weeklyResults);
+      saveCache(monthlyKey,monthlyResults);
+      saveCache(quarterlyKey,quarterlyResults);
+      saveCache(leapKey,leapResults);
+      saveCache(obKey,obResults);
+      saveCache(pdhKey,pdhPdlResults);
+      saveCache('mercury_reversal_'+today,reversalResults);
+    }
+
+    // Progressively render what we have so far
+    renderDashboard();
+    renderScannerView();
+    renderConfluenceView();
+    renderLeapView();
+    renderSweepView();
+    renderDealerView();
+    renderPdhPdlView();
+
+    // Phase 2: Daily intraday
+    updateProgress(50,'Fetching intraday data...');
+    const dailyKey='mercury_daily_'+today;
+    const emaKey='mercury_ema_'+today;
+    if(isCacheFresh(dailyKey,30*60*1000)){
+      dailyResults=loadCache(dailyKey).data;
+      emaResults=(loadCache(emaKey)||{}).data||{};
+      updateProgress(100,'Complete');
+    } else {
+      dailyResults={};emaResults={};
+      const twoDaysAgo=dateStr(daysAgo(5));
+      for(let i=0;i<WATCHLIST.length;i+=BATCH_SIZE){
+        const batch=WATCHLIST.slice(i,i+BATCH_SIZE);
+        const promises=batch.map(async sym=>{
+          try{
+            const isIndex=INDEX_ETFS.includes(sym)||FUTURES.includes(sym);
+            const isFut=FUTURES.includes(sym);
+            const tf=isIndex?'1hour':'4hour';
+            const bars=await fetchIntraday(sym,tf,twoDaysAgo,today);
+            if(!Array.isArray(bars)||!bars.length) return;
+            bars.sort((a,b)=>a.date.localeCompare(b.date));
+            let dates;
+            if(isFut){
+              const tradingDates=new Set();
+              bars.forEach(b=>{
+                const ds=b.date.slice(0,10);
+                const hour=new Date(b.date).getHours();
+                if(hour>=18){const nd=new Date(ds+'T00:00:00');nd.setDate(nd.getDate()+1);tradingDates.add(dateStr(nd));}
+                else tradingDates.add(ds);
+              });
+              dates=[...tradingDates].sort();
+            } else {
+              dates=[...new Set(bars.map(b=>b.date.slice(0,10)))].sort();
+            }
+            if(!dates.length) return;
+            const latestDate=dates[dates.length-1];
+            const priorDate=dates.length>=2?dates[dates.length-2]:null;
+            let todayPhases, priorLastPhase=null;
+            if(isFut){
+              todayPhases=aggregateFutures6H(bars,latestDate);
+              if(priorDate){const pp=aggregateFutures6H(bars,priorDate);for(let p=3;p>=0;p--)if(pp[p]){priorLastPhase=pp[p];break;}}
+            } else if(isIndex){
+              todayPhases=aggregateTo6H(bars,latestDate);
+              if(priorDate){const pp=aggregateTo6H(bars,priorDate);for(let p=3;p>=0;p--)if(pp[p]){priorLastPhase=pp[p];break;}}
+            } else {
+              todayPhases=group4HByDay(bars,latestDate);
+              if(priorDate){const pp=group4HByDay(bars,priorDate);for(let p=3;p>=0;p--)if(pp[p]){priorLastPhase=pp[p];break;}}
+            }
+            if(!todayPhases.some(p=>p)) return;
+            const classified=classifyDailyAMDX(todayPhases,priorLastPhase,isFut);
+            classified.tradingDate=latestDate;
+            dailyResults[sym]=classified;
+            // 9/21 EMA cross on 4H bars
+            emaResults[sym]=detectEMACross(bars);
+            // Reversal signature: Daily DOL → 4H structure
+            const pdh=pdhPdlResults[sym];
+            if(pdh&&(pdh.disagreedPDH||pdh.disagreedPDL)){
+              const dir=pdh.disagreedPDL?'bullish':'bearish';
+              if(!reversalResults[sym]) reversalResults[sym]={};
+              reversalResults[sym].daily={dolTf:'Daily',structureTf:'4H',entryTf:'15m',level:pdh.disagreedPDL?'PDL':'PDH',...detectReversalSignature(bars,dir)};
+            }
+          }catch(e){}
+        });
+        await Promise.all(promises);
+        const pct=50+Math.min(((i+BATCH_SIZE)/WATCHLIST.length)*50,50);
+        updateProgress(pct,`Intraday: ${Math.min(i+BATCH_SIZE,WATCHLIST.length)} / ${WATCHLIST.length}`);
+        if(i+BATCH_SIZE<WATCHLIST.length) await new Promise(r=>setTimeout(r,FETCH_DELAY));
+      }
+      saveCache(dailyKey,dailyResults);
+      saveCache(emaKey,emaResults);
+    }
+
+    // Final render with all data
+    renderDashboard();
+    renderScannerView();
+    renderConfluenceView();
+    renderLeapView();
+    renderSweepView();
+    renderDealerView();
+    renderPdhPdlView();
+    updateScannerCount();
+
+  }catch(e){
+    console.error('Scan failed:',e);
+    updateProgress(0,'Scan failed: '+e.message);
+  }
+
+  // Clean up — hide progress and reset bar
+  setTimeout(()=>{ strip.classList.remove('active'); status.classList.remove('active'); bar.style.width='0%'; },1500);
+  btn.disabled=false;
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg> Scan Now';
+  isScanning=false;
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER: Dashboard Home
+// ══════════════════════════════════════════════════════
+function renderDashboard(){
+  // Liquidity Sweep Summary Cards
+  // PDH/PDL (daily)
+  const pdhAll=Object.values(pdhPdlResults).filter(d=>d);
+  const pdhSweeps=pdhAll.length;
+  const pdhDisagree=pdhAll.filter(d=>d.disagreedPDH||d.disagreedPDL).length;
+  const el1=document.getElementById('scPdhDisagree');
+  if(el1){
+    el1.textContent=pdhDisagree;
+    document.getElementById('scPdhSub').textContent=`${pdhSweeps} sweeps detected today`;
+    document.getElementById('scPdhBar').style.width=pdhSweeps>0?(pdhDisagree/pdhSweeps*100)+'%':'0%';
+  }
+
+  // PWH/PWL (weekly)
+  const wAll=Object.values(weeklyResults).filter(d=>d);
+  const wSweeps=wAll.filter(d=>d.sweptHigh||d.sweptLow).length;
+  const wDisagree=wAll.filter(d=>d.disagreedHigh||d.disagreedLow).length;
+  const el2=document.getElementById('scPwhDisagree');
+  if(el2){
+    el2.textContent=wDisagree;
+    document.getElementById('scPwhSub').textContent=`${wSweeps} sweeps this week`;
+    document.getElementById('scPwhBar').style.width=wSweeps>0?(wDisagree/wSweeps*100)+'%':'0%';
+  }
+
+  // PMH/PML (monthly)
+  const mAll=Object.values(monthlyResults).filter(d=>d);
+  const mSweeps=mAll.filter(d=>d.sweptHigh||d.sweptLow).length;
+  const mDisagree=mAll.filter(d=>d.disagreedHigh||d.disagreedLow).length;
+  const el3=document.getElementById('scPmhDisagree');
+  if(el3){
+    el3.textContent=mDisagree;
+    document.getElementById('scPmhSub').textContent=`${mSweeps} sweeps this month`;
+    document.getElementById('scPmhBar').style.width=mSweeps>0?(mDisagree/mSweeps*100)+'%':'0%';
+  }
+
+  // Breakers
+  let breakerCount=0,unmitCount=0;
+  Object.values(obResults).forEach(ob=>{
+    if(!ob) return;
+    ['weekly','monthly'].forEach(tf=>{
+      if(!ob[tf]) return;
+      breakerCount+=ob[tf].breakers.length;
+      unmitCount+=ob[tf].bullish.length+ob[tf].bearish.length;
+    });
+  });
+  const el4=document.getElementById('scBreakers');
+  if(el4){
+    el4.textContent=breakerCount;
+    document.getElementById('scBreakerSub').textContent=`${unmitCount} OBs near price`;
+    document.getElementById('scBreakerBar').style.width=breakerCount>0?Math.min(breakerCount*10,100)+'%':'0%';
+  }
+
+  // Disagree Setups (replaces Top 5)
+  renderDisagreeSetups();
+  renderReversalSignatures();
+  // Quick stats
+  renderDashboardSweepSummary();
+  renderDashboardLeapSummary();
+  renderDashboardDealerSummary();
+}
+
+function renderMarketPulse(){
+  const indices=['SPY','QQQ','IWM','DIA'];
+  const strip=document.getElementById('pulseStrip');
+  strip.innerHTML=indices.map(sym=>{
+    const w=weeklyResults[sym];
+    const m=monthlyResults[sym];
+    const q=quarterlyResults[sym];
+    const p=pdhPdlResults[sym];
+    const wPhase=w?`<span class="pulse-phase ${w.ax==='A'?'acc':'exp'}" style="font-size:10px;opacity:0.6">W:${w.ax}</span>`:'';
+    const mPhase=m?`<span class="pulse-phase ${m.ax&&m.ax.startsWith('A')?'acc':'exp'}" style="font-size:10px;opacity:0.6">M:${m.ax||'—'}</span>`:'';
+    const qPhase=q?`<span class="pulse-phase ${q.ax==='AMDX'?'acc':'exp'}" style="font-size:10px;opacity:0.6">Q:${q.ax}</span>`:'';
+    // Sweep badges — most important
+    let sweepBadges='';
+    if(w&&w.sweptHigh) sweepBadges+=`<span class="badge ${w.disagreedHigh?'disagree':'agree'}" style="font-size:10px">PWH ${w.disagreedHigh?'✗':'✓'}</span>`;
+    if(w&&w.sweptLow) sweepBadges+=`<span class="badge ${w.disagreedLow?'disagree':'agree'}" style="font-size:10px">PWL ${w.disagreedLow?'✗':'✓'}</span>`;
+    if(p&&p.sweptPDH) sweepBadges+=`<span class="badge ${p.disagreedPDH?'disagree':'agree'}" style="font-size:10px">PDH ${p.disagreedPDH?'✗':'✓'}</span>`;
+    if(p&&p.sweptPDL) sweepBadges+=`<span class="badge ${p.disagreedPDL?'disagree':'agree'}" style="font-size:10px">PDL ${p.disagreedPDL?'✗':'✓'}</span>`;
+    return `<div class="pulse-pill"><span class="pulse-sym">${sym}</span>${sweepBadges}${wPhase}${mPhase}${qPhase}</div>`;
+  }).join('');
+}
+
+function getConfluenceScore(sym){
+  const d=dailyResults[sym];
+  const w=weeklyResults[sym];
+  const m=monthlyResults[sym];
+  const q=quarterlyResults[sym];
+  const l=leapResults[sym];
+  // Weighted scoring per blueprint
+  let score=0;
+  if(q&&q.ax==='AMDX') score+=3.0;
+  if(m&&m.ax==='A') score+=2.0;
+  if(w&&w.ax==='A') score+=1.5;
+  if(d&&d.ax==='AMDX') score+=1.0;
+  if(l&&l.status==='reclaimed') score+=1.5;
+  // Sweep modifiers
+  if(w&&w.sweptLow) score+=1.0;
+  if(w&&w.sweptHigh) score+=1.0;
+  // OB/Breaker proximity bonus
+  const ob=obResults[sym];
+  if(ob){
+    if(ob.weekly&&ob.weekly.nearestBullish&&Math.abs(parseFloat(ob.weekly.nearestBullish.distFromPrice))<=3) score+=0.5;
+    if(ob.monthly&&ob.monthly.nearestBullish&&Math.abs(parseFloat(ob.monthly.nearestBullish.distFromPrice))<=3) score+=0.5;
+    if(ob.weekly&&ob.weekly.breakers.length>0) score+=0.5;
+    if(ob.monthly&&ob.monthly.breakers.length>0) score+=0.5;
+  }
+  return score;
+}
+
+function getGrade(score){
+  if(score>=8) return {grade:'A+',cls:'a-plus'};
+  if(score>=6) return {grade:'A',cls:'a'};
+  if(score>=4) return {grade:'B',cls:'b'};
+  if(score>=2) return {grade:'C',cls:'c'};
+  return {grade:'D',cls:'d'};
+}
+
+function renderDisagreeSetups(){
+  const container=document.getElementById('disagreeGrid');
+  if(!container) return;
+  const header=container.querySelector('.top5-list-header');
+  const headerHTML=header?header.outerHTML:'';
+
+  // Collect disagree signals grouped by ticker, highest TF wins
+  const tickerMap={};
+  function ensure(sym){
+    if(!tickerMap[sym]) tickerMap[sym]={sym,levels:[],score:0,isLeap:false};
+    return tickerMap[sym];
+  }
+
+  // Monthly (weight 3)
+  Object.entries(monthlyResults).forEach(([sym,m])=>{
+    if(!m) return;
+    if(m.disagreedHigh){const t=ensure(sym);t.levels.push('PMH');t.score+=3;}
+    if(m.disagreedLow){const t=ensure(sym);t.levels.push('PML');t.score+=3;}
+  });
+  // Weekly (weight 2)
+  Object.entries(weeklyResults).forEach(([sym,w])=>{
+    if(!w) return;
+    if(w.disagreedHigh){const t=ensure(sym);t.levels.push('PWH');t.score+=2;}
+    if(w.disagreedLow){const t=ensure(sym);t.levels.push('PWL');t.score+=2;}
+  });
+  // Daily (weight 1)
+  Object.entries(pdhPdlResults).forEach(([sym,d])=>{
+    if(!d) return;
+    if(d.disagreedPDH){const t=ensure(sym);t.levels.push('PDH');t.score+=1;}
+    if(d.disagreedPDL){const t=ensure(sym);t.levels.push('PDL');t.score+=1;}
+  });
+
+  // Add LEAP bonus
+  Object.values(tickerMap).forEach(t=>{
+    const l=leapResults[t.sym];
+    if(l&&l.status==='reclaimed'){t.isLeap=true;t.score+=1;}
+  });
+
+  const sorted=Object.values(tickerMap).sort((a,b)=>b.score-a.score).slice(0,5);
+
+  if(!sorted.length){
+    container.innerHTML=headerHTML+'<div class="top5-empty">Run scan to detect sweeps</div>';
+    return;
+  }
+
+  container.innerHTML=headerHTML+sorted.map((t,i)=>{
+    // Direction from highest-TF sweep
+    const topLevel=t.levels[0];
+    const isLong=topLevel.endsWith('L');
+    const dir=isLong?'Long ↑':'Short ↓';
+    const dirCls=isLong?'acc':'dist';
+
+    // Sweep level tags — compact
+    const levelTags=t.levels.map(lv=>{
+      const tf=lv.startsWith('PM')?'Monthly':lv.startsWith('PW')?'Weekly':'Daily';
+      return `<span style="font-size:11px;font-weight:600;color:var(--text-sec);background:var(--bg);padding:3px 8px;border-radius:4px">${lv}<span style="font-weight:400;color:var(--text-muted);margin-left:4px">${tf}</span></span>`;
+    }).join('');
+
+    return `<div class="top5-row">
+      <div class="top5-left">
+        <span class="top5-rank">${i+1}</span>
+        <div class="top5-ticker">${tickerIcon(t.sym)}<span class="top5-sym">${t.sym}</span></div>
+      </div>
+      <div class="top5-phases" style="gap:6px;flex:1">${levelTags}${t.isLeap?'<span style="font-size:10px;font-weight:600;color:var(--green-dark);background:var(--green-light);padding:3px 8px;border-radius:4px">LEAP ✓</span>':''}</div>
+      <div style="font-size:13px;font-weight:700;color:var(${isLong?'--green-dark':'--red-dark'})">${dir}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderReversalSignatures(){
+  const container=document.getElementById('reversalGrid');
+  const emptyEl=document.getElementById('reversalEmpty');
+  if(!container) return;
+  const header=container.querySelector('.top5-list-header');
+  const headerHTML=header?header.outerHTML:'';
+
+  // Collect all tickers with reversal data, flatten across TF cascades
+  const rows=[];
+  Object.entries(reversalResults).forEach(([sym,r])=>{
+    if(!r) return;
+    ['monthly','weekly','daily'].forEach(cascade=>{
+      if(!r[cascade]||!r[cascade].steps) return;
+      rows.push({sym,...r[cascade]});
+    });
+  });
+
+  // Sort by score descending, then by DOL timeframe weight
+  const tfWeight={Monthly:3,Weekly:2,Daily:1};
+  rows.sort((a,b)=>{
+    if(b.score!==a.score) return b.score-a.score;
+    return (tfWeight[b.dolTf]||0)-(tfWeight[a.dolTf]||0);
+  });
+
+  if(!rows.length){
+    container.innerHTML=headerHTML+'<div class="top5-empty">Run scan to detect reversal signatures</div>';
+    return;
+  }
+
+  container.innerHTML=headerHTML+rows.slice(0,10).map(r=>{
+    const isLong=r.direction==='bullish';
+    const dir=isLong?'Long ↑':'Short ↓';
+    const stepHTML=r.steps.map((s,i)=>{
+      const isDone=s.done;
+      const isNext=!isDone&&(i===0||r.steps[i-1].done);
+      const cls=isDone?'done':isNext?'active':'';
+      const icon=isDone?'✓':isNext?'◉':'○';
+      // Label with timeframe context
+      let tfLabel='';
+      if(s.name==='DOL') tfLabel=r.dolTf;
+      else if(s.name==='Entry') tfLabel=r.entryTf;
+      else tfLabel=r.structureTf;
+      return `${i>0?'<span class="rev-arrow">→</span>':''}<span class="rev-step ${cls}"><span>${icon}</span>${s.name}<span class="rev-tf">${tfLabel}</span></span>`;
+    }).join('');
+
+    return `<div class="top5-row">
+      <div class="top5-left" style="min-width:120px">
+        <div class="top5-ticker">${tickerIcon(r.sym)}<span class="top5-sym">${r.sym}</span></div>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text-sec);background:var(--bg);padding:3px 8px;border-radius:4px;flex-shrink:0">${r.level}</div>
+      <div class="rev-steps">${stepHTML}</div>
+      <div style="font-size:13px;font-weight:700;color:var(${isLong?'--green-dark':'--red-dark'});flex-shrink:0">${dir}</div>
+      <div style="font-size:16px;font-weight:800;color:var(${r.score>=4?'--green-dark':r.score>=3?'--amber-dark':'--text-muted'});min-width:32px;text-align:right">${r.score}/5</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDashboardSweepSummary(){
+  const el=document.getElementById('sweepSummary');
+  const sweeps=[];
+  Object.entries(weeklyResults).forEach(([sym,w])=>{
+    if(!w) return;
+    if(w.sweptHigh) sweeps.push({sym,type:'BSL',level:w.pmh});
+    if(w.sweptLow) sweeps.push({sym,type:'SSL',level:w.pml});
+  });
+  if(!sweeps.length){el.innerHTML='<div style="color:var(--text-muted);font-size:13px">No sweeps detected this week</div>';return;}
+  el.innerHTML=`<div style="font-size:12px;color:var(--text-sec);margin-bottom:8px">${sweeps.length} weekly sweeps detected</div>`+
+    sweeps.slice(0,5).map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.03)"><div style="display:flex;align-items:center;gap:8px">${tickerIcon(s.sym)}<span style="font-weight:600;font-size:13px">${s.sym}</span></div><span class="badge ${s.type==='SSL'?'dist':'swept'}">${s.type} Swept</span></div>`).join('');
+}
+
+function renderDashboardLeapSummary(){
+  const el=document.getElementById('leapSummary');
+  const reclaims=Object.entries(leapResults).filter(([,l])=>l&&l.status==='reclaimed').map(([sym,l])=>({sym,...l}));
+  if(!reclaims.length){el.innerHTML='<div style="color:var(--text-muted);font-size:13px">No LEAP reclaims detected</div>';return;}
+  el.innerHTML=`<div style="font-size:12px;color:var(--text-sec);margin-bottom:8px">${reclaims.length} tickers reclaimed prior year low</div>`+
+    reclaims.slice(0,5).map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.03)"><div style="display:flex;align-items:center;gap:8px">${tickerIcon(r.sym)}<span style="font-weight:600;font-size:13px">${r.sym}</span></div><span class="badge swept">+${r.distFromPYL}%</span></div>`).join('');
+}
+
+function renderDashboardDealerSummary(){
+  const el=document.getElementById('dealerSummary');
+  if(!el) return;
+  let unmitCount=0,breakerCount=0;
+  const closest=[];
+
+  Object.entries(obResults).forEach(([sym,ob])=>{
+    if(!ob) return;
+    ['weekly','monthly'].forEach(tf=>{
+      if(!ob[tf]) return;
+      unmitCount+=ob[tf].bullish.length+ob[tf].bearish.length;
+      breakerCount+=ob[tf].breakers.length;
+      if(ob[tf].nearestBullish) closest.push({sym,...ob[tf].nearestBullish,tf});
+      if(ob[tf].nearestBearish) closest.push({sym,...ob[tf].nearestBearish,tf});
+    });
+  });
+
+  if(unmitCount===0&&breakerCount===0){
+    el.innerHTML='<div style="color:var(--text-muted);font-size:13px">No OB/breaker zones detected</div>';
+    return;
+  }
+
+  closest.sort((a,b)=>Math.abs(parseFloat(a.distFromPrice))-Math.abs(parseFloat(b.distFromPrice)));
+
+  el.innerHTML=`<div style="font-size:12px;color:var(--text-sec);margin-bottom:8px">${unmitCount} unmitigated OBs · ${breakerCount} breakers</div>`+
+    closest.slice(0,5).map(z=>{
+      const dir=z.type==='bullish'?'↓':'↑';
+      const cls=z.status==='breaker'?'breaker':z.type==='bullish'?'acc':'dist';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.03)">
+        <div style="display:flex;align-items:center;gap:8px">${tickerIcon(z.sym)}<span style="font-weight:600;font-size:13px">${z.sym}</span></div>
+        <span class="badge ${cls}">${z.status==='breaker'?'BRK':'OB'} ${dir}${Math.abs(parseFloat(z.distFromPrice)).toFixed(1)}%</span>
+      </div>`;
+    }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER: Scanner View
+// ══════════════════════════════════════════════════════
+function updateScannerCount(){
+  const total=Object.keys(dailyResults).length+Object.keys(weeklyResults).length;
+  document.getElementById('scannerCount').textContent=Object.keys(weeklyResults).length||'—';
+}
+
+function switchTimeframe(tf, btn){
+  currentTimeframe=tf;
+  if(btn){
+    document.querySelectorAll('#scannerTimeframeTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+  } else {
+    document.querySelectorAll('#scannerTimeframeTabs .filter-chip').forEach(c=>{
+      c.classList.toggle('active',c.textContent.toLowerCase()===tf);
+    });
+  }
+  scannerFilter='all';
+  renderScannerFilters();
+  renderScannerView();
+}
+
+function renderScannerFilters(){
+  const el=document.getElementById('scannerFilterTabs');
+  const tf=currentTimeframe;
+  let filters=[];
+  if(tf==='daily'){
+    const da=Object.values(dailyResults).filter(d=>d&&d.ax==='AMDX').length;
+    const dx=Object.values(dailyResults).filter(d=>d&&d.ax==='XAMD').length;
+    filters=[
+      {key:'all',label:'All',count:da+dx},
+      {key:'AMDX',label:'AMDX',count:da},
+      {key:'XAMD',label:'XAMD',count:dx}
+    ];
+  } else if(tf==='weekly'||tf==='monthly'){
+    const res=tf==='weekly'?weeklyResults:monthlyResults;
+    const a=Object.values(res).filter(d=>d&&d.ax==='A').length;
+    const x=Object.values(res).filter(d=>d&&d.ax==='X').length;
+    const swH=Object.values(res).filter(d=>d&&d.sweptHigh).length;
+    const swL=Object.values(res).filter(d=>d&&d.sweptLow).length;
+    filters=[
+      {key:'all',label:'All',count:a+x},
+      {key:'A',label:'A Inside',count:a},
+      {key:'X',label:'X Expanding',count:x},
+      {key:'sweptHigh',label:tf==='weekly'?'PWH Swept':'PMH Swept',count:swH},
+      {key:'sweptLow',label:tf==='weekly'?'PWL Swept':'PML Swept',count:swL}
+    ];
+  } else {
+    const qa=Object.values(quarterlyResults).filter(d=>d&&d.ax==='AMDX').length;
+    const qx=Object.values(quarterlyResults).filter(d=>d&&d.ax==='XAMD').length;
+    filters=[
+      {key:'all',label:'All',count:qa+qx},
+      {key:'AMDX',label:'AMDX',count:qa},
+      {key:'XAMD',label:'XAMD',count:qx}
+    ];
+  }
+  el.innerHTML=filters.map(f=>`<button class="filter-chip ${f.key===scannerFilter?'active':''}" onclick="filterScanner('${f.key}',this)">${f.label} <span class="chip-count">${f.count}</span></button>`).join('');
+}
+
+function filterScanner(key, btn){
+  scannerFilter=key;
+  document.querySelectorAll('#scannerFilterTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderScannerView();
+}
+
+function renderScannerView(){
+  const thead=document.getElementById('scannerThead');
+  const tbody=document.getElementById('scannerTbody');
+  const tf=currentTimeframe;
+
+  if(tf==='daily'){
+    thead.innerHTML='<tr><th>Ticker</th><th>Cycle</th><th>Stage</th><th>Sequence</th><th>Phase</th></tr>';
+    const rows=Object.entries(dailyResults).filter(([,d])=>d).filter(([,d])=>{
+      if(scannerFilter==='all') return true;
+      return d.ax===scannerFilter;
+    }).sort((a,b)=>a[1].ax.localeCompare(b[1].ax));
+    tbody.innerHTML=rows.map(([sym,d])=>`<tr data-ticker="${sym}">
+      <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
+      <td><span class="badge ${d.ax==='AMDX'?'acc':'exp'}">${d.ax}</span></td>
+      <td style="font-weight:600">${d.stage}</td>
+      <td style="font-size:12px;color:var(--text-sec)">${d.sequence.map(s=>s||'·').join(' → ')}</td>
+      <td>${d.currentPhase}/4</td>
+    </tr>`).join('');
+    document.getElementById('scannerTickerCount').textContent=rows.length+' tickers';
+  } else if(tf==='weekly'||tf==='monthly'){
+    const res=tf==='weekly'?weeklyResults:monthlyResults;
+    const priorLabel=tf==='weekly'?'Prior Wk':'Prior Mo';
+    thead.innerHTML=`<tr><th>Ticker</th><th>A/X</th><th>${priorLabel} H</th><th>${priorLabel} L</th><th>Current H</th><th>Current L</th><th>Range %</th><th>Swept</th><th>Zones</th><th>Manipulation</th></tr>`;
+    const rows=Object.entries(res).filter(([,d])=>d).filter(([,d])=>{
+      if(scannerFilter==='all') return true;
+      if(scannerFilter==='A'||scannerFilter==='X') return d.ax===scannerFilter;
+      if(scannerFilter==='sweptHigh') return d.sweptHigh;
+      if(scannerFilter==='sweptLow') return d.sweptLow;
+      return true;
+    }).sort((a,b)=>a[1].ax.localeCompare(b[1].ax));
+    tbody.innerHTML=rows.map(([sym,d])=>{
+      let sweptBadge='<span style="color:var(--text-muted)">—</span>';
+      if(d.sweptHigh&&d.sweptLow) sweptBadge='<span class="badge exp">Both</span>';
+      else if(d.sweptHigh) sweptBadge=`<span class="badge swept">${tf==='weekly'?'PWH':'PMH'} ↑</span>`;
+      else if(d.sweptLow) sweptBadge=`<span class="badge dist">${tf==='weekly'?'PWL':'PML'} ↓</span>`;
+      // OB/Breaker zones column
+      let zonesBadge='<span style="color:var(--text-muted)">—</span>';
+      const ob=obResults[sym];
+      if(ob&&ob[tf]){
+        const parts=[];
+        if(ob[tf].nearestBullish) parts.push(`<span class="badge acc">OB ↓${Math.abs(parseFloat(ob[tf].nearestBullish.distFromPrice)).toFixed(1)}%</span>`);
+        if(ob[tf].nearestBearish) parts.push(`<span class="badge dist">OB ↑${Math.abs(parseFloat(ob[tf].nearestBearish.distFromPrice)).toFixed(1)}%</span>`);
+        if(ob[tf].breakers.length>0) parts.push(`<span class="badge breaker">BRK ${ob[tf].breakers.length}</span>`);
+        if(parts.length) zonesBadge=parts.join(' ');
+      }
+      let manipBadge='<span style="color:var(--text-muted)">—</span>';
+      if(d.manip&&d.manip.status==='resolved'){
+        const dir=d.manip.grabbed==='high'?'↑':'↓';
+        manipBadge=d.manip.agreed?
+          `<span class="badge agree">Agreed ${dir}</span>`:
+          `<span class="badge disagree">Disagreed ${dir}</span>`;
+      }
+      return `<tr data-ticker="${sym}">
+        <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
+        <td><span class="badge ${d.ax==='A'?'acc':'exp'}">${d.ax}</span></td>
+        <td class="sensitive">${d.pmh?.toFixed(2)||'—'}</td>
+        <td class="sensitive">${d.pml?.toFixed(2)||'—'}</td>
+        <td class="sensitive">${d.cmh?.toFixed(2)||'—'}</td>
+        <td class="sensitive">${d.cml?.toFixed(2)||'—'}</td>
+        <td>${d.range||'—'}</td>
+        <td>${sweptBadge}</td>
+        <td>${zonesBadge}</td>
+        <td>${manipBadge}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('scannerTickerCount').textContent=rows.length+' tickers';
+  } else {
+    thead.innerHTML='<tr><th>Ticker</th><th>Cycle</th><th>Stage</th><th>Sequence</th><th>Phase</th></tr>';
+    const rows=Object.entries(quarterlyResults).filter(([,d])=>d).filter(([,d])=>{
+      if(scannerFilter==='all') return true;
+      return d.ax===scannerFilter;
+    }).sort((a,b)=>a[1].ax.localeCompare(b[1].ax));
+    tbody.innerHTML=rows.map(([sym,d])=>`<tr data-ticker="${sym}">
+      <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
+      <td><span class="badge ${d.ax==='AMDX'?'acc':'exp'}">${d.ax}</span></td>
+      <td style="font-weight:600">${d.stage}</td>
+      <td style="font-size:12px;color:var(--text-sec)">${(d.sequence||[]).map(s=>s||'·').join(' → ')}</td>
+      <td>${d.currentPhase}/4</td>
+    </tr>`).join('');
+    document.getElementById('scannerTickerCount').textContent=rows.length+' tickers';
+  }
+
+  renderScannerFilters();
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER: Confluence View
+// ══════════════════════════════════════════════════════
+function renderConfluenceView(){
+  const tbody=document.getElementById('confluenceTbody');
+  const allSyms=WATCHLIST.filter(s=>!FUTURES.includes(s));
+  let rows=allSyms.map(sym=>{
+    const d=dailyResults[sym];
+    const w=weeklyResults[sym];
+    const m=monthlyResults[sym];
+    const q=quarterlyResults[sym];
+    const l=leapResults[sym];
+    const score=getConfluenceScore(sym);
+    return {sym,d,w,m,q,l,score};
+  }).filter(r=>r.score>0);
+
+  if(confluenceFilter==='3+') rows=rows.filter(r=>r.score>=3);
+  if(confluenceFilter==='acc') rows=rows.filter(r=>{
+    const dA=r.d&&r.d.ax==='AMDX';
+    const wA=r.w&&r.w.ax==='A';
+    const mA=r.m&&r.m.ax==='A';
+    return dA&&wA&&mA;
+  });
+  if(confluenceFilter==='high') rows=rows.filter(r=>r.score>=6);
+
+  rows.sort((a,b)=>confluenceSort.dir==='desc'?b.score-a.score:a.score-b.score);
+
+  tbody.innerHTML=rows.map(r=>{
+    const {sym,d,w,m,q,l,score}=r;
+    const {grade,cls}=getGrade(score);
+    const scoreCls=score>=6?'high':score>=3?'med':'low';
+    return `<tr data-ticker="${sym}">
+      <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
+      <td>${d?`<span class="badge ${d.ax==='AMDX'?'acc':'exp'}">${d.ax}</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>${w?`<span class="badge ${w.ax==='A'?'acc':'exp'}">${w.ax}</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>${m?`<span class="badge ${m.ax==='A'?'acc':'exp'}">${m.ax}</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>${q?`<span class="badge ${q.ax==='AMDX'?'acc':'exp'}">${q.ax}</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>${l?`<span class="badge ${l.status==='reclaimed'?'swept':'below'}">${l.status==='reclaimed'?'Reclaimed':'Below'}</span>`:'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><span class="confluence-score ${scoreCls}">${score.toFixed(1)}</span><span class="grade-badge ${cls}" style="font-size:12px">${grade}</span></div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('confluenceCount').textContent=rows.length+' tickers';
+}
+
+function filterConfluence(key, btn){
+  confluenceFilter=key;
+  document.querySelectorAll('#confluenceFilterTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderConfluenceView();
+}
+
+function sortConfluenceView(col, th){
+  confluenceSort.dir=confluenceSort.dir==='desc'?'asc':'desc';
+  renderConfluenceView();
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER: LEAP Hunter
+// ══════════════════════════════════════════════════════
+function renderLeapView(){
+  const tbody=document.getElementById('leapTbody');
+  let rows=Object.entries(leapResults).filter(([,l])=>l);
+  if(confluenceFilter==='reclaimed') rows=rows.filter(([,l])=>l.status==='reclaimed');
+  if(confluenceFilter==='swept') rows=rows.filter(([,l])=>l.status==='swept');
+  rows.sort((a,b)=>parseFloat(b[1].distFromPYL)-parseFloat(a[1].distFromPYL));
+  tbody.innerHTML=rows.map(([sym,l])=>`<tr data-ticker="${sym}">
+    <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
+    <td><span class="badge ${l.status==='reclaimed'?'swept':'below'}">${l.status==='reclaimed'?'Reclaimed':'Below PYL'}</span></td>
+    <td class="sensitive">$${l.priorYearLow}</td>
+    <td class="sensitive">$${l.q1Low}</td>
+    <td class="sensitive">$${l.currentPrice}</td>
+    <td>${l.sweepDepth}%</td>
+    <td style="color:var(--green);font-weight:600">+${l.recovery}%</td>
+    <td style="font-weight:600;color:${parseFloat(l.distFromPYL)>=0?'var(--green)':'var(--red)'}">${parseFloat(l.distFromPYL)>=0?'+':''}${l.distFromPYL}%</td>
+  </tr>`).join('');
+  document.getElementById('leapCount').textContent=rows.length+' tickers';
+}
+
+function filterLeap(key, btn){
+  // Reuse confluenceFilter for simplicity
+  confluenceFilter=key==='all'?'all':key;
+  document.querySelectorAll('#leapFilterTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeapView();
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER: Sweep Radar
+// ══════════════════════════════════════════════════════
+function renderSweepView(){
+  const tbody=document.getElementById('sweepTbody');
+  const sweeps=[];
+  Object.entries(weeklyResults).forEach(([sym,w])=>{
+    if(!w) return;
+    if(w.sweptHigh) sweeps.push({sym,level:w.pmh,type:'BSL',timeframe:'Weekly',dist:w.cmh>0?((w.cmh-w.pmh)/w.pmh*100).toFixed(1):0,phase:w.ax});
+    if(w.sweptLow) sweeps.push({sym,level:w.pml,type:'SSL',timeframe:'Weekly',dist:w.cml>0?((w.cml-w.pml)/w.pml*100).toFixed(1):0,phase:w.ax});
+  });
+  Object.entries(monthlyResults).forEach(([sym,m])=>{
+    if(!m) return;
+    if(m.sweptHigh) sweeps.push({sym,level:m.pmh,type:'BSL',timeframe:'Monthly',dist:m.cmh>0?((m.cmh-m.pmh)/m.pmh*100).toFixed(1):0,phase:m.ax});
+    if(m.sweptLow) sweeps.push({sym,level:m.pml,type:'SSL',timeframe:'Monthly',dist:m.cml>0?((m.cml-m.pml)/m.pml*100).toFixed(1):0,phase:m.ax});
+  });
+  sweeps.sort((a,b)=>Math.abs(a.dist)-Math.abs(b.dist));
+  tbody.innerHTML=sweeps.map(s=>{
+    const absDist=Math.abs(parseFloat(s.dist));
+    const distCls=absDist<1?'close':absDist<3?'mid':'far';
+    return `<tr data-ticker="${s.sym}">
+      <td><div class="ticker-cell">${tickerIcon(s.sym)}<div class="ticker-info"><div class="sym">${s.sym}</div></div></div></td>
+      <td class="sensitive">$${s.level?.toFixed(2)||'—'}</td>
+      <td><span class="badge ${s.type==='SSL'?'dist':'swept'}">${s.type}</span></td>
+      <td><span class="sweep-dist ${distCls}" style="font-size:14px">${s.dist}%</span></td>
+      <td>${s.timeframe}</td>
+      <td><span class="badge ${s.phase==='A'?'acc':'exp'}">${s.phase}</span></td>
+      <td><span class="badge swept">Swept</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterSweep(key, btn){
+  document.querySelectorAll('#view-sweep .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  // Simple filter on visible rows
+  document.querySelectorAll('#sweepTbody tr').forEach(tr=>{
+    if(key==='all'){tr.style.display='';return;}
+    const badges=tr.querySelectorAll('.badge');
+    const text=Array.from(badges).map(b=>b.textContent).join(' ');
+    if(key==='ssl') tr.style.display=text.includes('SSL')?'':'none';
+    else if(key==='bsl') tr.style.display=text.includes('BSL')?'':'none';
+    else if(key==='close'){
+      const dist=tr.querySelector('.sweep-dist');
+      tr.style.display=(dist&&Math.abs(parseFloat(dist.textContent))<1)?'':'none';
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER: Dealer Intel (OB & Breaker Zones)
+// ══════════════════════════════════════════════════════
+function renderDealerView(){
+  const tbody=document.getElementById('dealerTbody');
+  if(!tbody) return;
+  const zones=[];
+
+  Object.entries(obResults).forEach(([sym,ob])=>{
+    if(!ob) return;
+    ['weekly','monthly'].forEach(tf=>{
+      if(!ob[tf]) return;
+      ob[tf].bullish.forEach(o=>{
+        zones.push({sym,tf,type:'Bullish OB',typeCls:'acc',
+          zoneHi:o.high,zoneLo:o.low,
+          dist:o.distFromPrice,distNum:parseFloat(o.distFromPrice),
+          status:'Unmitigated',statusCls:'swept',date:o.date});
+      });
+      ob[tf].bearish.forEach(o=>{
+        zones.push({sym,tf,type:'Bearish OB',typeCls:'dist',
+          zoneHi:o.high,zoneLo:o.low,
+          dist:o.distFromPrice,distNum:parseFloat(o.distFromPrice),
+          status:'Unmitigated',statusCls:'swept',date:o.date});
+      });
+      ob[tf].breakers.forEach(o=>{
+        const label=o.type==='bullish'?'Bullish Breaker':'Bearish Breaker';
+        zones.push({sym,tf,type:label,typeCls:'breaker',
+          zoneHi:o.high,zoneLo:o.low,
+          dist:o.distFromPrice,distNum:parseFloat(o.distFromPrice),
+          status:'Breaker',statusCls:'breaker',date:o.date});
+      });
+    });
+  });
+
+  // Apply filters
+  let filtered=zones;
+  if(dealerFilter==='bullish') filtered=filtered.filter(z=>z.type.includes('Bullish'));
+  if(dealerFilter==='bearish') filtered=filtered.filter(z=>z.type.includes('Bearish'));
+  if(dealerFilter==='breakers') filtered=filtered.filter(z=>z.status==='Breaker');
+  if(dealerTfFilter!=='all') filtered=filtered.filter(z=>z.tf===dealerTfFilter);
+
+  // Sort by distance (closest first)
+  filtered.sort((a,b)=>Math.abs(a.distNum)-Math.abs(b.distNum));
+
+  tbody.innerHTML=filtered.map(z=>{
+    const absDist=Math.abs(z.distNum);
+    const distCls=absDist<1?'close':absDist<3?'mid':'far';
+    const distSign=z.distNum>=0?'↑':'↓';
+    return `<tr data-ticker="${z.sym}">
+      <td><div class="ticker-cell">${tickerIcon(z.sym)}<div class="ticker-info"><div class="sym">${z.sym}</div></div></div></td>
+      <td style="font-size:12px;font-weight:500;text-transform:capitalize">${z.tf}</td>
+      <td><span class="badge ${z.typeCls}">${z.type}</span></td>
+      <td class="sensitive"><span class="zone-range">$${z.zoneLo.toFixed(2)} — $${z.zoneHi.toFixed(2)}</span></td>
+      <td><span class="sweep-dist ${distCls}" style="font-size:14px">${distSign}${absDist.toFixed(1)}%</span></td>
+      <td><span class="badge ${z.statusCls}">${z.status}</span></td>
+      <td style="font-size:11px;color:var(--text-muted)">${z.date}</td>
+    </tr>`;
+  }).join('');
+
+  const countEl=document.getElementById('dealerCount');
+  if(countEl) countEl.textContent=filtered.length+' zones';
+}
+
+function filterDealer(key,btn){
+  dealerFilter=key;
+  document.querySelectorAll('#dealerTypeTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderDealerView();
+}
+
+function filterDealerTf(key,btn){
+  dealerTfFilter=key;
+  document.querySelectorAll('#dealerTfTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderDealerView();
+}
+
+// ══════════════════════════════════════════════════════
+// Watchlist Management
+// ══════════════════════════════════════════════════════
+function addCustomTicker(){
+  const input=document.getElementById('addTickerInput');
+  const msg=document.getElementById('addTickerMsg');
+  const raw=input.value.trim().toUpperCase();
+  if(!raw){msg.textContent='';return;}
+  if(WATCHLIST.includes(raw)){
+    msg.style.color='var(--amber-dark)';
+    msg.textContent=raw+' is already in the watchlist';
+    return;
+  }
+  // Add to localStorage
+  const custom=JSON.parse(localStorage.getItem('mercury_custom_tickers')||'[]');
+  custom.push(raw);
+  localStorage.setItem('mercury_custom_tickers',JSON.stringify(custom));
+  WATCHLIST.push(raw);
+  input.value='';
+  msg.style.color='var(--green-dark)';
+  msg.textContent=raw+' added — run scan to include';
+  renderWatchlistView();
+  setTimeout(()=>{msg.textContent='';},3000);
+}
+
+function removeCustomTicker(sym){
+  const custom=JSON.parse(localStorage.getItem('mercury_custom_tickers')||'[]');
+  const idx=custom.indexOf(sym);
+  if(idx>-1) custom.splice(idx,1);
+  localStorage.setItem('mercury_custom_tickers',JSON.stringify(custom));
+  const wIdx=WATCHLIST.indexOf(sym);
+  if(wIdx>-1) WATCHLIST.splice(wIdx,1);
+  renderWatchlistView();
+}
+
+// ══════════════════════════════════════════════════════
+// PDH/PDL Sweep Scanner
+// ══════════════════════════════════════════════════════
+let pdhPdlFilter='all';
+
+function renderPdhPdlView(){
+  const tbody=document.getElementById('pdhPdlTbody');
+  const emptyEl=document.getElementById('pdhPdlEmpty');
+  const countEl=document.getElementById('pdhSweepCount');
+  if(!tbody) return;
+
+  let sweeps=[];
+
+  // Monthly sweeps (PMH/PML) — exclude indecisive (both swept)
+  Object.entries(monthlyResults).forEach(([sym,m])=>{
+    if(!m) return;
+    const mIndecisive=m.sweptHigh&&m.sweptLow;
+    if(m.sweptHigh&&!mIndecisive) sweeps.push({sym,level:'PMH',tf:'Monthly',tfWeight:3,high:m.pmh,low:m.pml,close:m.cmh,levelPrice:m.pmh,disagreed:m.disagreedHigh,agreed:m.agreedHigh});
+    if(m.sweptLow&&!mIndecisive) sweeps.push({sym,level:'PML',tf:'Monthly',tfWeight:3,high:m.pmh,low:m.pml,close:m.cml,levelPrice:m.pml,disagreed:m.disagreedLow,agreed:m.agreedLow});
+  });
+
+  // Weekly sweeps (PWH/PWL) — exclude indecisive (both swept)
+  Object.entries(weeklyResults).forEach(([sym,w])=>{
+    if(!w) return;
+    const wIndecisive=w.sweptHigh&&w.sweptLow;
+    if(w.sweptHigh&&!wIndecisive) sweeps.push({sym,level:'PWH',tf:'Weekly',tfWeight:2,high:w.pmh,low:w.pml,close:w.c0.close,levelPrice:w.pmh,disagreed:w.disagreedHigh,agreed:w.agreedHigh});
+    if(w.sweptLow&&!wIndecisive) sweeps.push({sym,level:'PWL',tf:'Weekly',tfWeight:2,high:w.pmh,low:w.pml,close:w.c0.close,levelPrice:w.pml,disagreed:w.disagreedLow,agreed:w.agreedLow});
+  });
+
+  // Daily sweeps (PDH/PDL) — exclude indecisive (both swept)
+  Object.entries(pdhPdlResults).forEach(([sym,d])=>{
+    if(!d||d.indecisive) return;
+    if(d.sweptPDH) sweeps.push({sym,level:'PDH',tf:'Daily',tfWeight:1,high:d.pdh,low:d.pdl,close:d.todayClose,levelPrice:d.pdh,disagreed:d.disagreedPDH,agreed:d.agreedPDH});
+    if(d.sweptPDL) sweeps.push({sym,level:'PDL',tf:'Daily',tfWeight:1,high:d.pdh,low:d.pdl,close:d.todayClose,levelPrice:d.pdl,disagreed:d.disagreedPDL,agreed:d.agreedPDL});
+  });
+
+  // Apply filters
+  if(pdhPdlFilter==='disagree') sweeps=sweeps.filter(s=>s.disagreed);
+  if(pdhPdlFilter==='pdh') sweeps=sweeps.filter(s=>s.level.endsWith('H'));
+  if(pdhPdlFilter==='pdl') sweeps=sweeps.filter(s=>s.level.endsWith('L'));
+  if(pdhPdlFilter==='monthly') sweeps=sweeps.filter(s=>s.tf==='Monthly');
+  if(pdhPdlFilter==='weekly') sweeps=sweeps.filter(s=>s.tf==='Weekly');
+  if(pdhPdlFilter==='daily') sweeps=sweeps.filter(s=>s.tf==='Daily');
+
+  // Sort: disagrees first, then by TF weight
+  sweeps.sort((a,b)=>{
+    if(a.disagreed&&!b.disagreed) return -1;
+    if(!a.disagreed&&b.disagreed) return 1;
+    return b.tfWeight-a.tfWeight;
+  });
+
+  if(!sweeps.length){
+    tbody.innerHTML='';
+    if(emptyEl) emptyEl.style.display='block';
+    if(countEl) countEl.textContent='0 sweeps';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+  if(countEl) countEl.textContent=sweeps.length+' sweeps';
+
+  tbody.innerHTML=sweeps.map(s=>{
+    const reaction=s.disagreed?'Disagree':'Agree';
+    const reactionCls=s.disagreed?'disagree':'agree';
+    const isLow=s.level.endsWith('L');
+    const dirHint=isLow&&s.disagreed?'Long ↑':!isLow&&s.disagreed?'Short ↓':'';
+
+    return `<tr data-ticker="${s.sym}" ${s.disagreed?'style="background:rgba(124,58,237,0.03)"':''}>
+      <td><div class="ticker-cell">${tickerIcon(s.sym)}<div class="ticker-info"><div class="sym">${s.sym}</div></div></div></td>
+      <td><span style="font-size:11px;font-weight:600;color:var(--text-sec);background:var(--bg);padding:3px 8px;border-radius:4px">${s.level}<span style="font-weight:400;color:var(--text-muted);margin-left:4px">${s.tf}</span></span></td>
+      <td class="sensitive" style="font-family:monospace;font-size:12px">$${s.high?.toFixed(2)||'—'}</td>
+      <td class="sensitive" style="font-family:monospace;font-size:12px">$${s.low?.toFixed(2)||'—'}</td>
+      <td class="sensitive" style="font-family:monospace;font-size:12px;color:var(--text-muted)">$${((s.high+s.low)/2).toFixed(2)}</td>
+      <td class="sensitive" style="font-family:monospace;font-size:12px;font-weight:600">$${s.close?.toFixed(2)||'—'}</td>
+      <td><span class="badge ${reactionCls}">${reaction}</span>${dirHint?`<span style="font-size:10px;color:var(--purple);margin-left:6px;font-weight:600">${dirHint}</span>`:''}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${s.tf}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterPdhPdl(key,btn){
+  pdhPdlFilter=key;
+  document.querySelectorAll('#pdhFilterTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderPdhPdlView();
+}
+
+// ══════════════════════════════════════════════════════
+// Trade Log (PDH/PDL Model)
+// ══════════════════════════════════════════════════════
+function logTrade(){
+  const sym=document.getElementById('tradeSymInput').value.trim().toUpperCase();
+  if(!sym) return;
+  const trade={
+    id:Date.now(),
+    date:new Date().toISOString().slice(0,10),
+    sym,
+    dir:document.getElementById('tradeDirInput').value,
+    sweep:document.getElementById('tradeSweepInput').value,
+    entry:document.getElementById('tradeEntryInput').value||'—',
+    result:document.getElementById('tradeResultInput').value,
+    notes:document.getElementById('tradeNotesInput').value||''
+  };
+  const log=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
+  log.unshift(trade);
+  localStorage.setItem('mercury_trade_log',JSON.stringify(log));
+  // Clear form
+  document.getElementById('tradeSymInput').value='';
+  document.getElementById('tradeEntryInput').value='';
+  document.getElementById('tradeNotesInput').value='';
+  renderTradeLog();
+}
+
+function deleteTrade(id){
+  let log=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
+  log=log.filter(t=>t.id!==id);
+  localStorage.setItem('mercury_trade_log',JSON.stringify(log));
+  renderTradeLog();
+}
+
+function updateTradeResult(id,result){
+  const log=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
+  const trade=log.find(t=>t.id===id);
+  if(trade) trade.result=result;
+  localStorage.setItem('mercury_trade_log',JSON.stringify(log));
+  renderTradeLog();
+}
+
+function renderTradeLog(){
+  const log=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
+  const tbody=document.getElementById('tradeLogTbody');
+  const emptyEl=document.getElementById('tradeLogEmpty');
+  const winRateEl=document.getElementById('modelWinRate');
+  const countEl=document.getElementById('modelTradeCount');
+  if(!tbody) return;
+
+  // Stats
+  const closed=log.filter(t=>t.result==='win'||t.result==='loss');
+  const wins=closed.filter(t=>t.result==='win').length;
+  const winRate=closed.length>0?((wins/closed.length)*100).toFixed(0):'—';
+  if(winRateEl) winRateEl.textContent=winRate==='—'?'—':winRate+'%';
+  if(countEl) countEl.textContent=log.length;
+
+  if(!log.length){
+    tbody.innerHTML='';
+    if(emptyEl) emptyEl.style.display='block';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+
+  tbody.innerHTML=log.map(t=>{
+    const resultCls=t.result==='win'?'acc':t.result==='loss'?'dist':'exp';
+    const resultLabel=t.result==='win'?'Win ✓':t.result==='loss'?'Loss ✗':'Open';
+    return `<tr>
+      <td style="font-size:12px;color:var(--text-sec)">${t.date}</td>
+      <td><div class="ticker-cell">${tickerIcon(t.sym)}<div class="ticker-info"><div class="sym">${t.sym}</div></div></div></td>
+      <td><span class="badge ${t.dir==='long'?'acc':'dist'}">${t.dir==='long'?'Long ↑':'Short ↓'}</span></td>
+      <td><span class="badge swept">${t.sweep}</span></td>
+      <td class="sensitive" style="font-family:monospace;font-size:12px">$${t.entry}</td>
+      <td>
+        <select onchange="updateTradeResult(${t.id},this.value)" style="background:none;border:1px solid var(--card-border);border-radius:var(--radius-xs);padding:4px 8px;font-family:var(--font);font-size:11px;font-weight:600;color:${t.result==='win'?'var(--green-dark)':t.result==='loss'?'var(--red-dark)':'var(--text-sec)'}">
+          <option value="open" ${t.result==='open'?'selected':''}>Open</option>
+          <option value="win" ${t.result==='win'?'selected':''}>Win ✓</option>
+          <option value="loss" ${t.result==='loss'?'selected':''}>Loss ✗</option>
+        </select>
+      </td>
+      <td style="font-size:11px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.notes}</td>
+      <td><button onclick="deleteTrade(${t.id})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">&times;</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderWatchlistView(){
+  const custom=JSON.parse(localStorage.getItem('mercury_custom_tickers')||'[]');
+  // Custom tickers section
+  const customEl=document.getElementById('customTickerList');
+  const customCount=document.getElementById('customTickerCount');
+  if(customEl){
+    if(!custom.length){
+      customEl.innerHTML='<div style="color:var(--text-muted);font-size:13px">No custom tickers added yet</div>';
+    } else {
+      customEl.innerHTML=custom.map(sym=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.03)">
+        <div style="display:flex;align-items:center;gap:8px">${tickerIcon(sym)}<span style="font-weight:600;font-size:13px">${sym}</span></div>
+        <button onclick="removeCustomTicker('${sym}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:4px 8px;border-radius:4px;font-family:var(--font)" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">&times;</button>
+      </div>`).join('');
+    }
+    if(customCount) customCount.textContent=custom.length+' added';
+  }
+  // Full watchlist grid
+  const gridEl=document.getElementById('fullWatchlistGrid');
+  const countEl=document.getElementById('watchlistCount');
+  if(gridEl){
+    gridEl.innerHTML=WATCHLIST.map(sym=>{
+      const isCustom=custom.includes(sym);
+      return `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:${isCustom?'var(--purple-light)':'var(--bg)'};border:1px solid ${isCustom?'rgba(124,58,237,0.2)':'var(--card-border)'};border-radius:var(--radius-xs);font-size:11px;font-weight:600;color:${isCustom?'var(--purple-dark)':'var(--text-sec)'}">${sym}</span>`;
+    }).join('');
+  }
+  if(countEl) countEl.textContent=WATCHLIST.length+' tickers';
+}
+
+// ── Auto-load from cache on page load ──
+(function init(){
+  const today=dateStr(new Date());
+  const wc=loadCache('mercury_weekly_'+today);
+  const dc=loadCache('mercury_daily_'+today);
+  if(wc&&wc.data){
+    weeklyResults=wc.data;
+    monthlyResults=(loadCache('mercury_monthly_'+today)||{}).data||{};
+    quarterlyResults=(loadCache('mercury_quarterly_'+today)||{}).data||{};
+    leapResults=(loadCache('mercury_leap_'+today)||{}).data||{};
+    obResults=(loadCache('mercury_ob_'+today)||{}).data||{};
+    pdhPdlResults=(loadCache('mercury_pdh_'+today)||{}).data||{};
+    if(dc&&dc.data) dailyResults=dc.data;
+    emaResults=(loadCache('mercury_ema_'+today)||{}).data||{};
+    reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
+    renderDashboard();
+    renderScannerView();
+    renderConfluenceView();
+    renderLeapView();
+    renderSweepView();
+    renderDealerView();
+    renderPdhPdlView();
+    updateScannerCount();
+  }
+})();
+</script>
+</body>
+</html>
