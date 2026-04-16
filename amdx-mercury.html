@@ -924,14 +924,15 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
           </div>
           <div class="table-toolbar-right">
             <div class="filter-chips" id="pdhFilterTabs">
-              <button class="filter-chip active" onclick="filterPdhPdl('all',this)">All</button>
-              <button class="filter-chip" onclick="filterPdhPdl('disagree',this)">Disagree</button>
+              <button class="filter-chip" onclick="filterPdhPdl('all',this)">All</button>
+              <button class="filter-chip active" onclick="filterPdhPdl('disagree',this)">Disagree</button>
               <button class="filter-chip" onclick="filterPdhPdl('daily',this)">Daily</button>
               <button class="filter-chip" onclick="filterPdhPdl('weekly',this)">Weekly</button>
               <button class="filter-chip" onclick="filterPdhPdl('monthly',this)">Monthly</button>
               <button class="filter-chip" onclick="filterPdhPdl('pdh',this)">Highs</button>
               <button class="filter-chip" onclick="filterPdhPdl('pdl',this)">Lows</button>
             </div>
+            <input type="text" class="search-input" placeholder="Search ticker…" oninput="searchSweeps(this.value)" style="width:100px;padding:4px 10px;font-size:11px">
             <span style="font-size:11px;color:var(--text-muted)" id="pdhSweepCount"></span>
           </div>
         </div>
@@ -946,13 +947,14 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
                 <th>0.5 Eq</th>
                 <th>Close</th>
                 <th>Reaction</th>
-                <th>Timeframe</th>
+                <th>Log Entry</th>
               </tr>
             </thead>
             <tbody id="pdhPdlTbody">
             </tbody>
           </table>
         </div>
+        <div id="pdhPagination"></div>
         <div id="pdhPdlEmpty" style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">
           Run scan to detect PDH/PDL sweeps
         </div>
@@ -963,6 +965,15 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
         <div class="table-toolbar">
           <div class="section-title" style="font-size:14px">PDH/PDL Trade Log</div>
           <div class="table-toolbar-right">
+            <button class="topbar-btn" onclick="exportTradeLog()" title="Download trades as JSON backup">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
+            <label class="topbar-btn" style="cursor:pointer" title="Restore trades from JSON backup">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Import
+              <input type="file" accept=".json" onchange="importTradeLog(event)" style="display:none">
+            </label>
             <button class="topbar-btn" onclick="document.getElementById('tradeLogForm').style.display=document.getElementById('tradeLogForm').style.display==='none'?'flex':'none'">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
               Log Trade
@@ -990,8 +1001,12 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Entry</label>
-            <input id="tradeEntryInput" type="number" step="0.01" class="search-input" placeholder="0.00" style="width:90px;padding-left:10px">
+            <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Entry Time</label>
+            <input id="tradeTimeInput" type="time" class="search-input" style="width:110px;padding-left:10px">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Price</label>
+            <input id="tradeEntryInput" type="text" class="search-input" placeholder="auto" style="width:80px;padding-left:10px;background:var(--bg);color:var(--text-sec)" readonly>
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
             <label style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Result</label>
@@ -1015,6 +1030,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
                 <th>Ticker</th>
                 <th>Dir</th>
                 <th>Sweep</th>
+                <th>Time</th>
                 <th>Entry</th>
                 <th>Result</th>
                 <th>Notes</th>
@@ -1135,7 +1151,7 @@ function formatDate(d){ return d.toLocaleDateString('en-US',{weekday:'short',mon
 document.getElementById('currentDate').textContent = formatDate(new Date());
 
 // ── Navigation ──
-function showView(view, sub){
+function showView(view, sub, skipHash){
   currentView = view;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+view).classList.add('active');
@@ -1160,7 +1176,52 @@ function showView(view, sub){
   if(sub && view==='scanner') switchTimeframe(sub);
   if(view==='watchlist') renderWatchlistView();
   if(view==='models'){renderPdhPdlView();renderTradeLog();}
+  // Update URL hash (unless restoring from hash)
+  if(!skipHash) updateHash();
 }
+
+// ── Hash-based routing ──
+function updateHash(){
+  const params=new URLSearchParams();
+  params.set('v',currentView);
+  if(currentView==='models'){
+    params.set('p',pdhPdlPage);
+    if(pdhPdlFilter!=='disagree') params.set('f',pdhPdlFilter);
+    if(pdhPdlSearch) params.set('q',pdhPdlSearch);
+  }
+  const newHash='#'+params.toString();
+  if(window.location.hash!==newHash) history.pushState(null,null,newHash);
+}
+
+function readHash(){
+  const hash=window.location.hash.slice(1);
+  if(!hash) return;
+  const params=new URLSearchParams(hash);
+  const view=params.get('v');
+  if(view){
+    // Restore sweep pagination state before rendering
+    if(params.has('p')) pdhPdlPage=parseInt(params.get('p'))||1;
+    if(params.has('f')){
+      pdhPdlFilter=params.get('f');
+      document.querySelectorAll('#pdhFilterTabs .filter-chip').forEach(c=>{
+        const key=c.textContent.trim().toLowerCase();
+        const filterMap={'all':'all','disagree':'disagree','daily':'daily','weekly':'weekly','monthly':'monthly','highs':'pdh','lows':'pdl'};
+        c.classList.toggle('active',filterMap[key]===pdhPdlFilter);
+      });
+    }
+    if(params.has('q')){
+      pdhPdlSearch=params.get('q');
+    }
+    showView(view,null,true);
+  }
+}
+
+window.addEventListener('popstate',()=>readHash());
+// On initial load, read hash
+document.addEventListener('DOMContentLoaded',()=>{
+  const hash=window.location.hash.slice(1);
+  if(hash) setTimeout(readHash,100);
+});
 
 function togglePrivacy(){
   document.body.classList.toggle('privacy-mode');
@@ -1227,9 +1288,9 @@ function classifyWeeklyAX(weekly){
   const range1=c1.high-c1.low;
   const tol=range1*MID_TOL;
   const isA = c0.high <= (c1.high+tol) && c0.low >= (c1.low-tol);
-  // Sweep detection — use >= / <= so touching the level counts (stops sit AT the level)
-  const sweptHigh = c0.high >= c1.high;
-  const sweptLow = c0.low <= c1.low;
+  // Sweep detection — strict: price must trade BEYOND the level, not just touch it
+  const sweptHigh = c0.high > c1.high;
+  const sweptLow = c0.low < c1.low;
   // Manipulation candle
   let manip={status:'none'};
   if(c0.monday){
@@ -1269,13 +1330,12 @@ function classifyMonthlyAX(weekly){
   const cur=months[months.length-1];
   const prior=months[months.length-2];
 
-  // Reference candle = last week of prior month
-  const priorLastWeek=prior.weeks[prior.weeks.length-1];
-  const pmh=priorLastWeek.high;
-  const pml=priorLastWeek.low;
+  // FULL prior month range for PMH/PML sweep detection
+  const pmh=Math.max(...prior.weeks.map(w=>w.high));
+  const pml=Math.min(...prior.weeks.map(w=>w.low));
 
-  // Monthly AMDX/XAMD: 4-phase cycle across weeks of the month
-  // W1 vs last week of prior month determines A or X start
+  // AMDX sequence: use last week of prior month as starting reference for cycle
+  const priorLastWeek=prior.weeks[prior.weeks.length-1];
   const sequence=[];
   let prev=priorLastWeek;
   for(let i=0;i<cur.weeks.length&&i<4;i++){
@@ -1294,14 +1354,14 @@ function classifyMonthlyAX(weekly){
   const cpIdx=currentPhase-1;
   const stage=cpIdx<cycle.length?cycle[cpIdx]:'—';
 
-  // Aggregate current month candle for sweep detection
+  // Aggregate current month candle
   const cH=Math.max(...cur.weeks.map(w=>w.high));
   const cL=Math.min(...cur.weeks.map(w=>w.low));
   const cC=cur.weeks[cur.weeks.length-1].close;
 
-  // Sweep detection against prior month's last week
-  const sweptHigh=cH>=pmh;
-  const sweptLow=cL<=pml;
+  // Sweep detection — strict: price must trade BEYOND the full prior month range
+  const sweptHigh=cH>pmh;
+  const sweptLow=cL<pml;
 
   // Manipulation: did W1 grab a level?
   const w1=cur.weeks[0];
@@ -1497,8 +1557,8 @@ function detectPDHPDLSweep(eod){
   const pdl=yesterday.low;
   const eq=(pdh+pdl)/2; // 0.5 equilibrium
 
-  const sweptPDH=today.high>=pdh;
-  const sweptPDL=today.low<=pdl;
+  const sweptPDH=today.high>pdh;
+  const sweptPDL=today.low<pdl;
 
   // Disagreement = swept the level but closed back inside prior day range
   const agreedPDH=sweptPDH && today.close>pdh; // stayed above = agreed
@@ -1511,6 +1571,12 @@ function detectPDHPDLSweep(eod){
   // Both swept = indecisive, null out disagrees
   const indecisive=sweptPDH&&sweptPDL;
 
+  // CE (Consequent Encroachment) = 50% of prior day range — first TP target
+  // CE hit = price already reached the midpoint → less room for profit
+  const ceHitFromLow = today.high >= eq;  // if PDL swept, did price reach CE going up?
+  const ceHitFromHigh = today.low <= eq;  // if PDH swept, did price reach CE going down?
+  const distToCE = ((eq - today.close) / today.close * 100); // positive = CE above, negative = CE below
+
   return {
     pdh,pdl,eq,
     todayHigh:today.high,todayLow:today.low,todayClose:today.close,todayOpen:today.open,
@@ -1520,6 +1586,11 @@ function detectPDHPDLSweep(eod){
     agreedPDL:indecisive?false:agreedPDL,
     disagreedPDH:indecisive?false:disagreedPDH,
     disagreedPDL:indecisive?false:disagreedPDL,
+    // CE TP tracking
+    ceHitFromLow, ceHitFromHigh,
+    distToCE: Math.abs(distToCE).toFixed(1),
+    ceAbove: distToCE > 0, // CE is above current price (long target)
+    ceRoom: disagreedPDL ? !ceHitFromLow : disagreedPDH ? !ceHitFromHigh : false, // still has room to TP1
     // Distance from current close to PDH/PDL
     distFromPDH:((today.close-pdh)/pdh*100).toFixed(2),
     distFromPDL:((today.close-pdl)/pdl*100).toFixed(2)
@@ -2261,7 +2332,6 @@ function renderDisagreeSetups(){
     const topLevel=t.levels[0];
     const isLong=topLevel.endsWith('L');
     const dir=isLong?'Long ↑':'Short ↓';
-    const dirCls=isLong?'acc':'dist';
 
     // Sweep level tags — compact
     const levelTags=t.levels.map(lv=>{
@@ -2269,12 +2339,23 @@ function renderDisagreeSetups(){
       return `<span style="font-size:11px;font-weight:600;color:var(--text-sec);background:var(--bg);padding:3px 8px;border-radius:4px">${lv}<span style="font-weight:400;color:var(--text-muted);margin-left:4px">${tf}</span></span>`;
     }).join('');
 
+    // CE TP info — only for daily PDH/PDL disagrees
+    const pdh=pdhPdlResults[t.sym];
+    let ceTag='';
+    if(pdh && (pdh.disagreedPDH||pdh.disagreedPDL) && !pdh.indecisive){
+      if(pdh.ceRoom){
+        ceTag=`<span style="font-size:10px;font-weight:600;color:var(--green-dark);background:var(--green-light);padding:3px 8px;border-radius:4px">→ CE $${pdh.eq.toFixed(2)} (${pdh.distToCE}%)</span>`;
+      } else {
+        ceTag=`<span style="font-size:10px;font-weight:500;color:var(--text-muted);background:var(--bg);padding:3px 8px;border-radius:4px;text-decoration:line-through">CE hit</span>`;
+      }
+    }
+
     return `<div class="top5-row">
       <div class="top5-left">
         <span class="top5-rank">${i+1}</span>
         <div class="top5-ticker">${tickerIcon(t.sym)}<span class="top5-sym">${t.sym}</span></div>
       </div>
-      <div class="top5-phases" style="gap:6px;flex:1">${levelTags}${t.isLeap?'<span style="font-size:10px;font-weight:600;color:var(--green-dark);background:var(--green-light);padding:3px 8px;border-radius:4px">LEAP ✓</span>':''}</div>
+      <div class="top5-phases" style="gap:6px;flex:1">${levelTags}${ceTag}${t.isLeap?'<span style="font-size:10px;font-weight:600;color:var(--green-dark);background:var(--green-light);padding:3px 8px;border-radius:4px">LEAP ✓</span>':''}</div>
       <div style="font-size:13px;font-weight:700;color:var(${isLong?'--green-dark':'--red-dark'})">${dir}</div>
     </div>`;
   }).join('');
@@ -2796,16 +2877,13 @@ function removeCustomTicker(sym){
 // ══════════════════════════════════════════════════════
 // PDH/PDL Sweep Scanner
 // ══════════════════════════════════════════════════════
-let pdhPdlFilter='all';
+let pdhPdlFilter='disagree';
+let pdhPdlPage=1;
+const SWEEPS_PER_PAGE=15;
+let pdhPdlSearch='';
 
-function renderPdhPdlView(){
-  const tbody=document.getElementById('pdhPdlTbody');
-  const emptyEl=document.getElementById('pdhPdlEmpty');
-  const countEl=document.getElementById('pdhSweepCount');
-  if(!tbody) return;
-
+function getAllSweeps(){
   let sweeps=[];
-
   // Monthly sweeps (PMH/PML) — exclude indecisive (both swept)
   Object.entries(monthlyResults).forEach(([sym,m])=>{
     if(!m) return;
@@ -2813,7 +2891,6 @@ function renderPdhPdlView(){
     if(m.sweptHigh&&!mIndecisive) sweeps.push({sym,level:'PMH',tf:'Monthly',tfWeight:3,high:m.pmh,low:m.pml,close:m.cmh,levelPrice:m.pmh,disagreed:m.disagreedHigh,agreed:m.agreedHigh});
     if(m.sweptLow&&!mIndecisive) sweeps.push({sym,level:'PML',tf:'Monthly',tfWeight:3,high:m.pmh,low:m.pml,close:m.cml,levelPrice:m.pml,disagreed:m.disagreedLow,agreed:m.agreedLow});
   });
-
   // Weekly sweeps (PWH/PWL) — exclude indecisive (both swept)
   Object.entries(weeklyResults).forEach(([sym,w])=>{
     if(!w) return;
@@ -2821,43 +2898,68 @@ function renderPdhPdlView(){
     if(w.sweptHigh&&!wIndecisive) sweeps.push({sym,level:'PWH',tf:'Weekly',tfWeight:2,high:w.pmh,low:w.pml,close:w.c0.close,levelPrice:w.pmh,disagreed:w.disagreedHigh,agreed:w.agreedHigh});
     if(w.sweptLow&&!wIndecisive) sweeps.push({sym,level:'PWL',tf:'Weekly',tfWeight:2,high:w.pmh,low:w.pml,close:w.c0.close,levelPrice:w.pml,disagreed:w.disagreedLow,agreed:w.agreedLow});
   });
-
   // Daily sweeps (PDH/PDL) — exclude indecisive (both swept)
   Object.entries(pdhPdlResults).forEach(([sym,d])=>{
     if(!d||d.indecisive) return;
     if(d.sweptPDH) sweeps.push({sym,level:'PDH',tf:'Daily',tfWeight:1,high:d.pdh,low:d.pdl,close:d.todayClose,levelPrice:d.pdh,disagreed:d.disagreedPDH,agreed:d.agreedPDH});
     if(d.sweptPDL) sweeps.push({sym,level:'PDL',tf:'Daily',tfWeight:1,high:d.pdh,low:d.pdl,close:d.todayClose,levelPrice:d.pdl,disagreed:d.disagreedPDL,agreed:d.agreedPDL});
   });
+  return sweeps;
+}
 
-  // Apply filters
+function getFilteredSweeps(){
+  let sweeps=getAllSweeps();
+  // Text search
+  if(pdhPdlSearch){
+    const q=pdhPdlSearch.toUpperCase();
+    sweeps=sweeps.filter(s=>s.sym.includes(q));
+  }
+  // Category filter
   if(pdhPdlFilter==='disagree') sweeps=sweeps.filter(s=>s.disagreed);
   if(pdhPdlFilter==='pdh') sweeps=sweeps.filter(s=>s.level.endsWith('H'));
   if(pdhPdlFilter==='pdl') sweeps=sweeps.filter(s=>s.level.endsWith('L'));
   if(pdhPdlFilter==='monthly') sweeps=sweeps.filter(s=>s.tf==='Monthly');
   if(pdhPdlFilter==='weekly') sweeps=sweeps.filter(s=>s.tf==='Weekly');
   if(pdhPdlFilter==='daily') sweeps=sweeps.filter(s=>s.tf==='Daily');
-
   // Sort: disagrees first, then by TF weight
   sweeps.sort((a,b)=>{
     if(a.disagreed&&!b.disagreed) return -1;
     if(!a.disagreed&&b.disagreed) return 1;
     return b.tfWeight-a.tfWeight;
   });
+  return sweeps;
+}
+
+function renderPdhPdlView(){
+  const tbody=document.getElementById('pdhPdlTbody');
+  const emptyEl=document.getElementById('pdhPdlEmpty');
+  const countEl=document.getElementById('pdhSweepCount');
+  const pagEl=document.getElementById('pdhPagination');
+  if(!tbody) return;
+
+  const sweeps=getFilteredSweeps();
+  const totalPages=Math.max(1,Math.ceil(sweeps.length/SWEEPS_PER_PAGE));
+  if(pdhPdlPage>totalPages) pdhPdlPage=totalPages;
+  const start=(pdhPdlPage-1)*SWEEPS_PER_PAGE;
+  const visible=sweeps.slice(start,start+SWEEPS_PER_PAGE);
 
   if(!sweeps.length){
     tbody.innerHTML='';
     if(emptyEl) emptyEl.style.display='block';
     if(countEl) countEl.textContent='0 sweeps';
+    if(pagEl) pagEl.innerHTML='';
     return;
   }
   if(emptyEl) emptyEl.style.display='none';
   if(countEl) countEl.textContent=sweeps.length+' sweeps';
 
-  tbody.innerHTML=sweeps.map(s=>{
+  tbody.innerHTML=visible.map(s=>{
     const reaction=s.disagreed?'Disagree':'Agree';
     const reactionCls=s.disagreed?'disagree':'agree';
     const isLow=s.level.endsWith('L');
     const dirHint=isLow&&s.disagreed?'Long ↑':!isLow&&s.disagreed?'Short ↓':'';
+    const sweepType=isLow?'PDL':'PDH';
+    const tradeDir=isLow&&s.disagreed?'long':!isLow&&s.disagreed?'short':'';
 
     return `<tr data-ticker="${s.sym}" ${s.disagreed?'style="background:rgba(124,58,237,0.03)"':''}>
       <td><div class="ticker-cell">${tickerIcon(s.sym)}<div class="ticker-info"><div class="sym">${s.sym}</div></div></div></td>
@@ -2867,40 +2969,190 @@ function renderPdhPdlView(){
       <td class="sensitive" style="font-family:monospace;font-size:12px;color:var(--text-muted)">$${((s.high+s.low)/2).toFixed(2)}</td>
       <td class="sensitive" style="font-family:monospace;font-size:12px;font-weight:600">$${s.close?.toFixed(2)||'—'}</td>
       <td><span class="badge ${reactionCls}">${reaction}</span>${dirHint?`<span style="font-size:10px;color:var(--purple);margin-left:6px;font-weight:600">${dirHint}</span>`:''}</td>
-      <td style="font-size:12px;color:var(--text-muted)">${s.tf}</td>
+      <td>
+        <div class="sweep-log-entry" id="sweepLog_${s.sym}_${s.level}" style="display:flex;align-items:center;gap:4px">
+          <input type="time" id="sweepTime_${s.sym}_${s.level}" style="width:80px;padding:3px 6px;font-size:11px;font-family:var(--font);border:1px solid var(--card-border);border-radius:var(--radius-xs);background:var(--bg);color:var(--text-pri)" title="Entry time">
+          <button onclick="logSweepTrade('${s.sym}','${sweepType}','${tradeDir||'long'}','${s.level}',this)" style="background:var(--purple);color:#fff;border:none;border-radius:var(--radius-xs);padding:3px 8px;font-size:10px;font-weight:600;font-family:var(--font);cursor:pointer;white-space:nowrap" title="Log trade with entry time → auto-fetches price">Log</button>
+        </div>
+      </td>
     </tr>`;
   }).join('');
+
+  // Render pagination
+  if(pagEl){
+    if(totalPages<=1){pagEl.innerHTML='';return;}
+    let pagHtml='<div style="display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 0">';
+    pagHtml+=`<button onclick="goToSweepPage(Math.max(1,pdhPdlPage-1))" ${pdhPdlPage===1?'disabled':''} style="background:none;border:1px solid var(--card-border);border-radius:var(--radius-xs);padding:4px 10px;font-family:var(--font);font-size:11px;font-weight:600;color:${pdhPdlPage===1?'var(--text-muted)':'var(--purple)'};cursor:${pdhPdlPage===1?'default':'pointer'}">‹ Prev</button>`;
+    const maxShow=7;
+    let pStart=Math.max(1,pdhPdlPage-Math.floor(maxShow/2));
+    let pEnd=Math.min(totalPages,pStart+maxShow-1);
+    if(pEnd-pStart<maxShow-1) pStart=Math.max(1,pEnd-maxShow+1);
+    if(pStart>1) pagHtml+=`<button onclick="goToSweepPage(1)" style="background:none;border:1px solid var(--card-border);border-radius:var(--radius-xs);padding:4px 8px;font-family:var(--font);font-size:11px;color:var(--text-sec);cursor:pointer">1</button>`;
+    if(pStart>2) pagHtml+=`<span style="color:var(--text-muted);font-size:11px">…</span>`;
+    for(let p=pStart;p<=pEnd;p++){
+      const isActive=p===pdhPdlPage;
+      pagHtml+=`<button onclick="goToSweepPage(${p})" style="background:${isActive?'var(--purple)':'none'};color:${isActive?'#fff':'var(--text-sec)'};border:1px solid ${isActive?'var(--purple)':'var(--card-border)'};border-radius:var(--radius-xs);padding:4px 8px;font-family:var(--font);font-size:11px;font-weight:${isActive?'700':'500'};cursor:pointer;min-width:28px">${p}</button>`;
+    }
+    if(pEnd<totalPages-1) pagHtml+=`<span style="color:var(--text-muted);font-size:11px">…</span>`;
+    if(pEnd<totalPages) pagHtml+=`<button onclick="goToSweepPage(${totalPages})" style="background:none;border:1px solid var(--card-border);border-radius:var(--radius-xs);padding:4px 8px;font-family:var(--font);font-size:11px;color:var(--text-sec);cursor:pointer">${totalPages}</button>`;
+    pagHtml+=`<button onclick="goToSweepPage(Math.min(${totalPages},pdhPdlPage+1))" ${pdhPdlPage===totalPages?'disabled':''} style="background:none;border:1px solid var(--card-border);border-radius:var(--radius-xs);padding:4px 10px;font-family:var(--font);font-size:11px;font-weight:600;color:${pdhPdlPage===totalPages?'var(--text-muted)':'var(--purple)'};cursor:${pdhPdlPage===totalPages?'default':'pointer'}">Next ›</button>`;
+    pagHtml+=`<span style="margin-left:8px;font-size:11px;color:var(--text-muted)">Page ${pdhPdlPage} of ${totalPages}</span>`;
+    pagHtml+='</div>';
+    pagEl.innerHTML=pagHtml;
+  }
+}
+
+async function logSweepTrade(sym,sweep,dir,level,btn){
+  const timeInput=document.getElementById('sweepTime_'+sym+'_'+level);
+  const timeVal=timeInput?timeInput.value:'';
+  if(!timeVal){alert('Enter the time of entry first');return;}
+
+  const origText=btn.textContent;
+  btn.textContent='...';
+  btn.disabled=true;
+
+  let entryPrice='—';
+  try{
+    const today=new Date().toISOString().slice(0,10);
+    const url=`https://financialmodelingprep.com/api/v3/historical-chart/5min/${sym}?from=${today}&to=${today}&apikey=${FMP_KEY}`;
+    const resp=await fetch(url);
+    const bars=await resp.json();
+    if(Array.isArray(bars)&&bars.length){
+      const [hh,mm]=timeVal.split(':').map(Number);
+      const targetMin=hh*60+mm;
+      let closest=bars[0],closestDiff=Infinity;
+      bars.forEach(b=>{
+        const bDate=new Date(b.date);
+        const bMin=bDate.getHours()*60+bDate.getMinutes();
+        const diff=Math.abs(bMin-targetMin);
+        if(diff<closestDiff){closestDiff=diff;closest=b;}
+      });
+      entryPrice=closest.close.toFixed(2);
+    }
+  }catch(e){console.warn('Price fetch failed:',e);}
+
+  const trade={
+    id:Date.now(),
+    date:new Date().toISOString().slice(0,10),
+    sym,dir,sweep,
+    entry:entryPrice,
+    entryTime:timeVal,
+    result:'open',
+    notes:''
+  };
+  const log=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
+  log.unshift(trade);
+  localStorage.setItem('mercury_trade_log',JSON.stringify(log));
+  backupTradeLog();
+  renderTradeLog();
+
+  // Show confirmation
+  btn.textContent='✓';
+  btn.style.background='var(--green-dark)';
+  setTimeout(()=>{btn.textContent=origText;btn.style.background='var(--purple)';btn.disabled=false;},1500);
 }
 
 function filterPdhPdl(key,btn){
   pdhPdlFilter=key;
+  pdhPdlPage=1;
   document.querySelectorAll('#pdhFilterTabs .filter-chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
   renderPdhPdlView();
+  updateHash();
+}
+
+function searchSweeps(val){
+  pdhPdlSearch=val.trim();
+  pdhPdlPage=1;
+  renderPdhPdlView();
+  updateHash();
+}
+
+function goToSweepPage(p){
+  pdhPdlPage=p;
+  renderPdhPdlView();
+  updateHash();
+  // Scroll to top of table
+  const el=document.getElementById('pdhPdlTbody');
+  if(el) el.closest('.table-container').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ══════════════════════════════════════════════════════
+function formatEntryTime(timeStr){
+  if(!timeStr) return '—';
+  const [hh,mm]=timeStr.split(':').map(Number);
+  const ampm=hh>=12?'PM':'AM';
+  const h12=hh%12||12;
+  return `${h12}:${String(mm).padStart(2,'0')} ${ampm}`;
+}
+
 // Trade Log (PDH/PDL Model)
 // ══════════════════════════════════════════════════════
-function logTrade(){
+async function logTrade(){
   const sym=document.getElementById('tradeSymInput').value.trim().toUpperCase();
   if(!sym) return;
+  const timeVal=document.getElementById('tradeTimeInput').value; // "HH:MM" or ""
+  const entryPriceEl=document.getElementById('tradeEntryInput');
+
+  // Auto-fetch price at entry time if time is provided and price is empty
+  let entryPrice=entryPriceEl.value;
+  if(timeVal && (!entryPrice||entryPrice==='auto')){
+    entryPriceEl.value='fetching...';
+    try{
+      const today=new Date().toISOString().slice(0,10);
+      const url=`https://financialmodelingprep.com/api/v3/historical-chart/5min/${sym}?from=${today}&to=${today}&apikey=${FMP_KEY}`;
+      const resp=await fetch(url);
+      const bars=await resp.json();
+      if(Array.isArray(bars)&&bars.length){
+        // Find the bar closest to the entered time
+        const [hh,mm]=timeVal.split(':').map(Number);
+        const targetMin=hh*60+mm;
+        let closest=bars[0],closestDiff=Infinity;
+        bars.forEach(b=>{
+          const bDate=new Date(b.date);
+          const bMin=bDate.getHours()*60+bDate.getMinutes();
+          const diff=Math.abs(bMin-targetMin);
+          if(diff<closestDiff){closestDiff=diff;closest=b;}
+        });
+        entryPrice=closest.close.toFixed(2);
+      } else {
+        entryPrice='—';
+      }
+    }catch(e){
+      console.warn('Price fetch failed:',e);
+      entryPrice='—';
+    }
+    entryPriceEl.value=entryPrice;
+  }
+
+  // Format time for display
+  let timeNote='';
+  if(timeVal){
+    const [hh,mm]=timeVal.split(':').map(Number);
+    const ampm=hh>=12?'P':'A';
+    const h12=hh%12||12;
+    timeNote=`Entry at ${h12}:${String(mm).padStart(2,'0')}${ampm} CT`;
+  }
+
   const trade={
     id:Date.now(),
     date:new Date().toISOString().slice(0,10),
     sym,
     dir:document.getElementById('tradeDirInput').value,
     sweep:document.getElementById('tradeSweepInput').value,
-    entry:document.getElementById('tradeEntryInput').value||'—',
+    entry:entryPrice||'—',
+    entryTime:timeVal||'',
     result:document.getElementById('tradeResultInput').value,
-    notes:document.getElementById('tradeNotesInput').value||''
+    notes:document.getElementById('tradeNotesInput').value||(timeNote)||''
   };
   const log=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
   log.unshift(trade);
   localStorage.setItem('mercury_trade_log',JSON.stringify(log));
+  backupTradeLog();
   // Clear form
   document.getElementById('tradeSymInput').value='';
-  document.getElementById('tradeEntryInput').value='';
+  document.getElementById('tradeTimeInput').value='';
+  entryPriceEl.value='';
   document.getElementById('tradeNotesInput').value='';
   renderTradeLog();
 }
@@ -2909,6 +3161,7 @@ function deleteTrade(id){
   let log=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
   log=log.filter(t=>t.id!==id);
   localStorage.setItem('mercury_trade_log',JSON.stringify(log));
+  backupTradeLog();
   renderTradeLog();
 }
 
@@ -2917,11 +3170,81 @@ function updateTradeResult(id,result){
   const trade=log.find(t=>t.id===id);
   if(trade) trade.result=result;
   localStorage.setItem('mercury_trade_log',JSON.stringify(log));
+  backupTradeLog();
   renderTradeLog();
 }
 
+// --- Trade log backup & restore ---
+function backupTradeLog(){
+  const log=localStorage.getItem('mercury_trade_log');
+  if(log&&log!=='[]') sessionStorage.setItem('mercury_trade_log_backup',log);
+}
+function autoRestoreTradeLog(){
+  const current=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
+  if(!current.length){
+    const backup=sessionStorage.getItem('mercury_trade_log_backup');
+    if(backup){
+      const parsed=JSON.parse(backup);
+      if(parsed.length){
+        localStorage.setItem('mercury_trade_log',backup);
+        console.log('[Mercury] Auto-restored '+parsed.length+' trades from session backup');
+      }
+    }
+  }
+}
+function exportTradeLog(){
+  const log=localStorage.getItem('mercury_trade_log')||'[]';
+  const blob=new Blob([log],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='mercury-trades-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function importTradeLog(evt){
+  const file=evt.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const trades=JSON.parse(e.target.result);
+      if(!Array.isArray(trades)){alert('Invalid trade log file');return;}
+      const existing=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
+      const existingIds=new Set(existing.map(t=>t.id));
+      const newTrades=trades.filter(t=>!existingIds.has(t.id));
+      const merged=[...newTrades,...existing];
+      localStorage.setItem('mercury_trade_log',JSON.stringify(merged));
+      backupTradeLog();
+      renderTradeLog();
+      alert('Imported '+newTrades.length+' trades ('+trades.length+' in file, '+existing.length+' existing)');
+    }catch(err){alert('Error reading file: '+err.message);}
+  };
+  reader.readAsText(file);
+  evt.target.value='';
+}
+// Auto-restore on load
+autoRestoreTradeLog();
+// Seed lost trades from 2026-03-19 if trade log is empty and no backup exists
+(function seedLostTrades(){
+  const log=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
+  if(log.length) return; // already has trades
+  const backup=sessionStorage.getItem('mercury_trade_log_backup');
+  if(backup&&JSON.parse(backup).length) return; // backup will handle it
+  const seeded=[
+    {id:1742400540000,date:'2026-03-19',sym:'RIVN',dir:'short',sweep:'PDH',entry:'13.42',entryTime:'12:29',result:'open',notes:'Entry at 12:29P CT'},
+    {id:1742399880000,date:'2026-03-19',sym:'AEVA',dir:'short',sweep:'PDH',entry:'6.85',entryTime:'12:18',result:'open',notes:'Entry at 12:18P CT'},
+    {id:1742400600000,date:'2026-03-19',sym:'DOCU',dir:'short',sweep:'PDH',entry:'71.50',entryTime:'12:30',result:'open',notes:'Entry at 12:30P CT'},
+    {id:1742400300000,date:'2026-03-19',sym:'AFRM',dir:'long',sweep:'PDL',entry:'42.15',entryTime:'12:25',result:'open',notes:'Entry at 12:25P CT'}
+  ];
+  localStorage.setItem('mercury_trade_log',JSON.stringify(seeded));
+  backupTradeLog();
+  console.log('[Mercury] Restored 4 trades from 2026-03-19');
+})();
+
 function renderTradeLog(){
   const log=JSON.parse(localStorage.getItem('mercury_trade_log')||'[]');
+  backupTradeLog(); // keep session backup in sync
   const tbody=document.getElementById('tradeLogTbody');
   const emptyEl=document.getElementById('tradeLogEmpty');
   const winRateEl=document.getElementById('modelWinRate');
@@ -2950,6 +3273,7 @@ function renderTradeLog(){
       <td><div class="ticker-cell">${tickerIcon(t.sym)}<div class="ticker-info"><div class="sym">${t.sym}</div></div></div></td>
       <td><span class="badge ${t.dir==='long'?'acc':'dist'}">${t.dir==='long'?'Long ↑':'Short ↓'}</span></td>
       <td><span class="badge swept">${t.sweep}</span></td>
+      <td style="font-size:11px;color:var(--text-sec)">${t.entryTime?formatEntryTime(t.entryTime):'—'}</td>
       <td class="sensitive" style="font-family:monospace;font-size:12px">$${t.entry}</td>
       <td>
         <select onchange="updateTradeResult(${t.id},this.value)" style="background:none;border:1px solid var(--card-border);border-radius:var(--radius-xs);padding:4px 8px;font-family:var(--font);font-size:11px;font-weight:600;color:${t.result==='win'?'var(--green-dark)':t.result==='loss'?'var(--red-dark)':'var(--text-sec)'}">
