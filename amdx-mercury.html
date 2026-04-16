@@ -1878,7 +1878,7 @@ async function runScan(){
     const engulfingKey='mercury_engulfing_'+today;
     const eodTailKey='mercury_eod_tail_'+today;
     const weeklyTailKey='mercury_weekly_tail_'+today;
-    if(isCacheFresh(weeklyKey)){
+    if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
       quarterlyResults=loadCache(quarterlyKey).data;
