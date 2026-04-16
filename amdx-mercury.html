@@ -1805,8 +1805,8 @@ async function runScan(){
     const pdhKey='mercury_pdh_'+today;
 
     const engulfingKey='mercury_engulfing_'+today;
-    const eodTailKey='mercury_eod_tail_'+today;
-    const weeklyTailKey='mercury_weekly_tail_'+today;
+    const eodTailKey='mercury_eod_tail_v2_'+today;     // v2 = 70 bars
+    const weeklyTailKey='mercury_weekly_tail_v2_'+today; // v2 = 18 closed weeks
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -3024,8 +3024,8 @@ function renderWatchlistView(){
     if(dc&&dc.data) dailyResults=dc.data;
     emaResults=(loadCache('mercury_ema_'+today)||{}).data||{};
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
-    eodTailMap=(loadCache('mercury_eod_tail_'+today)||{}).data||{};
-    weeklyTailMap=(loadCache('mercury_weekly_tail_'+today)||{}).data||{};
+    eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
+    weeklyTailMap=(loadCache('mercury_weekly_tail_v2_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap);
