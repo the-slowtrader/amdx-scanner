@@ -711,6 +711,12 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
       <div class="table-container">
         <div class="table-toolbar">
           <div class="table-toolbar-left">
+            <div class="filter-chips" id="engulfingDaysTabs">
+              <button class="filter-chip" onclick="filterEngulfing('days',7,this)">7D</button>
+              <button class="filter-chip" onclick="filterEngulfing('days',30,this)">30D</button>
+              <button class="filter-chip active" onclick="filterEngulfing('days',90,this)">90D</button>
+            </div>
+            <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="engulfingTfTabs">
               <button class="filter-chip active" onclick="filterEngulfing('tf','all',this)">All TF</button>
               <button class="filter-chip" onclick="filterEngulfing('tf','daily',this)">Daily</button>
@@ -719,8 +725,8 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="engulfingDirTabs">
               <button class="filter-chip active" onclick="filterEngulfing('dir','all',this)">All</button>
-              <button class="filter-chip" onclick="filterEngulfing('dir','bullish',this)">Bullish</button>
-              <button class="filter-chip" onclick="filterEngulfing('dir','bearish',this)">Bearish</button>
+              <button class="filter-chip" onclick="filterEngulfing('dir','bullish',this)">Bullish ↑</button>
+              <button class="filter-chip" onclick="filterEngulfing('dir','bearish',this)">Bearish ↓</button>
             </div>
           </div>
           <div class="table-toolbar-right">
@@ -732,17 +738,17 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             <thead>
               <tr>
                 <th>Ticker</th>
-                <th>Type</th>
-                <th>Timeframe</th>
-                <th>Prev Open</th>
-                <th>Prev High</th>
-                <th>Prev Low</th>
-                <th>Prev Close</th>
-                <th>Curr Open</th>
-                <th>Curr High</th>
-                <th>Curr Low</th>
-                <th>Curr Close</th>
-                <th>Candle Date</th>
+                <th>Date</th>
+                <th>Signal</th>
+                <th>TF</th>
+                <th style="color:var(--text-muted)">Prev O</th>
+                <th style="color:var(--green-dark)">Prev H</th>
+                <th style="color:var(--red-dark)">Prev L</th>
+                <th>Prev C</th>
+                <th style="color:var(--text-muted)">Curr O</th>
+                <th style="color:var(--green-dark)">Curr H</th>
+                <th style="color:var(--red-dark)">Curr L</th>
+                <th>Curr C</th>
               </tr>
             </thead>
             <tbody id="engulfingTbody"></tbody>
@@ -1117,6 +1123,7 @@ let engulfingResults=[];
 let eodTailMap={}, weeklyTailMap={};
 let engulfingTfFilter='all';
 let engulfingDirFilter='all';
+let engulfingDaysFilter=90;
 let currentView='dashboard';
 let currentTimeframe='daily';
 let scannerFilter='all';
@@ -1798,6 +1805,8 @@ async function runScan(){
     const pdhKey='mercury_pdh_'+today;
 
     const engulfingKey='mercury_engulfing_'+today;
+    const eodTailKey='mercury_eod_tail_'+today;
+    const weeklyTailKey='mercury_weekly_tail_'+today;
     if(isCacheFresh(weeklyKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -1806,20 +1815,22 @@ async function runScan(){
       obResults=(loadCache(obKey)||{}).data||{};
       pdhPdlResults=(loadCache(pdhKey)||{}).data||{};
       reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
-      engulfingResults=(loadCache(engulfingKey)||{}).data||[];
+      eodTailMap=(loadCache(eodTailKey)||{}).data||{};
+      weeklyTailMap=(loadCache(weeklyTailKey)||{}).data||{};
       updateProgress(50,'Loaded from cache...');
     } else {
       weeklyResults={};monthlyResults={};quarterlyResults={};leapResults={};obResults={};pdhPdlResults={};reversalResults={};
+      eodTailMap={};weeklyTailMap={};
       for(let i=0;i<nonFutures.length;i+=BATCH_SIZE){
         const batch=nonFutures.slice(i,i+BATCH_SIZE);
         const promises=batch.map(async sym=>{
           try{
             const eod=await fetchEOD(sym,from500,today);
             if(!eod.length) return;
-            eodTailMap[sym]=eod.slice(-2);
+            eodTailMap[sym]=eod.slice(-70);  // ~90 trading days of history
             const weekly=aggregateToWeekly(eod);
-            // Drop the last weekly bar (current partial week) — use only closed weeks
-            weeklyTailMap[sym]=weekly.length>=3 ? weekly.slice(-3,-1) : weekly.slice(0,-1);
+            // Drop last weekly bar (current partial week) — keep ~18 closed weeks
+            weeklyTailMap[sym]=weekly.length>=2 ? weekly.slice(-19,-1) : [];
             weeklyResults[sym]=classifyWeeklyAX(weekly);
             monthlyResults[sym]=classifyMonthlyAX(weekly);
             const qData=aggregateToQuarterlyPhases(eod);
@@ -1862,6 +1873,8 @@ async function runScan(){
       saveCache(obKey,obResults);
       saveCache(pdhKey,pdhPdlResults);
       saveCache('mercury_reversal_'+today,reversalResults);
+      saveCache(eodTailKey,eodTailMap);
+      saveCache(weeklyTailKey,weeklyTailMap);
     }
 
     // Compute engulfing from EOD + weekly tails
@@ -1976,28 +1989,28 @@ async function runScan(){
 // ══════════════════════════════════════════════════════
 // ENGULFING SCANNER
 // Body of current candle engulfs full high-low range of previous candle.
-// Bullish: prev bearish, curr_open < prev_low AND curr_close > prev_high
+// Bullish: prev bearish, curr_open < prev_low  AND curr_close > prev_high
 // Bearish: prev bullish, curr_open > prev_high AND curr_close < prev_low
-// Uses the two most recently CLOSED candles only.
+// Scans ALL consecutive bar pairs across the full history provided.
 // ══════════════════════════════════════════════════════
 
 function detectEngulfingOnBars(bars, sym, tf){
-  // bars sorted oldest→newest, already closed
+  // bars sorted oldest→newest
   if(!bars || bars.length < 2) return [];
-  const prev = bars[bars.length - 2];
-  const curr = bars[bars.length - 1];
   const results = [];
-
-  const pO = prev.open, pH = prev.high, pL = prev.low, pC = prev.close;
-  const cO = curr.open, cH = curr.high, cL = curr.low, cC = curr.close;
-
-  // Bullish engulfing: prev candle bearish, current body engulfs prev full range
-  if(pC < pO && cO < pL && cC > pH){
-    results.push({ sym, tf, type:'bullish', prev, curr });
-  }
-  // Bearish engulfing: prev candle bullish, current body engulfs prev full range
-  if(pC > pO && cO > pH && cC < pL){
-    results.push({ sym, tf, type:'bearish', prev, curr });
+  for(let i = 1; i < bars.length; i++){
+    const prev = bars[i-1];
+    const curr = bars[i];
+    const pO = prev.open, pH = prev.high, pL = prev.low, pC = prev.close;
+    const cO = curr.open, cH = curr.high, cL = curr.low, cC = curr.close;
+    // Bullish: prev bearish, current body engulfs prev full range
+    if(pC < pO && cO < pL && cC > pH){
+      results.push({ sym, tf, type:'bullish', prev, curr });
+    }
+    // Bearish: prev bullish, current body engulfs prev full range
+    else if(pC > pO && cO > pH && cC < pL){
+      results.push({ sym, tf, type:'bearish', prev, curr });
+    }
   }
   return results;
 }
@@ -2006,15 +2019,13 @@ function buildEngulfingResults(eodMap, weeklyMap){
   const all = [];
   for(const sym of Object.keys(eodMap)){
     const eod = eodMap[sym];
-    if(Array.isArray(eod) && eod.length >= 2){
+    if(Array.isArray(eod) && eod.length >= 2)
       all.push(...detectEngulfingOnBars(eod, sym, 'daily'));
-    }
   }
   for(const sym of Object.keys(weeklyMap)){
     const weekly = weeklyMap[sym];
-    if(Array.isArray(weekly) && weekly.length >= 2){
+    if(Array.isArray(weekly) && weekly.length >= 2)
       all.push(...detectEngulfingOnBars(weekly, sym, 'weekly'));
-    }
   }
   return all;
 }
@@ -2023,9 +2034,12 @@ function filterEngulfing(dimension, val, el){
   if(dimension==='tf'){
     engulfingTfFilter = val;
     document.querySelectorAll('#engulfingTfTabs .filter-chip').forEach(b=>b.classList.remove('active'));
-  } else {
+  } else if(dimension==='dir'){
     engulfingDirFilter = val;
     document.querySelectorAll('#engulfingDirTabs .filter-chip').forEach(b=>b.classList.remove('active'));
+  } else if(dimension==='days'){
+    engulfingDaysFilter = val;
+    document.querySelectorAll('#engulfingDaysTabs .filter-chip').forEach(b=>b.classList.remove('active'));
   }
   if(el) el.classList.add('active');
   renderEngulfingView();
@@ -2037,23 +2051,26 @@ function renderEngulfingView(){
   const countEl = document.getElementById('engulfingCount');
   if(!tbody) return;
 
+  // Date cutoff
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - engulfingDaysFilter);
+  const cutoffStr = cutoff.toISOString().slice(0,10);
+
   let rows = engulfingResults.filter(r=>{
+    if(r.curr.date < cutoffStr) return false;
     if(engulfingTfFilter !== 'all' && r.tf !== engulfingTfFilter) return false;
     if(engulfingDirFilter !== 'all' && r.type !== engulfingDirFilter) return false;
     return true;
   });
 
-  // Sort: bullish first, then by ticker
-  rows.sort((a,b)=>{
-    if(a.type !== b.type) return a.type==='bullish'?-1:1;
-    return a.sym.localeCompare(b.sym);
-  });
+  // Sort: newest candle date first, then ticker
+  rows.sort((a,b)=> b.curr.date.localeCompare(a.curr.date) || a.sym.localeCompare(b.sym));
 
   const bullCount = rows.filter(r=>r.type==='bullish').length;
   const bearCount = rows.filter(r=>r.type==='bearish').length;
-  if(countEl) countEl.textContent = `${rows.length} found · ${bullCount} bullish · ${bearCount} bearish`;
+  if(countEl) countEl.textContent = `${rows.length} signals · ${bullCount} bullish · ${bearCount} bearish`;
 
-  // Update badge in sidebar
+  // Badge shows total signals in default window
   const badge = document.getElementById('engulfingBadge');
   if(badge) badge.textContent = engulfingResults.length > 0 ? engulfingResults.length : '—';
 
@@ -2075,18 +2092,18 @@ function renderEngulfingView(){
     const p = r.prev, c = r.curr;
     const fmt = v => v != null ? (+v).toFixed(2) : '—';
     return `<tr data-ticker="${r.sym}">
-      <td><div class="ticker-cell">${tickerIcon(r.sym)}<div class="ticker-info"><div class="sym">${r.sym}</div><div class="name" style="font-size:10px;color:var(--text-muted)">${p.date}</div></div></div></td>
+      <td><div class="ticker-cell">${tickerIcon(r.sym)}<div class="ticker-info"><div class="sym">${r.sym}</div></div></div></td>
+      <td style="font-size:12px;font-weight:600">${c.date}</td>
       <td>${typeBadge}</td>
       <td>${tfBadge}</td>
-      <td style="font-family:monospace;font-size:12px">${fmt(p.open)}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--text-sec)">${fmt(p.open)}</td>
       <td style="font-family:monospace;font-size:12px;color:var(--green-dark)">${fmt(p.high)}</td>
       <td style="font-family:monospace;font-size:12px;color:var(--red-dark)">${fmt(p.low)}</td>
       <td style="font-family:monospace;font-size:12px;font-weight:600;color:${p.close<p.open?'var(--red)':'var(--green)'}">${fmt(p.close)}</td>
-      <td style="font-family:monospace;font-size:12px">${fmt(c.open)}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--text-sec)">${fmt(c.open)}</td>
       <td style="font-family:monospace;font-size:12px;color:var(--green-dark)">${fmt(c.high)}</td>
       <td style="font-family:monospace;font-size:12px;color:var(--red-dark)">${fmt(c.low)}</td>
       <td style="font-family:monospace;font-size:12px;font-weight:600;color:${isBull?'var(--green-dark)':'var(--red-dark)'}">${fmt(c.close)}</td>
-      <td style="font-size:12px;color:var(--text-sec)">${c.date}</td>
     </tr>`;
   }).join('');
 }
@@ -3007,7 +3024,12 @@ function renderWatchlistView(){
     if(dc&&dc.data) dailyResults=dc.data;
     emaResults=(loadCache('mercury_ema_'+today)||{}).data||{};
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
+    eodTailMap=(loadCache('mercury_eod_tail_'+today)||{}).data||{};
+    weeklyTailMap=(loadCache('mercury_weekly_tail_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing_'+today)||{}).data||[];
+    if(!engulfingResults.length && Object.keys(eodTailMap).length){
+      engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap);
+    }
     renderDashboard();
     renderScannerView();
     renderConfluenceView();
