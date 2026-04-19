@@ -356,6 +356,11 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       <span>LEAP Hunter</span>
     </button>
+    <button class="nav-item" onclick="showView('q1sweep')" data-view="q1sweep">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-8"/></svg>
+      <span>Q1 Sweep</span>
+      <span class="badge-count" id="q1sweepCount">—</span>
+    </button>
   </div>
 
   <div class="sidebar-section">
@@ -762,6 +767,48 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
     </div>
 
     <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Q1 Sweep Hunter                       -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-q1sweep">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips" id="q1sweepFilterTabs">
+              <button class="filter-chip active" onclick="filterQ1Sweep('all',this)">All</button>
+              <button class="filter-chip" onclick="filterQ1Sweep('reclaimed',this)">🟢 Reclaimed Q1L</button>
+              <button class="filter-chip" onclick="filterQ1Sweep('below',this)">🟡 Below Q1L</button>
+              <button class="filter-chip" onclick="filterQ1Sweep('rejected',this)">🔴 Rejected Q1H</button>
+              <button class="filter-chip" onclick="filterQ1Sweep('breakout',this)">🔵 Breakout</button>
+            </div>
+          </div>
+          <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted)" id="q1sweepCountLabel"></span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Setup</th>
+                <th>Q1 Low</th>
+                <th>Q1 High</th>
+                <th>Sweep Level</th>
+                <th>Sweep Date</th>
+                <th>Depth / Ext</th>
+                <th>Current</th>
+                <th>Dist Q1L</th>
+                <th>Upside to Q1H</th>
+              </tr>
+            </thead>
+            <tbody id="q1sweepTbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
     <!-- VIEW: Watchlist                             -->
     <!-- ═══════════════════════════════════════════ -->
     <div class="view" id="view-watchlist">
@@ -1131,7 +1178,7 @@ function tickerIcon(sym){
 }
 
 // ── State ──
-let dailyResults={}, weeklyResults={}, monthlyResults={}, quarterlyResults={}, leapResults={};
+let dailyResults={}, weeklyResults={}, monthlyResults={}, quarterlyResults={}, leapResults={}, q1SweepResults={};
 let obResults={};
 let pdhPdlResults={};
 let emaResults={};
@@ -1173,6 +1220,7 @@ function showView(view, sub, skipHash){
     dealer: ['Dealer Intel', 'HTF order block &amp; breaker zone detection'],
     sweep: ['Sweep Radar', 'Proximity to key liquidity levels'],
     leap: ['LEAP Hunter', 'Prior year low sweep & reclaim tracker'],
+    q1sweep: ['Q1 Sweep Hunter', 'Q1 2026 high/low sweeps &amp; reclaim setups'],
     models: ['Trading Models', 'Entry checklists &amp; trade tracking'],
     engulfing: ['Engulfing Scanner', 'Daily &amp; weekly body-engulfs-range candles'],
     watchlist: ['Watchlist', 'Your tracked tickers'],
@@ -1771,6 +1819,45 @@ function classifyLeapHunter(dailyData){
   };
 }
 
+// ── Q1 Sweep Hunter ─────────────────────────────────────────────────
+// Finds tickers where Q2 price swept below Q1 low or above Q1 high,
+// then tracks whether they've reclaimed / rejected — swing setups.
+function classifyQ1Sweep(dailyData){
+  const now=new Date();
+  const yr=now.getFullYear();
+  const q1Start=`${yr}-01-01`, q1End=`${yr}-03-31`, q2Start=`${yr}-04-01`;
+  const q1Days=dailyData.filter(d=>d.date>=q1Start&&d.date<=q1End);
+  const q2Days=dailyData.filter(d=>d.date>=q2Start);
+  if(q1Days.length<10||!q2Days.length) return null;
+  const q1Low =Math.min(...q1Days.map(d=>+d.low));
+  const q1High=Math.max(...q1Days.map(d=>+d.high));
+  const q2LL  =Math.min(...q2Days.map(d=>+d.low));
+  const q2HH  =Math.max(...q2Days.map(d=>+d.high));
+  const cur   =+q2Days[q2Days.length-1].close;
+  const sweptLow=q2LL<q1Low, sweptHigh=q2HH>q1High;
+  if(!sweptLow&&!sweptHigh) return null;
+  const res={sweptLow,sweptHigh,q1Low:q1Low.toFixed(2),q1High:q1High.toFixed(2),currentPrice:cur.toFixed(2)};
+  if(sweptLow){
+    const sc=q2Days.reduce((a,b)=>(+b.low<+a.low)?b:a);
+    res.sweepLowDate=sc.date;
+    res.q2LowestLow=q2LL.toFixed(2);
+    res.sweepDepthPct=((q2LL-q1Low)/q1Low*100).toFixed(1);
+    res.reclaimedQ1L=cur>q1Low;
+    res.distFromQ1L=((cur-q1Low)/q1Low*100).toFixed(1);
+    res.distToQ1H=((q1High-cur)/cur*100).toFixed(1);
+    res.recovery=((cur-q2LL)/q2LL*100).toFixed(1);
+  }
+  if(sweptHigh){
+    const sc=q2Days.reduce((a,b)=>(+b.high>+a.high)?b:a);
+    res.sweepHighDate=sc.date;
+    res.q2HighestHigh=q2HH.toFixed(2);
+    res.sweepExtPct=((q2HH-q1High)/q1High*100).toFixed(1);
+    res.rejectedQ1H=cur<q1High;
+    res.distFromQ1H=((cur-q1High)/q1High*100).toFixed(1);
+  }
+  return res;
+}
+
 // Daily AMDX (intraday phases)
 function group4HByDay(bars, targetDate){
   const dayBars=bars.filter(b=>b.date.startsWith(targetDate));
@@ -1873,6 +1960,7 @@ async function runScan(){
     const monthlyKey='mercury_monthly_'+today;
     const quarterlyKey='mercury_quarterly_'+today;
     const leapKey='mercury_leap_'+today;
+    const q1SweepKey='mercury_q1sweep_'+today;
     const obKey='mercury_ob_'+today;
     const pdhKey='mercury_pdh_'+today;
 
@@ -1884,6 +1972,7 @@ async function runScan(){
       monthlyResults=loadCache(monthlyKey).data;
       quarterlyResults=loadCache(quarterlyKey).data;
       leapResults=loadCache(leapKey).data;
+      q1SweepResults=(loadCache(q1SweepKey)||{}).data||{};
       obResults=(loadCache(obKey)||{}).data||{};
       pdhPdlResults=(loadCache(pdhKey)||{}).data||{};
       reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
@@ -1891,7 +1980,7 @@ async function runScan(){
       weeklyTailMap=(loadCache(weeklyTailKey)||{}).data||{};
       updateProgress(50,'Loaded from cache...');
     } else {
-      weeklyResults={};monthlyResults={};quarterlyResults={};leapResults={};obResults={};pdhPdlResults={};reversalResults={};
+      weeklyResults={};monthlyResults={};quarterlyResults={};leapResults={};q1SweepResults={};obResults={};pdhPdlResults={};reversalResults={};
       eodTailMap={};weeklyTailMap={};
       for(let i=0;i<nonFutures.length;i+=BATCH_SIZE){
         const batch=nonFutures.slice(i,i+BATCH_SIZE);
@@ -1908,6 +1997,7 @@ async function runScan(){
             const qData=aggregateToQuarterlyPhases(eod);
             quarterlyResults[sym]=classifyQuarterlyAMDX(qData);
             leapResults[sym]=classifyLeapHunter(eod);
+            q1SweepResults[sym]=classifyQ1Sweep(eod);
             // OB & Breaker detection
             const currentPrice=eod[eod.length-1].close;
             const monthlyCandles=buildMonthlyCandles(weekly);
@@ -1942,6 +2032,7 @@ async function runScan(){
       saveCache(monthlyKey,monthlyResults);
       saveCache(quarterlyKey,quarterlyResults);
       saveCache(leapKey,leapResults);
+      saveCache(q1SweepKey,q1SweepResults);
       saveCache(obKey,obResults);
       saveCache(pdhKey,pdhPdlResults);
       saveCache('mercury_reversal_'+today,reversalResults);
@@ -1958,6 +2049,7 @@ async function runScan(){
     renderScannerView();
     renderConfluenceView();
     renderLeapView();
+    renderQ1SweepView();
     renderSweepView();
     renderDealerView();
     renderPdhPdlView();
@@ -2040,6 +2132,7 @@ async function runScan(){
     renderScannerView();
     renderConfluenceView();
     renderLeapView();
+    renderQ1SweepView();
     renderSweepView();
     renderDealerView();
     renderPdhPdlView();
@@ -2756,6 +2849,95 @@ function filterLeap(key, btn){
 }
 
 // ══════════════════════════════════════════════════════
+// RENDER: Q1 Sweep Hunter
+// ══════════════════════════════════════════════════════
+let q1sweepFilter='all';
+function renderQ1SweepView(){
+  const tbody=document.getElementById('q1sweepTbody');
+  if(!tbody) return;
+
+  // Build row list from all results that have data
+  let rows=Object.entries(q1SweepResults).filter(([,q])=>q);
+
+  // Apply filter
+  if(q1sweepFilter==='reclaimed') rows=rows.filter(([,q])=>q.sweptLow&&q.reclaimedQ1L);
+  else if(q1sweepFilter==='below')    rows=rows.filter(([,q])=>q.sweptLow&&!q.reclaimedQ1L);
+  else if(q1sweepFilter==='rejected') rows=rows.filter(([,q])=>q.sweptHigh&&q.rejectedQ1H);
+  else if(q1sweepFilter==='breakout') rows=rows.filter(([,q])=>q.sweptHigh&&!q.rejectedQ1H);
+
+  // Sort: reclaimed first (by dist from Q1L desc), then below, then high sweeps
+  rows.sort((a,b)=>{
+    const [,qa]=a, [,qb]=b;
+    const scoreA=(qa.sweptLow&&qa.reclaimedQ1L)?3:(qa.sweptLow&&!qa.reclaimedQ1L)?2:(qa.sweptHigh&&qa.rejectedQ1H)?1:0;
+    const scoreB=(qb.sweptLow&&qb.reclaimedQ1L)?3:(qb.sweptLow&&!qb.reclaimedQ1L)?2:(qb.sweptHigh&&qb.rejectedQ1H)?1:0;
+    if(scoreA!==scoreB) return scoreB-scoreA;
+    if(qa.sweptLow&&qb.sweptLow) return parseFloat(qb.distFromQ1L||0)-parseFloat(qa.distFromQ1L||0);
+    return 0;
+  });
+
+  tbody.innerHTML=rows.map(([sym,q])=>{
+    // Determine primary setup (prefer low sweep)
+    const isLow=q.sweptLow;
+    const isHigh=q.sweptHigh&&!isLow;
+    let setupBadge, sweepLevel, sweepDate, depthStr, distQ1L, upsideQ1H;
+
+    if(isLow){
+      const reclaimed=q.reclaimedQ1L;
+      setupBadge=reclaimed
+        ?`<span class="badge swept" style="background:var(--green-light);color:var(--green-dark)">🟢 Reclaimed Q1L</span>`
+        :`<span class="badge below" style="background:var(--amber-light);color:var(--amber-dark)">🟡 Below Q1L</span>`;
+      sweepLevel=`<span class="sensitive">$${q.q2LowestLow}</span>`;
+      sweepDate=q.sweepLowDate;
+      depthStr=`<span style="color:var(--red);font-weight:600">${q.sweepDepthPct}%</span>`;
+      distQ1L=reclaimed
+        ?`<span style="color:var(--green);font-weight:600">+${q.distFromQ1L}%</span>`
+        :`<span style="color:var(--red);font-weight:600">${q.distFromQ1L}%</span>`;
+      upsideQ1H=reclaimed
+        ?`<span style="color:var(--text-sec)">${q.distToQ1H}%</span>`
+        :`<span style="color:var(--text-muted)">—</span>`;
+    } else {
+      const rejected=q.rejectedQ1H;
+      setupBadge=rejected
+        ?`<span class="badge dist" style="background:var(--red-light);color:var(--red-dark)">🔴 Rejected Q1H</span>`
+        :`<span class="badge acc" style="background:var(--blue-light);color:#1d4ed8">🔵 Breakout</span>`;
+      sweepLevel=`<span class="sensitive">$${q.q2HighestHigh}</span>`;
+      sweepDate=q.sweepHighDate;
+      depthStr=`<span style="color:var(--green);font-weight:600">+${q.sweepExtPct}%</span>`;
+      distQ1L=`<span style="color:var(--text-muted)">—</span>`;
+      upsideQ1H=`<span style="font-weight:600;color:${parseFloat(q.distFromQ1H)>=0?'var(--green)':'var(--red)'}>${parseFloat(q.distFromQ1H)>=0?'+':''}${q.distFromQ1H}%</span>`;
+    }
+
+    return `<tr data-ticker="${sym}">
+      <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
+      <td>${setupBadge}</td>
+      <td class="sensitive">$${q.q1Low}</td>
+      <td class="sensitive">$${q.q1High}</td>
+      <td>${sweepLevel}</td>
+      <td style="font-size:12px;color:var(--text-sec)">${sweepDate||'—'}</td>
+      <td>${depthStr}</td>
+      <td class="sensitive">$${q.currentPrice}</td>
+      <td>${distQ1L}</td>
+      <td>${upsideQ1H}</td>
+    </tr>`;
+  }).join('');
+
+  // Update count badge in sidebar + label
+  const countEl=document.getElementById('q1sweepCount');
+  const labelEl=document.getElementById('q1sweepCountLabel');
+  const totalBull=Object.values(q1SweepResults).filter(q=>q&&q.sweptLow).length;
+  const reclaimed=Object.values(q1SweepResults).filter(q=>q&&q.sweptLow&&q.reclaimedQ1L).length;
+  if(countEl) countEl.textContent=totalBull;
+  if(labelEl) labelEl.textContent=`${rows.length} shown · ${reclaimed} reclaimed · ${totalBull} swept Q1L`;
+}
+
+function filterQ1Sweep(key, btn){
+  q1sweepFilter=key;
+  document.querySelectorAll('#q1sweepFilterTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderQ1SweepView();
+}
+
+// ══════════════════════════════════════════════════════
 // RENDER: Sweep Radar
 // ══════════════════════════════════════════════════════
 function renderSweepView(){
@@ -3368,6 +3550,7 @@ function renderWatchlistView(){
     monthlyResults=(loadCache('mercury_monthly_'+today)||{}).data||{};
     quarterlyResults=(loadCache('mercury_quarterly_'+today)||{}).data||{};
     leapResults=(loadCache('mercury_leap_'+today)||{}).data||{};
+    q1SweepResults=(loadCache('mercury_q1sweep_'+today)||{}).data||{};
     obResults=(loadCache('mercury_ob_'+today)||{}).data||{};
     pdhPdlResults=(loadCache('mercury_pdh_'+today)||{}).data||{};
     if(dc&&dc.data) dailyResults=dc.data;
@@ -3383,6 +3566,7 @@ function renderWatchlistView(){
     renderScannerView();
     renderConfluenceView();
     renderLeapView();
+    renderQ1SweepView();
     renderSweepView();
     renderDealerView();
     renderPdhPdlView();
