@@ -781,8 +781,12 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip" onclick="filterQ1Sweep('breakout',this)">🔵 Breakout</button>
             </div>
           </div>
-          <div class="table-toolbar-right">
+          <div class="table-toolbar-right" style="display:flex;align-items:center;gap:10px">
             <span style="font-size:11px;color:var(--text-muted)" id="q1sweepCountLabel"></span>
+            <button class="topbar-btn" onclick="copyQ1SweepTickers(this)" title="Copy visible tickers to clipboard">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Tickers
+            </button>
           </div>
         </div>
         <div class="table-wrap">
@@ -791,10 +795,8 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <tr>
                 <th>Ticker</th>
                 <th>Setup</th>
-                <th>Q1 Low</th>
-                <th>Q1 High</th>
+                <th>Q1 Range (L – H)</th>
                 <th>Sweep Level</th>
-                <th>Sweep Date</th>
                 <th>Depth / Ext</th>
                 <th>Current</th>
                 <th>Dist Q1L</th>
@@ -2876,10 +2878,11 @@ function renderQ1SweepView(){
   });
 
   tbody.innerHTML=rows.map(([sym,q])=>{
-    // Determine primary setup (prefer low sweep)
     const isLow=q.sweptLow;
-    const isHigh=q.sweptHigh&&!isLow;
-    let setupBadge, sweepLevel, sweepDate, depthStr, distQ1L, upsideQ1H;
+    let setupBadge, q1Range, sweepLevel, depthStr, distQ1L, upsideQ1H;
+
+    // Q1 Range cell (shared)
+    q1Range=`<span class="sensitive" style="font-size:12px;color:var(--text-sec)">$${q.q1Low} – $${q.q1High}</span>`;
 
     if(isLow){
       const reclaimed=q.reclaimedQ1L;
@@ -2887,7 +2890,6 @@ function renderQ1SweepView(){
         ?`<span class="badge swept" style="background:var(--green-light);color:var(--green-dark)">🟢 Reclaimed Q1L</span>`
         :`<span class="badge below" style="background:var(--amber-light);color:var(--amber-dark)">🟡 Below Q1L</span>`;
       sweepLevel=`<span class="sensitive">$${q.q2LowestLow}</span>`;
-      sweepDate=q.sweepLowDate;
       depthStr=`<span style="color:var(--red);font-weight:600">${q.sweepDepthPct}%</span>`;
       distQ1L=reclaimed
         ?`<span style="color:var(--green);font-weight:600">+${q.distFromQ1L}%</span>`
@@ -2901,7 +2903,6 @@ function renderQ1SweepView(){
         ?`<span class="badge dist" style="background:var(--red-light);color:var(--red-dark)">🔴 Rejected Q1H</span>`
         :`<span class="badge acc" style="background:var(--blue-light);color:#1d4ed8">🔵 Breakout</span>`;
       sweepLevel=`<span class="sensitive">$${q.q2HighestHigh}</span>`;
-      sweepDate=q.sweepHighDate;
       depthStr=`<span style="color:var(--green);font-weight:600">+${q.sweepExtPct}%</span>`;
       distQ1L=`<span style="color:var(--text-muted)">—</span>`;
       upsideQ1H=`<span style="font-weight:600;color:${parseFloat(q.distFromQ1H)>=0?'var(--green)':'var(--red)'}>${parseFloat(q.distFromQ1H)>=0?'+':''}${q.distFromQ1H}%</span>`;
@@ -2910,10 +2911,8 @@ function renderQ1SweepView(){
     return `<tr data-ticker="${sym}">
       <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
       <td>${setupBadge}</td>
-      <td class="sensitive">$${q.q1Low}</td>
-      <td class="sensitive">$${q.q1High}</td>
+      <td>${q1Range}</td>
       <td>${sweepLevel}</td>
-      <td style="font-size:12px;color:var(--text-sec)">${sweepDate||'—'}</td>
       <td>${depthStr}</td>
       <td class="sensitive">$${q.currentPrice}</td>
       <td>${distQ1L}</td>
@@ -2935,6 +2934,18 @@ function filterQ1Sweep(key, btn){
   document.querySelectorAll('#q1sweepFilterTabs .filter-chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
   renderQ1SweepView();
+}
+
+function copyQ1SweepTickers(btn){
+  const rows=[...document.querySelectorAll('#q1sweepTbody tr')].filter(r=>r.style.display!=='none');
+  const tickers=rows.map(r=>r.dataset.ticker).filter(Boolean);
+  if(!tickers.length) return;
+  navigator.clipboard.writeText(tickers.join(',')).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent='✓ Copied!';
+    btn.style.color='var(--green)';
+    setTimeout(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Tickers';btn.style.color='';},2000);
+  });
 }
 
 // ══════════════════════════════════════════════════════
