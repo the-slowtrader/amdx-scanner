@@ -730,8 +730,8 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="engulfingDirTabs">
               <button class="filter-chip active" onclick="filterEngulfing('dir','all',this)">All</button>
-              <button class="filter-chip" onclick="filterEngulfing('dir','bullish',this)">Close ↑ Above Range</button>
-              <button class="filter-chip" onclick="filterEngulfing('dir','bearish',this)">Close ↓ Below Range</button>
+              <button class="filter-chip" onclick="filterEngulfing('dir','bullish',this)">Bullish — Swept Low, Closed Above High</button>
+              <button class="filter-chip" onclick="filterEngulfing('dir','bearish',this)">Bearish — Swept High, Closed Below Low</button>
             </div>
           </div>
           <div class="table-toolbar-right">
@@ -1233,7 +1233,7 @@ function showView(view, sub, skipHash){
     leap: ['LEAP Hunter', 'Prior year low sweep & reclaim tracker'],
     q1sweep: ['Q1 Sweep Hunter', 'Q1 2026 high/low sweeps &amp; reclaim setups'],
     models: ['Trading Models', 'Entry checklists &amp; trade tracking'],
-    engulfing: ['Engulfing Scanner', 'Close outside prior candle range — daily &amp; weekly'],
+    engulfing: ['Engulfing Scanner', 'Wick sweeps one side, close through the other — daily &amp; weekly'],
     watchlist: ['Watchlist', 'Your tracked tickers'],
     alerts: ['Alert Center', 'Phase transition notifications']
   };
@@ -1975,7 +1975,7 @@ async function runScan(){
     const obKey='mercury_ob_'+today;
     const pdhKey='mercury_pdh_'+today;
 
-    const engulfingKey='mercury_engulfing3_'+today;
+    const engulfingKey='mercury_engulfing4_'+today;
     const eodTailKey='mercury_eod_tail_v2_'+today;     // v2 = 70 bars
     const weeklyTailKey='mercury_weekly_tail_v2_'+today; // v2 = 18 closed weeks
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
@@ -2165,12 +2165,13 @@ async function runScan(){
 // ══════════════════════════════════════════════════════
 // ENGULFING + DOUBLE SWEEP SCANNER
 //
-// Close-Outside Engulf:
-//   Bullish : curr_close > prev_high  (closed above prior candle's full range)
-//   Bearish : curr_close < prev_low   (closed below prior candle's full range)
+// Liquidity Sweep Engulf:
+//   Bullish : curr_low  <= prev_low  AND curr_close > prev_high
+//             → wick sweeps below prior low, closes above prior high
+//   Bearish : curr_high >= prev_high AND curr_close < prev_low
+//             → wick sweeps above prior high, closes below prior low
 //
-// No requirement on the open or prior candle direction.
-// Scans ALL consecutive bar pairs across the full history provided.
+// Open is irrelevant. Scans ALL consecutive bar pairs in history.
 // ══════════════════════════════════════════════════════
 
 function detectEngulfingOnBars(bars, sym, tf){
@@ -2181,13 +2182,13 @@ function detectEngulfingOnBars(bars, sym, tf){
     const prev = bars[i-1];
     const curr = bars[i];
     const pH = +prev.high, pL = +prev.low;
-    const cC = +curr.close;
-    // Bullish: close above prev high
-    if(cC > pH){
+    const cH = +curr.high, cL = +curr.low, cC = +curr.close;
+    // Bullish: wick takes out prev low, close above prev high
+    if(cL <= pL && cC > pH){
       results.push({ sym, tf, type:'bullish', prev, curr });
     }
-    // Bearish: close below prev low
-    else if(cC < pL){
+    // Bearish: wick takes out prev high, close below prev low
+    else if(cH >= pH && cC < pL){
       results.push({ sym, tf, type:'bearish', prev, curr });
     }
   }
@@ -2250,7 +2251,7 @@ function renderEngulfingView(){
 
   const bullCount = rows.filter(r=>r.type==='bullish').length;
   const bearCount = rows.filter(r=>r.type==='bearish').length;
-  if(countEl) countEl.textContent = `${rows.length} signals · ${bullCount} close above range · ${bearCount} close below range`;
+  if(countEl) countEl.textContent = `${rows.length} signals · ${bullCount} swept low / closed above · ${bearCount} swept high / closed below`;
 
   // Badge shows total signals in default window
   const badge = document.getElementById('engulfingBadge');
@@ -2268,8 +2269,8 @@ function renderEngulfingView(){
     const isBear = r.type === 'bearish';
 
     const typeBadge = isBull
-      ? `<span class="badge acc">Close ↑ Above Range</span>`
-      : `<span class="badge dist">Close ↓ Below Range</span>`;
+      ? `<span class="badge acc">Swept Low → Close Above ↑</span>`
+      : `<span class="badge dist">Swept High → Close Below ↓</span>`;
 
     const tfBadge = r.tf === 'daily'
       ? `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">Daily</span>`
@@ -3565,7 +3566,7 @@ function renderWatchlistView(){
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
     weeklyTailMap=(loadCache('mercury_weekly_tail_v2_'+today)||{}).data||{};
-    engulfingResults=(loadCache('mercury_engulfing3_'+today)||{}).data||[];
+    engulfingResults=(loadCache('mercury_engulfing4_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap);
     }
