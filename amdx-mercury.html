@@ -730,8 +730,9 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="engulfingDirTabs">
               <button class="filter-chip active" onclick="filterEngulfing('dir','all',this)">All</button>
-              <button class="filter-chip" onclick="filterEngulfing('dir','bullish',this)">Bullish — Swept Low, Closed Above High</button>
-              <button class="filter-chip" onclick="filterEngulfing('dir','bearish',this)">Bearish — Swept High, Closed Below Low</button>
+              <button class="filter-chip" onclick="filterEngulfing('dir','live',this)" style="border-color:var(--amber);color:var(--amber-dark);background:var(--amber-light)">⚡ Live — In Progress</button>
+              <button class="filter-chip" onclick="filterEngulfing('dir','bullish',this)">Swept Low → Closed Above</button>
+              <button class="filter-chip" onclick="filterEngulfing('dir','bearish',this)">Swept High → Closed Below</button>
             </div>
           </div>
           <div class="table-toolbar-right">
@@ -2202,7 +2203,7 @@ function buildEngulfingResults(eodMap, weeklyMap){
   for(const sym of Object.keys(eodMap)){
     const eod = eodMap[sym];
     if(!Array.isArray(eod) || eod.length < 2) continue;
-    // Strip today's bar — it may be a live/partial candle mid-session
+    // Strip today's bar — confirmed signals only use fully closed bars
     const closed = eod[eod.length-1].date === today ? eod.slice(0,-1) : eod;
     if(closed.length >= 2)
       all.push(...detectEngulfingOnBars(closed, sym, 'daily'));
@@ -2214,6 +2215,34 @@ function buildEngulfingResults(eodMap, weeklyMap){
       all.push(...detectEngulfingOnBars(weekly, sym, 'weekly'));
   }
   return all;
+}
+
+// Live / in-progress engulfing: wick already swept one side AND
+// current price already on the other — lets you enter before close.
+// Always built fresh from eodTailMap, never cached.
+function buildLiveEngulfingResults(eodMap){
+  const today = dateStr(new Date());
+  const live = [];
+  for(const sym of Object.keys(eodMap)){
+    const eod = eodMap[sym];
+    if(!Array.isArray(eod) || eod.length < 2) continue;
+    if(eod[eod.length-1].date !== today) continue; // no live bar for today
+    const curr = eod[eod.length-1]; // today's live bar
+    const prev = eod[eod.length-2]; // yesterday's confirmed close
+    const pH = +prev.high, pL = +prev.low;
+    const cH = +curr.high, cL = +curr.low, cC = +curr.close;
+    if(isNaN(pH)||isNaN(pL)||isNaN(cH)||isNaN(cL)||isNaN(cC)) continue;
+    // Bearish: wick swept above prev high AND current price below prev low
+    if(cH > pH && cC < pL){
+      live.push({ sym, tf:'daily', type:'bearish', live:true, prev, curr });
+    }
+    // Bullish: wick swept below prev low AND current price above prev high
+    else if(cL < pL && cC > pH){
+      live.push({ sym, tf:'daily', type:'bullish', live:true, prev, curr });
+    }
+  }
+  live.sort((a,b)=>a.sym.localeCompare(b.sym));
+  return live;
 }
 
 function filterEngulfing(dimension, val, el){
@@ -2237,31 +2266,36 @@ function renderEngulfingView(){
   const countEl = document.getElementById('engulfingCount');
   if(!tbody) return;
 
-  // Date cutoff
+  // Live in-progress signals — always fresh, never cached
+  const liveRows = Object.keys(eodTailMap).length ? buildLiveEngulfingResults(eodTailMap) : [];
+
+  // Date cutoff for confirmed signals
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - engulfingDaysFilter);
   const cutoffStr = cutoff.toISOString().slice(0,10);
 
-  let rows = engulfingResults.filter(r=>{
-    if(r.curr.date < cutoffStr) return false;
-    if(engulfingTfFilter !== 'all' && r.tf !== engulfingTfFilter) return false;
-    if(engulfingDirFilter !== 'all'){
-      if(engulfingDirFilter === 'sweep' && r.type !== 'sweep_bull' && r.type !== 'sweep_bear') return false;
-      if(engulfingDirFilter !== 'sweep' && r.type !== engulfingDirFilter) return false;
-    }
-    return true;
-  });
+  let rows;
+  if(engulfingDirFilter === 'live'){
+    rows = liveRows;
+  } else {
+    const confirmed = engulfingResults.filter(r=>{
+      if(r.curr.date < cutoffStr) return false;
+      if(engulfingTfFilter !== 'all' && r.tf !== engulfingTfFilter) return false;
+      if(engulfingDirFilter !== 'all' && r.type !== engulfingDirFilter) return false;
+      return true;
+    });
+    confirmed.sort((a,b)=> b.curr.date.localeCompare(a.curr.date) || a.sym.localeCompare(b.sym));
+    // Live signals always pin to top when showing All
+    rows = engulfingDirFilter === 'all' ? [...liveRows, ...confirmed] : confirmed;
+  }
 
-  // Sort: newest candle date first, then ticker
-  rows.sort((a,b)=> b.curr.date.localeCompare(a.curr.date) || a.sym.localeCompare(b.sym));
-
+  const liveCount = liveRows.length;
   const bullCount = rows.filter(r=>r.type==='bullish').length;
   const bearCount = rows.filter(r=>r.type==='bearish').length;
-  if(countEl) countEl.textContent = `${rows.length} signals · ${bullCount} swept low / closed above · ${bearCount} swept high / closed below`;
+  if(countEl) countEl.textContent = `${rows.length} signals · ⚡ ${liveCount} live · ${bullCount} bull · ${bearCount} bear`;
 
-  // Badge shows total signals in default window
   const badge = document.getElementById('engulfingBadge');
-  if(badge) badge.textContent = engulfingResults.length > 0 ? engulfingResults.length : '—';
+  if(badge) badge.textContent = liveCount > 0 ? `⚡${liveCount}` : (engulfingResults.length > 0 ? engulfingResults.length : '—');
 
   if(!rows.length){
     tbody.innerHTML='';
@@ -2275,12 +2309,14 @@ function renderEngulfingView(){
     const isBear = r.type === 'bearish';
 
     const typeBadge = isBull
-      ? `<span class="badge acc">Swept Low → Close Above ↑</span>`
-      : `<span class="badge dist">Swept High → Close Below ↓</span>`;
+      ? `<span class="badge acc">Swept Low → Above ↑</span>`
+      : `<span class="badge dist">Swept High → Below ↓</span>`;
 
-    const tfBadge = r.tf === 'daily'
-      ? `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">Daily</span>`
-      : `<span class="badge" style="background:var(--purple-light);color:var(--purple-dark)">Weekly</span>`;
+    const tfBadge = r.live
+      ? `<span class="badge" style="background:var(--amber-light);color:var(--amber-dark);font-weight:700">⚡ Live</span>`
+      : r.tf === 'daily'
+        ? `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">Daily</span>`
+        : `<span class="badge" style="background:var(--purple-light);color:var(--purple-dark)">Weekly</span>`;
 
     const p = r.prev, c = r.curr;
     const fmt = v => v != null ? (+v).toFixed(2) : '—';
