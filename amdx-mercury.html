@@ -1329,6 +1329,28 @@ async function fetchIntraday(sym, tf, from, to){
   return fetchJSON(url);
 }
 
+// Batch real-time quotes: returns map of sym → {price, dayHigh, dayLow, open}
+// Uses FMP /stable/quote which gives the actual live price + today's session range,
+// not the stale EOD historical close that can lag or include wrong extended-hours data.
+async function fetchQuotesBatch(syms){
+  const CHUNK = 50; // FMP handles ~50 symbols per call safely
+  const result = {};
+  for(let i = 0; i < syms.length; i += CHUNK){
+    const chunk = syms.slice(i, i + CHUNK).map(fmpSym).join(',');
+    try{
+      const data = await fetchJSON(`https://financialmodelingprep.com/stable/quote?symbol=${chunk}&apikey=${FMP_KEY}`);
+      if(Array.isArray(data)){
+        data.forEach(q=>{
+          if(q && q.symbol && q.price != null){
+            result[q.symbol] = { price: +q.price, dayHigh: +q.dayHigh, dayLow: +q.dayLow, open: +q.open };
+          }
+        });
+      }
+    }catch(e){ /* silent — live data is best-effort */ }
+  }
+  return result;
+}
+
 // ── Aggregation ──
 function aggregateToWeekly(daily){
   const weeks=[];
@@ -2153,6 +2175,21 @@ async function runScan(){
       saveCache(emaKey,emaResults);
     }
 
+    // Phase 3: Live quotes — real-time price + today's session H/L
+    // Replaces stale EOD close in the live engulfing scanner
+    updateProgress(98,'Fetching live quotes...');
+    try{
+      const nonFutureSyms = WATCHLIST.filter(s=>!FUTURES.includes(s));
+      const quotes = await fetchQuotesBatch(nonFutureSyms);
+      const liveDate = dateStr(new Date());
+      nonFutureSyms.forEach(sym=>{
+        const q = quotes[fmpSym(sym)] || quotes[sym];
+        if(q && q.price && q.dayHigh && q.dayLow){
+          liveDayMap[sym] = { date: liveDate, open: q.open, high: q.dayHigh, low: q.dayLow, close: q.price };
+        }
+      });
+    }catch(e){ /* live quotes are best-effort; fall back to EOD */ }
+
     // Final render with all data
     renderDashboard();
     renderScannerView();
@@ -2233,28 +2270,36 @@ function buildEngulfingResults(eodMap, weeklyMap){
 
 // Live / in-progress engulfing: wick already swept one side AND
 // current price already on the other — lets you enter before close.
-// Uses FMP's EOD live bar which includes pre/post-market H/L — intentional,
-// because sweeps can legitimately happen in pre/after-hours.
-// Always built fresh, never cached.
+//
+// H/L: from liveDayMap (FMP /quote dayHigh/dayLow) — includes pre/post-market ✓
+// Close: from liveDayMap (FMP /quote real-time price) — accurate, not a stale EOD value ✓
+// Prev: last confirmed closed bar from eodMap
+// Falls back to EOD live bar if no quote was fetched for a symbol.
 function buildLiveEngulfingResults(eodMap){
   const today = dateStr(new Date());
   const live = [];
   for(const sym of Object.keys(eodMap)){
     const eod = eodMap[sym];
     if(!Array.isArray(eod) || eod.length < 2) continue;
-    if(eod[eod.length-1].date !== today) continue; // no live bar for today
-    const curr = eod[eod.length-1]; // today's live bar (includes pre/post-market)
-    const prev = eod[eod.length-2]; // yesterday's confirmed close
+    // Determine the confirmed previous bar (last fully closed day)
+    const lastBar = eod[eod.length-1];
+    const prev = lastBar.date === today ? eod[eod.length-2] : lastBar;
+    if(!prev) continue;
+    // Prefer real-time quote for today's bar; fall back to EOD live bar
+    const liveBar = (liveDayMap[sym] && liveDayMap[sym].date === today)
+      ? liveDayMap[sym]
+      : (lastBar.date === today ? lastBar : null);
+    if(!liveBar) continue;
     const pH = +prev.high, pL = +prev.low;
-    const cH = +curr.high, cL = +curr.low, cC = +curr.close;
+    const cH = +liveBar.high, cL = +liveBar.low, cC = +liveBar.close;
     if(isNaN(pH)||isNaN(pL)||isNaN(cH)||isNaN(cL)||isNaN(cC)) continue;
     // Bearish: wick swept above prev high AND current price below prev low
     if(cH > pH && cC < pL){
-      live.push({ sym, tf:'daily', type:'bearish', live:true, prev, curr });
+      live.push({ sym, tf:'daily', type:'bearish', live:true, prev, curr:liveBar });
     }
     // Bullish: wick swept below prev low AND current price above prev high
     else if(cL < pL && cC > pH){
-      live.push({ sym, tf:'daily', type:'bullish', live:true, prev, curr });
+      live.push({ sym, tf:'daily', type:'bullish', live:true, prev, curr:liveBar });
     }
   }
   live.sort((a,b)=>a.sym.localeCompare(b.sym));
