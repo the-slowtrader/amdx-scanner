@@ -2233,30 +2233,28 @@ function buildEngulfingResults(eodMap, weeklyMap){
 
 // Live / in-progress engulfing: wick already swept one side AND
 // current price already on the other — lets you enter before close.
-// Always built fresh. Prefers liveDayMap (4H regular-session OHLC) to avoid
-// pre/post-market bleed from FMP's EOD live bar (e.g. AES post-market spike).
-function buildLiveEngulfingResults(eodMap, liveMap){
+// Uses FMP's EOD live bar which includes pre/post-market H/L — intentional,
+// because sweeps can legitimately happen in pre/after-hours.
+// Always built fresh, never cached.
+function buildLiveEngulfingResults(eodMap){
   const today = dateStr(new Date());
   const live = [];
   for(const sym of Object.keys(eodMap)){
     const eod = eodMap[sym];
     if(!Array.isArray(eod) || eod.length < 2) continue;
-    // Need yesterday's confirmed OHLC as prev reference
-    const prevBar = eod[eod.length-1].date === today ? eod[eod.length-2] : eod[eod.length-1];
-    if(!prevBar) continue;
-    // Prefer regular-session bar from 4H aggregation; fall back to EOD live bar
-    const liveBar = (liveMap && liveMap[sym] && liveMap[sym].date === today) ? liveMap[sym] : null;
-    if(!liveBar) continue; // skip if no regular-session data yet for today
-    const pH = +prevBar.high, pL = +prevBar.low;
-    const cH = +liveBar.high, cL = +liveBar.low, cC = +liveBar.close;
+    if(eod[eod.length-1].date !== today) continue; // no live bar for today
+    const curr = eod[eod.length-1]; // today's live bar (includes pre/post-market)
+    const prev = eod[eod.length-2]; // yesterday's confirmed close
+    const pH = +prev.high, pL = +prev.low;
+    const cH = +curr.high, cL = +curr.low, cC = +curr.close;
     if(isNaN(pH)||isNaN(pL)||isNaN(cH)||isNaN(cL)||isNaN(cC)) continue;
     // Bearish: wick swept above prev high AND current price below prev low
     if(cH > pH && cC < pL){
-      live.push({ sym, tf:'daily', type:'bearish', live:true, prev:prevBar, curr:liveBar });
+      live.push({ sym, tf:'daily', type:'bearish', live:true, prev, curr });
     }
     // Bullish: wick swept below prev low AND current price above prev high
     else if(cL < pL && cC > pH){
-      live.push({ sym, tf:'daily', type:'bullish', live:true, prev:prevBar, curr:liveBar });
+      live.push({ sym, tf:'daily', type:'bullish', live:true, prev, curr });
     }
   }
   live.sort((a,b)=>a.sym.localeCompare(b.sym));
@@ -2285,7 +2283,7 @@ function renderEngulfingView(){
   if(!tbody) return;
 
   // Live in-progress signals — always fresh, never cached
-  const liveRows = Object.keys(eodTailMap).length ? buildLiveEngulfingResults(eodTailMap, liveDayMap) : [];
+  const liveRows = Object.keys(eodTailMap).length ? buildLiveEngulfingResults(eodTailMap) : [];
 
   // Date cutoff for confirmed signals
   const cutoff = new Date();
