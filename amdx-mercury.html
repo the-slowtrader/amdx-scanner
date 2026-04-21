@@ -730,7 +730,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="engulfingDirTabs">
               <button class="filter-chip active" onclick="filterEngulfing('dir','all',this)">All</button>
-              <button class="filter-chip" onclick="filterEngulfing('dir','live',this)" style="border-color:var(--amber);color:var(--amber-dark);background:var(--amber-light)">⚡ Live — In Progress</button>
+              <button class="filter-chip" onclick="filterEngulfing('dir','live',this)" style="border-color:var(--amber);color:var(--amber-dark);background:var(--amber-light)"><svg viewBox="0 0 24 24" fill="currentColor" width="11" height="11" style="flex-shrink:0;margin-right:3px"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Live</button>
               <button class="filter-chip" onclick="filterEngulfing('dir','bullish',this)">Swept Low → Closed Above</button>
               <button class="filter-chip" onclick="filterEngulfing('dir','bearish',this)">Swept High → Closed Below</button>
             </div>
@@ -2313,7 +2313,7 @@ function renderEngulfingView(){
       : `<span class="badge dist">Swept High → Below ↓</span>`;
 
     const tfBadge = r.live
-      ? `<span class="badge" style="background:var(--amber-light);color:var(--amber-dark);font-weight:700">⚡ Live</span>`
+      ? `<span class="badge" style="background:var(--amber-light);color:var(--amber-dark);font-weight:700;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Live</span>`
       : r.tf === 'daily'
         ? `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">Daily</span>`
         : `<span class="badge" style="background:var(--purple-light);color:var(--purple-dark)">Weekly</span>`;
