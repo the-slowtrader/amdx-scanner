@@ -1975,7 +1975,7 @@ async function runScan(){
     const obKey='mercury_ob_'+today;
     const pdhKey='mercury_pdh_'+today;
 
-    const engulfingKey='mercury_engulfing5_'+today;
+    const engulfingKey='mercury_engulfing6_'+today;
     const eodTailKey='mercury_eod_tail_v2_'+today;     // v2 = 70 bars
     const weeklyTailKey='mercury_weekly_tail_v2_'+today; // v2 = 18 closed weeks
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
@@ -2197,14 +2197,19 @@ function detectEngulfingOnBars(bars, sym, tf){
 }
 
 function buildEngulfingResults(eodMap, weeklyMap){
+  const today = dateStr(new Date());
   const all = [];
   for(const sym of Object.keys(eodMap)){
     const eod = eodMap[sym];
-    if(Array.isArray(eod) && eod.length >= 2)
-      all.push(...detectEngulfingOnBars(eod, sym, 'daily'));
+    if(!Array.isArray(eod) || eod.length < 2) continue;
+    // Strip today's bar — it may be a live/partial candle mid-session
+    const closed = eod[eod.length-1].date === today ? eod.slice(0,-1) : eod;
+    if(closed.length >= 2)
+      all.push(...detectEngulfingOnBars(closed, sym, 'daily'));
   }
   for(const sym of Object.keys(weeklyMap)){
     const weekly = weeklyMap[sym];
+    // weeklyTailMap already excludes current partial week (slice(-19,-1))
     if(Array.isArray(weekly) && weekly.length >= 2)
       all.push(...detectEngulfingOnBars(weekly, sym, 'weekly'));
   }
@@ -3567,7 +3572,7 @@ function renderWatchlistView(){
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
     weeklyTailMap=(loadCache('mercury_weekly_tail_v2_'+today)||{}).data||{};
-    engulfingResults=(loadCache('mercury_engulfing5_'+today)||{}).data||[];
+    engulfingResults=(loadCache('mercury_engulfing6_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap);
     }
