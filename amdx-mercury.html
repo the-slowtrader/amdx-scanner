@@ -1214,6 +1214,7 @@ let isScanning=false;
 function dateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d; }
 function formatDate(d){ return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
+function mondayOfCurrentWeek(){ const d=new Date(); const day=d.getDay(); d.setDate(d.getDate()+(day===0?-6:1-day)); return dateStr(d); }
 
 // ── Init ──
 document.getElementById('currentDate').textContent = formatDate(new Date());
@@ -2001,7 +2002,7 @@ async function runScan(){
 
     const engulfingKey='mercury_engulfing6_'+today;
     const eodTailKey='mercury_eod_tail_v2_'+today;     // v2 = 70 bars
-    const weeklyTailKey='mercury_weekly_tail_v2_'+today; // v2 = 18 closed weeks
+    const weeklyTailKey='mercury_weekly_tail_v3_'+today; // v3 = includes current partial week
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -2025,8 +2026,8 @@ async function runScan(){
             if(!eod.length) return;
             eodTailMap[sym]=eod.slice(-70);  // ~90 trading days of history
             const weekly=aggregateToWeekly(eod);
-            // Drop last weekly bar (current partial week) — keep ~18 closed weeks
-            weeklyTailMap[sym]=weekly.length>=2 ? weekly.slice(-19,-1) : [];
+            // Keep current partial week — confirmed scanner strips it, Live scanner uses it
+            weeklyTailMap[sym]=weekly.length>=2 ? weekly.slice(-20) : [];
             weeklyResults[sym]=classifyWeeklyAX(weekly);
             monthlyResults[sym]=classifyMonthlyAX(weekly);
             const qData=aggregateToQuarterlyPhases(eod);
@@ -2259,11 +2260,14 @@ function buildEngulfingResults(eodMap, weeklyMap){
     if(closed.length >= 2)
       all.push(...detectEngulfingOnBars(closed, sym, 'daily'));
   }
+  const currWeekMon = mondayOfCurrentWeek();
   for(const sym of Object.keys(weeklyMap)){
     const weekly = weeklyMap[sym];
-    // weeklyTailMap already excludes current partial week (slice(-19,-1))
-    if(Array.isArray(weekly) && weekly.length >= 2)
-      all.push(...detectEngulfingOnBars(weekly, sym, 'weekly'));
+    if(!Array.isArray(weekly) || weekly.length < 2) continue;
+    // Strip current partial week — confirmed signals use only fully closed weeks
+    const closedWeekly = weekly[weekly.length-1].date >= currWeekMon ? weekly.slice(0,-1) : weekly;
+    if(closedWeekly.length >= 2)
+      all.push(...detectEngulfingOnBars(closedWeekly, sym, 'weekly'));
   }
   return all;
 }
@@ -2271,21 +2275,22 @@ function buildEngulfingResults(eodMap, weeklyMap){
 // Live / in-progress engulfing: wick already swept one side AND
 // current price already on the other — lets you enter before close.
 //
-// H/L: from liveDayMap (FMP /quote dayHigh/dayLow) — includes pre/post-market ✓
-// Close: from liveDayMap (FMP /quote real-time price) — accurate, not a stale EOD value ✓
-// Prev: last confirmed closed bar from eodMap
-// Falls back to EOD live bar if no quote was fetched for a symbol.
-function buildLiveEngulfingResults(eodMap){
+// Daily: H/L from liveDayMap (FMP /quote dayHigh/dayLow — includes pre/post-market)
+//        Close from liveDayMap (real-time price, not a stale EOD value)
+//        Falls back to EOD live bar if no quote was fetched.
+// Weekly: current partial week bar from weeklyTailMap vs prior closed week.
+function buildLiveEngulfingResults(eodMap, weeklyMap){
   const today = dateStr(new Date());
+  const currWeekMon = mondayOfCurrentWeek();
   const live = [];
+
+  // ── Daily live ──
   for(const sym of Object.keys(eodMap)){
     const eod = eodMap[sym];
     if(!Array.isArray(eod) || eod.length < 2) continue;
-    // Determine the confirmed previous bar (last fully closed day)
     const lastBar = eod[eod.length-1];
     const prev = lastBar.date === today ? eod[eod.length-2] : lastBar;
     if(!prev) continue;
-    // Prefer real-time quote for today's bar; fall back to EOD live bar
     const liveBar = (liveDayMap[sym] && liveDayMap[sym].date === today)
       ? liveDayMap[sym]
       : (lastBar.date === today ? lastBar : null);
@@ -2293,15 +2298,26 @@ function buildLiveEngulfingResults(eodMap){
     const pH = +prev.high, pL = +prev.low;
     const cH = +liveBar.high, cL = +liveBar.low, cC = +liveBar.close;
     if(isNaN(pH)||isNaN(pL)||isNaN(cH)||isNaN(cL)||isNaN(cC)) continue;
-    // Bearish: wick swept above prev high AND current price below prev low
-    if(cH > pH && cC < pL){
-      live.push({ sym, tf:'daily', type:'bearish', live:true, prev, curr:liveBar });
-    }
-    // Bullish: wick swept below prev low AND current price above prev high
-    else if(cL < pL && cC > pH){
-      live.push({ sym, tf:'daily', type:'bullish', live:true, prev, curr:liveBar });
+    if(cH > pH && cC < pL)       live.push({ sym, tf:'daily',  type:'bearish', live:true, prev, curr:liveBar });
+    else if(cL < pL && cC > pH)  live.push({ sym, tf:'daily',  type:'bullish', live:true, prev, curr:liveBar });
+  }
+
+  // ── Weekly live: current partial week vs last closed week ──
+  if(weeklyMap){
+    for(const sym of Object.keys(weeklyMap)){
+      const weekly = weeklyMap[sym];
+      if(!Array.isArray(weekly) || weekly.length < 2) continue;
+      const currWeek = weekly[weekly.length-1];
+      if(currWeek.date < currWeekMon) continue; // no current-week bar
+      const prevWeek = weekly[weekly.length-2];
+      const pH = +prevWeek.high, pL = +prevWeek.low;
+      const cH = +currWeek.high, cL = +currWeek.low, cC = +currWeek.close;
+      if(isNaN(pH)||isNaN(pL)||isNaN(cH)||isNaN(cL)||isNaN(cC)) continue;
+      if(cH > pH && cC < pL)       live.push({ sym, tf:'weekly', type:'bearish', live:true, prev:prevWeek, curr:currWeek });
+      else if(cL < pL && cC > pH)  live.push({ sym, tf:'weekly', type:'bullish', live:true, prev:prevWeek, curr:currWeek });
     }
   }
+
   live.sort((a,b)=>a.sym.localeCompare(b.sym));
   return live;
 }
@@ -2328,7 +2344,7 @@ function renderEngulfingView(){
   if(!tbody) return;
 
   // Live in-progress signals — always fresh, never cached
-  const liveRows = Object.keys(eodTailMap).length ? buildLiveEngulfingResults(eodTailMap) : [];
+  const liveRows = Object.keys(eodTailMap).length ? buildLiveEngulfingResults(eodTailMap, weeklyTailMap) : [];
 
   // Date cutoff for confirmed signals
   const cutoff = new Date();
@@ -3668,7 +3684,7 @@ function renderWatchlistView(){
     emaResults=(loadCache('mercury_ema_'+today)||{}).data||{};
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
-    weeklyTailMap=(loadCache('mercury_weekly_tail_v2_'+today)||{}).data||{};
+    weeklyTailMap=(loadCache('mercury_weekly_tail_v3_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing6_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap);
