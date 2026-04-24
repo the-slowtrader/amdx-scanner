@@ -647,6 +647,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip active" onclick="filterSweep('all',this)">All Levels</button>
               <button class="filter-chip" onclick="filterSweep('ssl',this)">SSL (Sell Stops)</button>
               <button class="filter-chip" onclick="filterSweep('bsl',this)">BSL (Buy Stops)</button>
+              <button class="filter-chip" onclick="filterSweep('reclaimed',this)">Reclaimed / Rejected</button>
               <button class="filter-chip" onclick="filterSweep('close',this)">Within 1%</button>
             </div>
           </div>
@@ -3070,28 +3071,72 @@ function copyQ1SweepTickers(btn){
 function renderSweepView(){
   const tbody=document.getElementById('sweepTbody');
   const sweeps=[];
+
+  // Helper: current price from liveDayMap → eodTailMap fallback
+  function curPrice(sym){
+    if(liveDayMap[sym]) return liveDayMap[sym].close;
+    const tail=eodTailMap[sym];
+    return tail&&tail.length ? +tail[tail.length-1].close : null;
+  }
+
   Object.entries(weeklyResults).forEach(([sym,w])=>{
     if(!w) return;
-    if(w.sweptHigh) sweeps.push({sym,level:w.pmh,type:'BSL',timeframe:'Weekly',dist:w.cmh>0?((w.cmh-w.pmh)/w.pmh*100).toFixed(1):0,phase:w.ax});
-    if(w.sweptLow) sweeps.push({sym,level:w.pml,type:'SSL',timeframe:'Weekly',dist:w.cml>0?((w.cml-w.pml)/w.pml*100).toFixed(1):0,phase:w.ax});
+    const px=curPrice(sym);
+    if(w.sweptHigh){
+      // BSL: swept above prior high — reclaim status = did price come back below?
+      const reclaim = w.disagreedHigh ? 'rejected'    // swept above, closed back below → false breakout
+                    : w.agreedHigh   ? 'held'         // swept above, stayed above → breakout
+                    : 'swept';
+      const dist = px ? ((px-w.pmh)/w.pmh*100).toFixed(1) : '—';
+      sweeps.push({sym,level:w.pmh,type:'BSL',timeframe:'Weekly',dist,phase:w.ax,reclaim});
+    }
+    if(w.sweptLow){
+      // SSL: swept below prior low — reclaim status = did price come back above?
+      const reclaim = w.disagreedLow ? 'reclaimed'   // swept below, closed back above → bullish reclaim
+                    : w.agreedLow    ? 'below'        // swept below, stayed below → bearish
+                    : 'swept';
+      const dist = px ? ((px-w.pml)/w.pml*100).toFixed(1) : '—';
+      sweeps.push({sym,level:w.pml,type:'SSL',timeframe:'Weekly',dist,phase:w.ax,reclaim});
+    }
   });
   Object.entries(monthlyResults).forEach(([sym,m])=>{
     if(!m) return;
-    if(m.sweptHigh) sweeps.push({sym,level:m.pmh,type:'BSL',timeframe:'Monthly',dist:m.cmh>0?((m.cmh-m.pmh)/m.pmh*100).toFixed(1):0,phase:m.ax});
-    if(m.sweptLow) sweeps.push({sym,level:m.pml,type:'SSL',timeframe:'Monthly',dist:m.cml>0?((m.cml-m.pml)/m.pml*100).toFixed(1):0,phase:m.ax});
+    const px=curPrice(sym);
+    if(m.sweptHigh){
+      const reclaim = m.disagreedHigh ? 'rejected' : m.agreedHigh ? 'held' : 'swept';
+      const dist = px ? ((px-m.pmh)/m.pmh*100).toFixed(1) : '—';
+      sweeps.push({sym,level:m.pmh,type:'BSL',timeframe:'Monthly',dist,phase:m.ax,reclaim});
+    }
+    if(m.sweptLow){
+      const reclaim = m.disagreedLow ? 'reclaimed' : m.agreedLow ? 'below' : 'swept';
+      const dist = px ? ((px-m.pml)/m.pml*100).toFixed(1) : '—';
+      sweeps.push({sym,level:m.pml,type:'SSL',timeframe:'Monthly',dist,phase:m.ax,reclaim});
+    }
   });
-  sweeps.sort((a,b)=>Math.abs(a.dist)-Math.abs(b.dist));
+
+  sweeps.sort((a,b)=>Math.abs(parseFloat(a.dist)||99)-Math.abs(parseFloat(b.dist)||99));
+
   tbody.innerHTML=sweeps.map(s=>{
-    const absDist=Math.abs(parseFloat(s.dist));
+    const distNum=parseFloat(s.dist);
+    const absDist=isNaN(distNum)?99:Math.abs(distNum);
     const distCls=absDist<1?'close':absDist<3?'mid':'far';
+    const distSign=!isNaN(distNum)?(distNum>=0?'+':'')+s.dist+'%':'—';
+
+    // Reclaim badge
+    const rBadge = s.reclaim==='reclaimed' ? `<span class="badge acc">Reclaimed ↑</span>`
+                 : s.reclaim==='below'     ? `<span class="badge dist">Still Below</span>`
+                 : s.reclaim==='rejected'  ? `<span class="badge dist">Rejected ↓</span>`
+                 : s.reclaim==='held'      ? `<span class="badge acc">Held ↑</span>`
+                 :                          `<span class="badge">Swept</span>`;
+
     return `<tr data-ticker="${s.sym}">
       <td><div class="ticker-cell">${tickerIcon(s.sym)}<div class="ticker-info"><div class="sym">${s.sym}</div></div></div></td>
       <td class="sensitive">$${s.level?.toFixed(2)||'—'}</td>
       <td><span class="badge ${s.type==='SSL'?'dist':'swept'}">${s.type}</span></td>
-      <td><span class="sweep-dist ${distCls}" style="font-size:14px">${s.dist}%</span></td>
+      <td><span class="sweep-dist ${distCls}" style="font-size:14px">${distSign}</span></td>
       <td>${s.timeframe}</td>
       <td><span class="badge ${s.phase==='A'?'acc':'exp'}">${s.phase}</span></td>
-      <td><span class="badge swept">Swept</span></td>
+      <td>${rBadge}</td>
     </tr>`;
   }).join('');
 }
@@ -3106,6 +3151,7 @@ function filterSweep(key, btn){
     const text=Array.from(badges).map(b=>b.textContent).join(' ');
     if(key==='ssl') tr.style.display=text.includes('SSL')?'':'none';
     else if(key==='bsl') tr.style.display=text.includes('BSL')?'':'none';
+    else if(key==='reclaimed') tr.style.display=(text.includes('Reclaimed')||text.includes('Rejected'))?'':'none';
     else if(key==='close'){
       const dist=tr.querySelector('.sweep-dist');
       tr.style.display=(dist&&Math.abs(parseFloat(dist.textContent))<1)?'':'none';
