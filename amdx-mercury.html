@@ -2460,9 +2460,14 @@ function renderEngulfingView(){
   cutoff.setDate(cutoff.getDate() - engulfingDaysFilter);
   const cutoffStr = cutoff.toISOString().slice(0,10);
 
+  // Apply TF filter to live rows the same way as confirmed rows
+  const filteredLiveRows = engulfingTfFilter === 'all'
+    ? liveRows
+    : liveRows.filter(r => r.tf === engulfingTfFilter);
+
   let rows;
   if(engulfingDirFilter === 'live'){
-    rows = liveRows;
+    rows = filteredLiveRows;
   } else {
     const confirmed = engulfingResults.filter(r=>{
       if(r.curr.date < cutoffStr) return false;
@@ -2472,7 +2477,7 @@ function renderEngulfingView(){
     });
     confirmed.sort((a,b)=> b.curr.date.localeCompare(a.curr.date) || a.sym.localeCompare(b.sym));
     // Live signals always pin to top when showing All
-    rows = engulfingDirFilter === 'all' ? [...liveRows, ...confirmed] : confirmed;
+    rows = engulfingDirFilter === 'all' ? [...filteredLiveRows, ...confirmed] : confirmed;
   }
 
   const liveCount = liveRows.length;
