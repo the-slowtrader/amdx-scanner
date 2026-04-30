@@ -1396,6 +1396,29 @@ function aggregateToMonthly(daily){
   return months;
 }
 
+// Collapse 4H regular-session bars to daily OHLC.
+// Used to build weeklyTailMap / monthlyTailMap from intraday data that
+// contains NO pre/post-market — so the resulting weekly & monthly candles
+// match what a standard chart (TradingView 1W / 1M) shows.
+function aggregateTo4HDayBars(bars4H){
+  const days=[];
+  let cur=null, curD=null;
+  bars4H.forEach(b=>{
+    const d=b.date.slice(0,10);
+    if(d!==curD){
+      if(cur) days.push(cur);
+      curD=d;
+      cur={open:+b.open,high:+b.high,low:+b.low,close:+b.close,date:d};
+    } else {
+      cur.high=Math.max(cur.high,+b.high);
+      cur.low =Math.min(cur.low, +b.low);
+      cur.close=+b.close;
+    }
+  });
+  if(cur) days.push(cur);
+  return days;
+}
+
 // ── Classification ──
 function classifyWeeklyAX(weekly){
   if(weekly.length<2) return null;
@@ -2024,10 +2047,10 @@ async function runScan(){
     const obKey='mercury_ob_'+today;
     const pdhKey='mercury_pdh_'+today;
 
-    const engulfingKey='mercury_engulfing7_'+today;
+    const engulfingKey='mercury_engulfing8_'+today;
     const eodTailKey='mercury_eod_tail_v2_'+today;
-    const weeklyTailKey='mercury_weekly_tail_v3_'+today;
-    const monthlyTailKey='mercury_monthly_tail_v1_'+today;
+    const weeklyTailKey='mercury_weekly_tail_v4_'+today;
+    const monthlyTailKey='mercury_monthly_tail_v2_'+today;
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -2131,6 +2154,9 @@ async function runScan(){
     } else {
       dailyResults={};emaResults={};
       const twoDaysAgo=dateStr(daysAgo(5));
+      // Regular stocks get 400 days of 4H bars so we can build weekly/monthly
+      // candles from STRICTLY regular-session data (no pre/post-market H/L bleed).
+      const fromLong=dateStr(daysAgo(400));
       for(let i=0;i<WATCHLIST.length;i+=BATCH_SIZE){
         const batch=WATCHLIST.slice(i,i+BATCH_SIZE);
         const promises=batch.map(async sym=>{
@@ -2138,7 +2164,9 @@ async function runScan(){
             const isIndex=INDEX_ETFS.includes(sym)||FUTURES.includes(sym);
             const isFut=FUTURES.includes(sym);
             const tf=isIndex?'1hour':'4hour';
-            const bars=await fetchIntraday(sym,tf,twoDaysAgo,today);
+            // Futures/indices: short window (they need special handling).
+            // Regular stocks: full 400-day window for weekly/monthly engulfing.
+            const bars=await fetchIntraday(sym,tf,(isIndex||isFut)?twoDaysAgo:fromLong,today);
             if(!Array.isArray(bars)||!bars.length) return;
             bars.sort((a,b)=>a.date.localeCompare(b.date));
             let dates;
@@ -2174,7 +2202,8 @@ async function runScan(){
             dailyResults[sym]=classified;
             // 9/21 EMA cross on 4H bars
             emaResults[sym]=detectEMACross(bars);
-            // Regular-session OHLC for today (no pre/post bleed) — used by live engulfing scanner
+            // Regular-session OHLC for stocks — used by live engulfing scanner
+            // AND to build clean weekly/monthly tail maps (no pre/post-market bleed)
             if(!isIndex && !isFut){
               const todayBars=bars.filter(b=>b.date.startsWith(latestDate));
               if(todayBars.length){
@@ -2185,6 +2214,15 @@ async function runScan(){
                   low:Math.min(...todayBars.map(b=>+b.low)),
                   close:+todayBars[todayBars.length-1].close
                 };
+              }
+              // Build weekly/monthly from 4H regular-session bars so candles
+              // match TradingView's standard weekly/monthly chart (no extended-hours H/L)
+              const dayBars4H=aggregateTo4HDayBars(bars);
+              if(dayBars4H.length>=2){
+                const w4H=aggregateToWeekly(dayBars4H);
+                if(w4H.length>=2) weeklyTailMap[sym]=w4H.slice(-20);
+                const m4H=aggregateToMonthly(dayBars4H);
+                if(m4H.length>=2) monthlyTailMap[sym]=m4H.slice(-13);
               }
             }
             // Reversal signature: Daily DOL → 4H structure
@@ -2203,6 +2241,9 @@ async function runScan(){
       }
       saveCache(dailyKey,dailyResults);
       saveCache(emaKey,emaResults);
+      // Save 4H-based weekly/monthly tail maps (override Phase 1 EOD-based values)
+      saveCache(weeklyTailKey,weeklyTailMap);
+      saveCache(monthlyTailKey,monthlyTailMap);
     }
 
     // Phase 3: Live quotes — real-time price + today's session H/L
@@ -2256,28 +2297,21 @@ async function runScan(){
 // Open is irrelevant. Scans ALL consecutive bar pairs in history.
 // ══════════════════════════════════════════════════════
 
-// Minimum wick extension beyond the prior bar's level required to qualify as a sweep.
-// FMP's historical EOD includes pre/post-market H/L which can cause tiny "sweeps" on
-// weekly/monthly bars from a single pre-market gap that immediately recovered.
-// Daily live uses real-time quotes so no threshold needed there.
-const SWEEP_MIN_PCT = { daily: 0, weekly: 0.002, monthly: 0.005 }; // 0%, 0.2%, 0.5%
-
 function detectEngulfingOnBars(bars, sym, tf){
   // bars sorted oldest→newest
+  // Weekly/monthly bars built from 4H regular-session data (no pre/post-market),
+  // so strict comparisons are correct — no threshold needed.
   if(!bars || bars.length < 2) return [];
-  const minPct = SWEEP_MIN_PCT[tf] || 0;
   const results = [];
   for(let i = 1; i < bars.length; i++){
-    const prev = bars[i-1];
-    const curr = bars[i];
+    const prev = bars[i-1], curr = bars[i];
     const pH = +prev.high, pL = +prev.low;
     const cH = +curr.high, cL = +curr.low, cC = +curr.close;
     if(isNaN(pH)||isNaN(pL)||isNaN(cH)||isNaN(cL)||isNaN(cC)) continue;
-    // Bullish: wick sweeps below prev low by >= minPct AND closes above prev high
-    const sweepLow  = cL < pL && (pL - cL) / pL >= minPct;
-    const sweepHigh = cH > pH && (cH - pH) / pH >= minPct;
-    if(sweepLow  && cC > pH){ results.push({ sym, tf, type:'bullish', prev, curr }); }
-    else if(sweepHigh && cC < pL){ results.push({ sym, tf, type:'bearish', prev, curr }); }
+    // Bullish: wick STRICTLY sweeps below prev low AND closes above prev high
+    if(cL < pL && cC > pH){ results.push({ sym, tf, type:'bullish', prev, curr }); }
+    // Bearish: wick STRICTLY sweeps above prev high AND closes below prev low
+    else if(cH > pH && cC < pL){ results.push({ sym, tf, type:'bearish', prev, curr }); }
   }
   return results;
 }
@@ -3794,9 +3828,9 @@ function renderWatchlistView(){
     emaResults=(loadCache('mercury_ema_'+today)||{}).data||{};
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
-    weeklyTailMap=(loadCache('mercury_weekly_tail_v3_'+today)||{}).data||{};
-    monthlyTailMap=(loadCache('mercury_monthly_tail_v1_'+today)||{}).data||{};
-    engulfingResults=(loadCache('mercury_engulfing7_'+today)||{}).data||[];
+    weeklyTailMap=(loadCache('mercury_weekly_tail_v4_'+today)||{}).data||{};
+    monthlyTailMap=(loadCache('mercury_monthly_tail_v2_'+today)||{}).data||{};
+    engulfingResults=(loadCache('mercury_engulfing8_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
     }
