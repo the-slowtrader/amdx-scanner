@@ -727,6 +727,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip active" onclick="filterEngulfing('tf','all',this)">All TF</button>
               <button class="filter-chip" onclick="filterEngulfing('tf','daily',this)">Daily</button>
               <button class="filter-chip" onclick="filterEngulfing('tf','weekly',this)">Weekly</button>
+              <button class="filter-chip" onclick="filterEngulfing('tf','monthly',this)">Monthly</button>
             </div>
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="engulfingDirTabs">
@@ -1197,7 +1198,7 @@ let pdhPdlResults={};
 let emaResults={};
 let reversalResults={};
 let engulfingResults=[];
-let eodTailMap={}, weeklyTailMap={};
+let eodTailMap={}, weeklyTailMap={}, monthlyTailMap={};
 let liveDayMap={}; // regular-session OHLC for today, built from 4H bars (no pre/post bleed)
 let engulfingTfFilter='all';
 let engulfingDirFilter='all';
@@ -1237,7 +1238,7 @@ function showView(view, sub, skipHash){
     leap: ['LEAP Hunter', 'Prior year low sweep & reclaim tracker'],
     q1sweep: ['Q1 Sweep Hunter', 'Q1 2026 high/low sweeps &amp; reclaim setups'],
     models: ['Trading Models', 'Entry checklists &amp; trade tracking'],
-    engulfing: ['Engulfing Scanner', 'Wick sweeps one side, close through the other — daily &amp; weekly'],
+    engulfing: ['Engulfing Scanner', 'Wick sweeps one side, close through the other — daily, weekly &amp; monthly'],
     watchlist: ['Watchlist', 'Your tracked tickers'],
     alerts: ['Alert Center', 'Phase transition notifications']
   };
@@ -1371,6 +1372,28 @@ function aggregateToWeekly(daily){
   });
   if(cur) weeks.push(cur);
   return weeks;
+}
+
+// Monthly OHLC — date is set to the LAST trading day of each month so the
+// days-lookback filter works correctly (signal "closes" at month end)
+function aggregateToMonthly(daily){
+  const months=[];
+  let cur=null, curM=null;
+  daily.forEach(d=>{
+    const m=d.date.slice(0,7);
+    if(m!==curM){
+      if(cur) months.push(cur);
+      curM=m;
+      cur={open:+d.open,high:+d.high,low:+d.low,close:+d.close,date:d.date};
+    } else {
+      cur.high=Math.max(cur.high,+d.high);
+      cur.low =Math.min(cur.low, +d.low);
+      cur.close=+d.close;
+      cur.date=d.date; // rolls forward to last trading day of month
+    }
+  });
+  if(cur) months.push(cur);
+  return months;
 }
 
 // ── Classification ──
@@ -2002,8 +2025,9 @@ async function runScan(){
     const pdhKey='mercury_pdh_'+today;
 
     const engulfingKey='mercury_engulfing6_'+today;
-    const eodTailKey='mercury_eod_tail_v2_'+today;     // v2 = 70 bars
-    const weeklyTailKey='mercury_weekly_tail_v3_'+today; // v3 = includes current partial week
+    const eodTailKey='mercury_eod_tail_v2_'+today;
+    const weeklyTailKey='mercury_weekly_tail_v3_'+today;
+    const monthlyTailKey='mercury_monthly_tail_v1_'+today;
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -2015,10 +2039,11 @@ async function runScan(){
       reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
       eodTailMap=(loadCache(eodTailKey)||{}).data||{};
       weeklyTailMap=(loadCache(weeklyTailKey)||{}).data||{};
+      monthlyTailMap=(loadCache(monthlyTailKey)||{}).data||{};
       updateProgress(50,'Loaded from cache...');
     } else {
       weeklyResults={};monthlyResults={};quarterlyResults={};leapResults={};q1SweepResults={};obResults={};pdhPdlResults={};reversalResults={};
-      eodTailMap={};weeklyTailMap={};liveDayMap={};
+      eodTailMap={};weeklyTailMap={};monthlyTailMap={};liveDayMap={};
       for(let i=0;i<nonFutures.length;i+=BATCH_SIZE){
         const batch=nonFutures.slice(i,i+BATCH_SIZE);
         const promises=batch.map(async sym=>{
@@ -2029,6 +2054,8 @@ async function runScan(){
             const weekly=aggregateToWeekly(eod);
             // Keep current partial week — confirmed scanner strips it, Live scanner uses it
             weeklyTailMap[sym]=weekly.length>=2 ? weekly.slice(-20) : [];
+            const monthly=aggregateToMonthly(eod);
+            monthlyTailMap[sym]=monthly.length>=2 ? monthly.slice(-13) : []; // 12 closed + current
             weeklyResults[sym]=classifyWeeklyAX(weekly);
             monthlyResults[sym]=classifyMonthlyAX(weekly);
             const qData=aggregateToQuarterlyPhases(eod);
@@ -2075,10 +2102,11 @@ async function runScan(){
       saveCache('mercury_reversal_'+today,reversalResults);
       saveCache(eodTailKey,eodTailMap);
       saveCache(weeklyTailKey,weeklyTailMap);
+      saveCache(monthlyTailKey,monthlyTailMap);
     }
 
     // Compute engulfing from EOD + weekly tails
-    engulfingResults = buildEngulfingResults(eodTailMap, weeklyTailMap);
+    engulfingResults = buildEngulfingResults(eodTailMap, weeklyTailMap, monthlyTailMap);
     saveCache(engulfingKey, engulfingResults);
 
     // Progressively render what we have so far
@@ -2250,26 +2278,39 @@ function detectEngulfingOnBars(bars, sym, tf){
   return results;
 }
 
-function buildEngulfingResults(eodMap, weeklyMap){
+function buildEngulfingResults(eodMap, weeklyMap, monthlyMap){
   const today = dateStr(new Date());
+  const curMonthPfx = today.slice(0,7); // "2026-04"
   const all = [];
+
+  // ── Daily confirmed (closed bars only) ──
   for(const sym of Object.keys(eodMap)){
     const eod = eodMap[sym];
     if(!Array.isArray(eod) || eod.length < 2) continue;
-    // Strip today's bar — confirmed signals only use fully closed bars
     const closed = eod[eod.length-1].date === today ? eod.slice(0,-1) : eod;
-    if(closed.length >= 2)
-      all.push(...detectEngulfingOnBars(closed, sym, 'daily'));
+    if(closed.length >= 2) all.push(...detectEngulfingOnBars(closed, sym, 'daily'));
   }
+
+  // ── Weekly confirmed (closed weeks only) ──
   const currWeekMon = mondayOfCurrentWeek();
   for(const sym of Object.keys(weeklyMap)){
     const weekly = weeklyMap[sym];
     if(!Array.isArray(weekly) || weekly.length < 2) continue;
-    // Strip current partial week — confirmed signals use only fully closed weeks
     const closedWeekly = weekly[weekly.length-1].date >= currWeekMon ? weekly.slice(0,-1) : weekly;
-    if(closedWeekly.length >= 2)
-      all.push(...detectEngulfingOnBars(closedWeekly, sym, 'weekly'));
+    if(closedWeekly.length >= 2) all.push(...detectEngulfingOnBars(closedWeekly, sym, 'weekly'));
   }
+
+  // ── Monthly confirmed (closed months only) ──
+  if(monthlyMap){
+    for(const sym of Object.keys(monthlyMap)){
+      const mos = monthlyMap[sym];
+      if(!Array.isArray(mos) || mos.length < 2) continue;
+      // Strip current partial month (its date will be in the current month prefix)
+      const closedMos = mos[mos.length-1].date.slice(0,7) === curMonthPfx ? mos.slice(0,-1) : mos;
+      if(closedMos.length >= 2) all.push(...detectEngulfingOnBars(closedMos, sym, 'monthly'));
+    }
+  }
+
   return all;
 }
 
@@ -2279,10 +2320,11 @@ function buildEngulfingResults(eodMap, weeklyMap){
 // Daily: H/L from liveDayMap (FMP /quote dayHigh/dayLow — includes pre/post-market)
 //        Close from liveDayMap (real-time price, not a stale EOD value)
 //        Falls back to EOD live bar if no quote was fetched.
-// Weekly: current partial week bar from weeklyTailMap vs prior closed week.
-function buildLiveEngulfingResults(eodMap, weeklyMap){
+// Weekly/Monthly: current partial bar vs prior closed bar.
+function buildLiveEngulfingResults(eodMap, weeklyMap, monthlyMap){
   const today = dateStr(new Date());
   const currWeekMon = mondayOfCurrentWeek();
+  const curMonthPfx = today.slice(0,7);
   const live = [];
 
   // ── Daily live ──
@@ -2309,13 +2351,29 @@ function buildLiveEngulfingResults(eodMap, weeklyMap){
       const weekly = weeklyMap[sym];
       if(!Array.isArray(weekly) || weekly.length < 2) continue;
       const currWeek = weekly[weekly.length-1];
-      if(currWeek.date < currWeekMon) continue; // no current-week bar
+      if(currWeek.date < currWeekMon) continue;
       const prevWeek = weekly[weekly.length-2];
       const pH = +prevWeek.high, pL = +prevWeek.low;
       const cH = +currWeek.high, cL = +currWeek.low, cC = +currWeek.close;
       if(isNaN(pH)||isNaN(pL)||isNaN(cH)||isNaN(cL)||isNaN(cC)) continue;
-      if(cH > pH && cC < pL)       live.push({ sym, tf:'weekly', type:'bearish', live:true, prev:prevWeek, curr:currWeek });
-      else if(cL < pL && cC > pH)  live.push({ sym, tf:'weekly', type:'bullish', live:true, prev:prevWeek, curr:currWeek });
+      if(cH > pH && cC < pL)       live.push({ sym, tf:'weekly',  type:'bearish', live:true, prev:prevWeek, curr:currWeek });
+      else if(cL < pL && cC > pH)  live.push({ sym, tf:'weekly',  type:'bullish', live:true, prev:prevWeek, curr:currWeek });
+    }
+  }
+
+  // ── Monthly live: current partial month vs last closed month ──
+  if(monthlyMap){
+    for(const sym of Object.keys(monthlyMap)){
+      const mos = monthlyMap[sym];
+      if(!Array.isArray(mos) || mos.length < 2) continue;
+      const currMo = mos[mos.length-1];
+      if(currMo.date.slice(0,7) !== curMonthPfx) continue;
+      const prevMo = mos[mos.length-2];
+      const pH = +prevMo.high, pL = +prevMo.low;
+      const cH = +currMo.high, cL = +currMo.low, cC = +currMo.close;
+      if(isNaN(pH)||isNaN(pL)||isNaN(cH)||isNaN(cL)||isNaN(cC)) continue;
+      if(cH > pH && cC < pL)       live.push({ sym, tf:'monthly', type:'bearish', live:true, prev:prevMo, curr:currMo });
+      else if(cL < pL && cC > pH)  live.push({ sym, tf:'monthly', type:'bullish', live:true, prev:prevMo, curr:currMo });
     }
   }
 
@@ -2345,7 +2403,7 @@ function renderEngulfingView(){
   if(!tbody) return;
 
   // Live in-progress signals — always fresh, never cached
-  const liveRows = Object.keys(eodTailMap).length ? buildLiveEngulfingResults(eodTailMap, weeklyTailMap) : [];
+  const liveRows = Object.keys(eodTailMap).length ? buildLiveEngulfingResults(eodTailMap, weeklyTailMap, monthlyTailMap) : [];
 
   // Date cutoff for confirmed signals
   const cutoff = new Date();
@@ -2391,10 +2449,12 @@ function renderEngulfingView(){
       : `<span class="badge dist">Swept High → Below ↓</span>`;
 
     const tfBadge = r.live
-      ? `<span class="badge" style="background:var(--card);border:1px solid var(--card-border);color:var(--text-sec);font-weight:600;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10" style="color:var(--amber)"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Live</span>`
+      ? `<span class="badge" style="background:var(--card);border:1px solid var(--card-border);color:var(--text-sec);font-weight:600;display:inline-flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10" style="color:var(--amber)"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>${r.tf==='monthly'?'Mo':r.tf==='weekly'?'Wk':''}Live</span>`
       : r.tf === 'daily'
         ? `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">Daily</span>`
-        : `<span class="badge" style="background:var(--purple-light);color:var(--purple-dark)">Weekly</span>`;
+        : r.tf === 'weekly'
+          ? `<span class="badge" style="background:var(--purple-light);color:var(--purple-dark)">Weekly</span>`
+          : `<span class="badge" style="background:#fef9c3;color:#854d0e">Monthly</span>`;
 
     const p = r.prev, c = r.curr;
     const fmt = v => v != null ? (+v).toFixed(2) : '—';
@@ -3731,9 +3791,10 @@ function renderWatchlistView(){
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
     weeklyTailMap=(loadCache('mercury_weekly_tail_v3_'+today)||{}).data||{};
+    monthlyTailMap=(loadCache('mercury_monthly_tail_v1_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing6_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
-      engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap);
+      engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
     }
     renderDashboard();
     renderScannerView();
