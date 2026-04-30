@@ -2069,7 +2069,7 @@ async function runScan(){
     const obKey='mercury_ob_'+today;
     const pdhKey='mercury_pdh_'+today;
 
-    const engulfingKey='mercury_engulfing9_'+today;
+    const engulfingKey='mercury_engulfing10_'+today;
     const eodTailKey='mercury_eod_tail_v2_'+today;
     const weeklyTailKey='mercury_weekly_tail_v5_'+today;
     const monthlyTailKey='mercury_monthly_tail_v3_'+today;
@@ -2346,23 +2346,24 @@ function buildEngulfingResults(eodMap, weeklyMap, monthlyMap){
     if(closed.length >= 2) all.push(...detectEngulfingOnBars(closed, sym, 'daily'));
   }
 
-  // ── Weekly confirmed (closed weeks only) ──
+  // ── Weekly confirmed: only the most recently closed week vs the one before it ──
   const currWeekMon = mondayOfCurrentWeek();
   for(const sym of Object.keys(weeklyMap)){
     const weekly = weeklyMap[sym];
     if(!Array.isArray(weekly) || weekly.length < 2) continue;
     const closedWeekly = weekly[weekly.length-1].date >= currWeekMon ? weekly.slice(0,-1) : weekly;
-    if(closedWeekly.length >= 2) all.push(...detectEngulfingOnBars(closedWeekly, sym, 'weekly'));
+    if(closedWeekly.length >= 2) all.push(...detectEngulfingOnBars(closedWeekly.slice(-2), sym, 'weekly'));
   }
 
-  // ── Monthly confirmed (closed months only) ──
+  // ── Monthly confirmed: ONLY the most recently closed month vs the one before it ──
+  // We don't care if February engulfed January — only if the latest closed month
+  // (e.g. March) engulfed the prior month (February). Check the last 2 closed bars only.
   if(monthlyMap){
     for(const sym of Object.keys(monthlyMap)){
       const mos = monthlyMap[sym];
       if(!Array.isArray(mos) || mos.length < 2) continue;
-      // Strip current partial month (its date will be in the current month prefix)
       const closedMos = mos[mos.length-1].date.slice(0,7) === curMonthPfx ? mos.slice(0,-1) : mos;
-      if(closedMos.length >= 2) all.push(...detectEngulfingOnBars(closedMos, sym, 'monthly'));
+      if(closedMos.length >= 2) all.push(...detectEngulfingOnBars(closedMos.slice(-2), sym, 'monthly'));
     }
   }
 
@@ -3869,7 +3870,7 @@ function renderWatchlistView(){
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
     weeklyTailMap=(loadCache('mercury_weekly_tail_v5_'+today)||{}).data||{};
     monthlyTailMap=(loadCache('mercury_monthly_tail_v3_'+today)||{}).data||{};
-    engulfingResults=(loadCache('mercury_engulfing9_'+today)||{}).data||[];
+    engulfingResults=(loadCache('mercury_engulfing10_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
     }
