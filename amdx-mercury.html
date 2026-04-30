@@ -1332,6 +1332,23 @@ async function fetchIntraday(sym, tf, from, to){
   return fetchJSON(url);
 }
 
+// Native FMP 1-month candles — matches TradingView 1M chart (regular session only).
+// Returns sorted array of {date,open,high,low,close} or null on failure.
+async function fetchMonthlySeries(sym, from, to){
+  const url = `https://financialmodelingprep.com/stable/historical-chart/1month?symbol=${fmpSym(sym)}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
+  const data = await fetchJSON(url);
+  if(!Array.isArray(data)||!data.length) return null;
+  return data.map(b=>({...b,date:b.date.slice(0,10)})).sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+// Native FMP 1-week candles — matches TradingView 1W chart (regular session only).
+async function fetchWeeklySeries(sym, from, to){
+  const url = `https://financialmodelingprep.com/stable/historical-chart/1week?symbol=${fmpSym(sym)}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
+  const data = await fetchJSON(url);
+  if(!Array.isArray(data)||!data.length) return null;
+  return data.map(b=>({...b,date:b.date.slice(0,10)})).sort((a,b)=>a.date.localeCompare(b.date));
+}
+
 // Batch real-time quotes: returns map of sym → {price, dayHigh, dayLow, open}
 // Uses FMP /stable/quote which gives the actual live price + today's session range,
 // not the stale EOD historical close that can lag or include wrong extended-hours data.
@@ -2047,10 +2064,10 @@ async function runScan(){
     const obKey='mercury_ob_'+today;
     const pdhKey='mercury_pdh_'+today;
 
-    const engulfingKey='mercury_engulfing8_'+today;
+    const engulfingKey='mercury_engulfing9_'+today;
     const eodTailKey='mercury_eod_tail_v2_'+today;
-    const weeklyTailKey='mercury_weekly_tail_v4_'+today;
-    const monthlyTailKey='mercury_monthly_tail_v2_'+today;
+    const weeklyTailKey='mercury_weekly_tail_v5_'+today;
+    const monthlyTailKey='mercury_monthly_tail_v3_'+today;
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -2071,14 +2088,26 @@ async function runScan(){
         const batch=nonFutures.slice(i,i+BATCH_SIZE);
         const promises=batch.map(async sym=>{
           try{
-            const eod=await fetchEOD(sym,from500,today);
+            // Fetch EOD + native 1M + native 1W in parallel.
+            // 1M/1W use FMP's own monthly/weekly candles (regular-session only),
+            // which match TradingView's 1M/1W charts — no pre/post-market H/L bleed.
+            const [eod, monthlyDirect, weeklyDirect] = await Promise.all([
+              fetchEOD(sym,from500,today),
+              fetchMonthlySeries(sym,from500,today).catch(()=>null),
+              fetchWeeklySeries(sym,from500,today).catch(()=>null)
+            ]);
             if(!eod.length) return;
             eodTailMap[sym]=eod.slice(-70);  // ~90 trading days of history
             const weekly=aggregateToWeekly(eod);
-            // Keep current partial week — confirmed scanner strips it, Live scanner uses it
-            weeklyTailMap[sym]=weekly.length>=2 ? weekly.slice(-20) : [];
+            // Weekly tail: prefer native 1W bars (regular-session, matches TradingView 1W)
+            weeklyTailMap[sym]= weeklyDirect&&weeklyDirect.length>=2
+              ? weeklyDirect.slice(-20)
+              : (weekly.length>=2 ? weekly.slice(-20) : []);
             const monthly=aggregateToMonthly(eod);
-            monthlyTailMap[sym]=monthly.length>=2 ? monthly.slice(-13) : []; // 12 closed + current
+            // Monthly tail: prefer native 1M bars (regular-session, matches TradingView 1M)
+            monthlyTailMap[sym]= monthlyDirect&&monthlyDirect.length>=2
+              ? monthlyDirect.slice(-13)
+              : (monthly.length>=2 ? monthly.slice(-13) : []); // 12 closed + current
             weeklyResults[sym]=classifyWeeklyAX(weekly);
             monthlyResults[sym]=classifyMonthlyAX(weekly);
             const qData=aggregateToQuarterlyPhases(eod);
@@ -2154,9 +2183,6 @@ async function runScan(){
     } else {
       dailyResults={};emaResults={};
       const twoDaysAgo=dateStr(daysAgo(5));
-      // Regular stocks get 400 days of 4H bars so we can build weekly/monthly
-      // candles from STRICTLY regular-session data (no pre/post-market H/L bleed).
-      const fromLong=dateStr(daysAgo(400));
       for(let i=0;i<WATCHLIST.length;i+=BATCH_SIZE){
         const batch=WATCHLIST.slice(i,i+BATCH_SIZE);
         const promises=batch.map(async sym=>{
@@ -2164,9 +2190,7 @@ async function runScan(){
             const isIndex=INDEX_ETFS.includes(sym)||FUTURES.includes(sym);
             const isFut=FUTURES.includes(sym);
             const tf=isIndex?'1hour':'4hour';
-            // Futures/indices: short window (they need special handling).
-            // Regular stocks: full 400-day window for weekly/monthly engulfing.
-            const bars=await fetchIntraday(sym,tf,(isIndex||isFut)?twoDaysAgo:fromLong,today);
+            const bars=await fetchIntraday(sym,tf,twoDaysAgo,today);
             if(!Array.isArray(bars)||!bars.length) return;
             bars.sort((a,b)=>a.date.localeCompare(b.date));
             let dates;
@@ -2202,8 +2226,7 @@ async function runScan(){
             dailyResults[sym]=classified;
             // 9/21 EMA cross on 4H bars
             emaResults[sym]=detectEMACross(bars);
-            // Regular-session OHLC for stocks — used by live engulfing scanner
-            // AND to build clean weekly/monthly tail maps (no pre/post-market bleed)
+            // Regular-session OHLC for today — used by live engulfing scanner
             if(!isIndex && !isFut){
               const todayBars=bars.filter(b=>b.date.startsWith(latestDate));
               if(todayBars.length){
@@ -2215,15 +2238,7 @@ async function runScan(){
                   close:+todayBars[todayBars.length-1].close
                 };
               }
-              // Build weekly/monthly from 4H regular-session bars so candles
-              // match TradingView's standard weekly/monthly chart (no extended-hours H/L)
-              const dayBars4H=aggregateTo4HDayBars(bars);
-              if(dayBars4H.length>=2){
-                const w4H=aggregateToWeekly(dayBars4H);
-                if(w4H.length>=2) weeklyTailMap[sym]=w4H.slice(-20);
-                const m4H=aggregateToMonthly(dayBars4H);
-                if(m4H.length>=2) monthlyTailMap[sym]=m4H.slice(-13);
-              }
+
             }
             // Reversal signature: Daily DOL → 4H structure
             const pdh=pdhPdlResults[sym];
@@ -2241,9 +2256,6 @@ async function runScan(){
       }
       saveCache(dailyKey,dailyResults);
       saveCache(emaKey,emaResults);
-      // Save 4H-based weekly/monthly tail maps (override Phase 1 EOD-based values)
-      saveCache(weeklyTailKey,weeklyTailMap);
-      saveCache(monthlyTailKey,monthlyTailMap);
     }
 
     // Phase 3: Live quotes — real-time price + today's session H/L
@@ -3828,9 +3840,9 @@ function renderWatchlistView(){
     emaResults=(loadCache('mercury_ema_'+today)||{}).data||{};
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
-    weeklyTailMap=(loadCache('mercury_weekly_tail_v4_'+today)||{}).data||{};
-    monthlyTailMap=(loadCache('mercury_monthly_tail_v2_'+today)||{}).data||{};
-    engulfingResults=(loadCache('mercury_engulfing8_'+today)||{}).data||[];
+    weeklyTailMap=(loadCache('mercury_weekly_tail_v5_'+today)||{}).data||{};
+    monthlyTailMap=(loadCache('mercury_monthly_tail_v3_'+today)||{}).data||{};
+    engulfingResults=(loadCache('mercury_engulfing9_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
     }
