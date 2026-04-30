@@ -737,8 +737,12 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip" onclick="filterEngulfing('dir','bearish',this)">Swept High → Closed Below</button>
             </div>
           </div>
-          <div class="table-toolbar-right">
+          <div class="table-toolbar-right" style="display:flex;align-items:center;gap:10px">
             <span style="font-size:11px;color:var(--text-muted)" id="engulfingCount"></span>
+            <button class="topbar-btn" id="engulfingCopyBtn" onclick="copyEngulfingTickers()" style="padding:5px 10px;font-size:11px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Tickers
+            </button>
           </div>
         </div>
         <div class="table-wrap">
@@ -1203,6 +1207,7 @@ let liveDayMap={}; // regular-session OHLC for today, built from 4H bars (no pre
 let engulfingTfFilter='all';
 let engulfingDirFilter='all';
 let engulfingDaysFilter=90;
+let lastEngulfingRows=[];
 let currentView='dashboard';
 let currentTimeframe='daily';
 let scannerFilter='all';
@@ -2446,6 +2451,22 @@ function filterEngulfing(dimension, val, el){
   renderEngulfingView();
 }
 
+function copyEngulfingTickers(){
+  if(!lastEngulfingRows.length) return;
+  // Dedupe preserving order, then join comma-separated
+  const seen = new Set();
+  const tickers = lastEngulfingRows.map(r=>r.sym).filter(s=>{ if(seen.has(s)) return false; seen.add(s); return true; });
+  navigator.clipboard.writeText(tickers.join(', ')).then(()=>{
+    const btn = document.getElementById('engulfingCopyBtn');
+    if(!btn) return;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    btn.style.color = 'var(--green-dark)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(()=>{ btn.innerHTML=orig; btn.style.color=''; btn.style.borderColor=''; }, 2000);
+  });
+}
+
 function renderEngulfingView(){
   const tbody = document.getElementById('engulfingTbody');
   const emptyEl = document.getElementById('engulfingEmpty');
@@ -2480,6 +2501,7 @@ function renderEngulfingView(){
     rows = engulfingDirFilter === 'all' ? [...filteredLiveRows, ...confirmed] : confirmed;
   }
 
+  lastEngulfingRows = rows; // expose for copy button
   const liveCount = liveRows.length;
   const bullCount = rows.filter(r=>r.type==='bullish').length;
   const bearCount = rows.filter(r=>r.type==='bearish').length;
