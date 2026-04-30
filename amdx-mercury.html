@@ -2024,7 +2024,7 @@ async function runScan(){
     const obKey='mercury_ob_'+today;
     const pdhKey='mercury_pdh_'+today;
 
-    const engulfingKey='mercury_engulfing6_'+today;
+    const engulfingKey='mercury_engulfing7_'+today;
     const eodTailKey='mercury_eod_tail_v2_'+today;
     const weeklyTailKey='mercury_weekly_tail_v3_'+today;
     const monthlyTailKey='mercury_monthly_tail_v1_'+today;
@@ -2256,9 +2256,16 @@ async function runScan(){
 // Open is irrelevant. Scans ALL consecutive bar pairs in history.
 // ══════════════════════════════════════════════════════
 
+// Minimum wick extension beyond the prior bar's level required to qualify as a sweep.
+// FMP's historical EOD includes pre/post-market H/L which can cause tiny "sweeps" on
+// weekly/monthly bars from a single pre-market gap that immediately recovered.
+// Daily live uses real-time quotes so no threshold needed there.
+const SWEEP_MIN_PCT = { daily: 0, weekly: 0.002, monthly: 0.005 }; // 0%, 0.2%, 0.5%
+
 function detectEngulfingOnBars(bars, sym, tf){
   // bars sorted oldest→newest
   if(!bars || bars.length < 2) return [];
+  const minPct = SWEEP_MIN_PCT[tf] || 0;
   const results = [];
   for(let i = 1; i < bars.length; i++){
     const prev = bars[i-1];
@@ -2266,14 +2273,11 @@ function detectEngulfingOnBars(bars, sym, tf){
     const pH = +prev.high, pL = +prev.low;
     const cH = +curr.high, cL = +curr.low, cC = +curr.close;
     if(isNaN(pH)||isNaN(pL)||isNaN(cH)||isNaN(cL)||isNaN(cC)) continue;
-    // Bullish: wick STRICTLY sweeps below prev low AND body closes STRICTLY above prev high
-    if(cL < pL && cC > pH){
-      results.push({ sym, tf, type:'bullish', prev, curr });
-    }
-    // Bearish: wick STRICTLY sweeps above prev high AND body closes STRICTLY below prev low
-    else if(cH > pH && cC < pL){
-      results.push({ sym, tf, type:'bearish', prev, curr });
-    }
+    // Bullish: wick sweeps below prev low by >= minPct AND closes above prev high
+    const sweepLow  = cL < pL && (pL - cL) / pL >= minPct;
+    const sweepHigh = cH > pH && (cH - pH) / pH >= minPct;
+    if(sweepLow  && cC > pH){ results.push({ sym, tf, type:'bullish', prev, curr }); }
+    else if(sweepHigh && cC < pL){ results.push({ sym, tf, type:'bearish', prev, curr }); }
   }
   return results;
 }
@@ -3792,7 +3796,7 @@ function renderWatchlistView(){
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
     weeklyTailMap=(loadCache('mercury_weekly_tail_v3_'+today)||{}).data||{};
     monthlyTailMap=(loadCache('mercury_monthly_tail_v1_'+today)||{}).data||{};
-    engulfingResults=(loadCache('mercury_engulfing6_'+today)||{}).data||[];
+    engulfingResults=(loadCache('mercury_engulfing7_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
     }
