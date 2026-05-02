@@ -352,6 +352,11 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
       <span>Engulfing</span>
       <span class="badge-count" id="engulfingBadge">—</span>
     </button>
+    <button class="nav-item" onclick="showView('fvg')" data-view="fvg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="8" width="4" height="7" rx="1"/><rect x="14" y="5" width="4" height="10" rx="1"/><line x1="7" y1="12" x2="18" y2="12" stroke-dasharray="2 2"/></svg>
+      <span>FVG Radar</span>
+      <span class="badge-count" id="fvgBadge">—</span>
+    </button>
     <button class="nav-item" onclick="showView('leap')" data-view="leap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       <span>LEAP Hunter</span>
@@ -768,6 +773,52 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
         </div>
         <div id="engulfingEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
           Run scan to detect engulfing candles
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: FVG Radar                             -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-fvg">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips" id="fvgStatusTabs">
+              <button class="filter-chip active" onclick="filterFVG('all',this)">All Open</button>
+              <button class="filter-chip" onclick="filterFVG('at_ce',this)">At CE</button>
+              <button class="filter-chip" onclick="filterFVG('above_ce',this)">Above CE</button>
+              <button class="filter-chip" onclick="filterFVG('above_fvg',this)">Above FVG</button>
+            </div>
+          </div>
+          <div class="table-toolbar-right" style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--text-muted)" id="fvgCount"></span>
+            <button class="topbar-btn" id="fvgCopyBtn" onclick="copyFVGTickers()" style="padding:5px 10px;font-size:11px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Tickers
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Formed</th>
+                <th>Status</th>
+                <th style="color:var(--green-dark)">FVG High</th>
+                <th>50% CE</th>
+                <th style="color:var(--red-dark)">FVG Low</th>
+                <th>FVG Size</th>
+                <th>Current Price</th>
+                <th>Dist to CE</th>
+              </tr>
+            </thead>
+            <tbody id="fvgTbody"></tbody>
+          </table>
+        </div>
+        <div id="fvgEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
+          Run scan to detect monthly FVGs
         </div>
       </div>
     </div>
@@ -1208,6 +1259,9 @@ let engulfingTfFilter='all';
 let engulfingDirFilter='all';
 let engulfingDaysFilter=90;
 let lastEngulfingRows=[];
+let fvgResults=[];
+let fvgStatusFilter='all';
+let lastFVGRows=[];
 let currentView='dashboard';
 let currentTimeframe='daily';
 let scannerFilter='all';
@@ -1244,6 +1298,7 @@ function showView(view, sub, skipHash){
     q1sweep: ['Q1 Sweep Hunter', 'Q1 2026 high/low sweeps &amp; reclaim setups'],
     models: ['Trading Models', 'Entry checklists &amp; trade tracking'],
     engulfing: ['Engulfing Scanner', 'Wick sweeps one side, close through the other — daily, weekly &amp; monthly'],
+    fvg: ['FVG Radar', 'Bullish monthly fair value gaps — price respecting 50% CE'],
     watchlist: ['Watchlist', 'Your tracked tickers'],
     alerts: ['Alert Center', 'Phase transition notifications']
   };
@@ -2166,6 +2221,9 @@ async function runScan(){
     engulfingResults = buildEngulfingResults(eodTailMap, weeklyTailMap, monthlyTailMap);
     saveCache(engulfingKey, engulfingResults);
 
+    // Compute monthly FVG results (uses monthlyTailMap — native 1M candles)
+    fvgResults = computeFVGResults();
+
     // Progressively render what we have so far
     renderDashboard();
     renderScannerView();
@@ -2176,6 +2234,7 @@ async function runScan(){
     renderDealerView();
     renderPdhPdlView();
     renderEngulfingView();
+    renderFVGView();
 
     // Phase 2: Daily intraday
     updateProgress(50,'Fetching intraday data...');
@@ -2288,6 +2347,8 @@ async function runScan(){
     renderDealerView();
     renderPdhPdlView();
     renderEngulfingView();
+    fvgResults = computeFVGResults(); // refresh with live quotes from Phase 3
+    renderFVGView();
     updateScannerCount();
 
   }catch(e){
@@ -2443,6 +2504,144 @@ function filterEngulfing(dimension, val, el){
   }
   if(el) el.classList.add('active');
   renderEngulfingView();
+}
+
+// ══════════════════════════════════════════════════════
+// FVG RADAR — Monthly bullish FVGs, 50% CE check
+// ══════════════════════════════════════════════════════
+
+// A bullish FVG forms when: bars[i-1].high < bars[i+1].low
+// (gap between the candle before the impulse and the candle after)
+// FVG Low  = bars[i-1].high
+// FVG High = bars[i+1].low
+// 50% CE   = midpoint of the FVG range
+//
+// Status:
+//  'at_ce'    — current low touched CE, current price still above CE  ← the setup
+//  'above_ce' — price is in the FVG but above CE (upper half)
+//  'above_fvg'— price is above the FVG high (gap not yet tested)
+//  'below_ce' — price dipped below CE (into lower half of gap)
+function computeFVGResults(){
+  const results=[];
+  for(const sym of Object.keys(monthlyTailMap)){
+    const bars=monthlyTailMap[sym];
+    if(!Array.isArray(bars)||bars.length<3) continue;
+
+    // Current price: prefer live quote, fall back to last monthly bar
+    const lq=liveDayMap[sym];
+    const lastBar=bars[bars.length-1];
+    const curPrice = lq ? lq.close : +lastBar.close;
+    const curLow   = lq ? lq.low   : +lastBar.low;
+    const curHigh  = lq ? lq.high  : +lastBar.high;
+
+    // Detect bullish FVGs across the monthly bars.
+    // b0 = bar before impulse, b1 = impulse candle, b2 = bar after impulse.
+    // We need bars[i+1] to exist, so loop to bars.length-2.
+    for(let i=1; i<=bars.length-2; i++){
+      const b0=bars[i-1], b2=bars[i+1];
+      const fvgLow=+b0.high, fvgHigh=+b2.low;
+      if(fvgLow>=fvgHigh) continue; // no gap
+
+      const ce=(fvgLow+fvgHigh)/2;
+
+      // Check if FVG has been mitigated: any bar AFTER b2 closed below fvgLow
+      let mitigated=false;
+      for(let j=i+2; j<bars.length; j++){
+        if(+bars[j].close<fvgLow){ mitigated=true; break; }
+      }
+      if(mitigated) continue;
+
+      // Determine current status relative to the FVG
+      const fvgSize=((fvgHigh-fvgLow)/fvgLow*100);
+      const distCEPct=((curPrice-ce)/ce*100); // +above, -below
+      let status;
+      if(curPrice>fvgHigh)          status='above_fvg';
+      else if(curLow<=ce&&curPrice>=ce) status='at_ce';   // wick touched CE, holding above
+      else if(curPrice>=ce)          status='above_ce';   // in upper half of FVG
+      else                           status='below_ce';   // below midpoint (less ideal)
+
+      results.push({ sym, fvgLow, fvgHigh, ce, fvgSize, formed:b2.date, status, distCEPct, curPrice });
+    }
+  }
+
+  // Sort: at_ce first, then above_ce, above_fvg, below_ce
+  const order={at_ce:0,above_ce:1,above_fvg:2,below_ce:3};
+  results.sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||Math.abs(a.distCEPct)-Math.abs(b.distCEPct));
+  return results;
+}
+
+function filterFVG(val, el){
+  fvgStatusFilter=val;
+  document.querySelectorAll('#fvgStatusTabs .filter-chip').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderFVGView();
+}
+
+function copyFVGTickers(){
+  if(!lastFVGRows.length) return;
+  const seen=new Set();
+  const tickers=lastFVGRows.map(r=>r.sym).filter(s=>{ if(seen.has(s)) return false; seen.add(s); return true; });
+  navigator.clipboard.writeText(tickers.join(', ')).then(()=>{
+    const btn=document.getElementById('fvgCopyBtn');
+    if(!btn) return;
+    const orig=btn.innerHTML;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    btn.style.color='var(--green-dark)'; btn.style.borderColor='var(--green)';
+    setTimeout(()=>{ btn.innerHTML=orig; btn.style.color=''; btn.style.borderColor=''; },2000);
+  });
+}
+
+function renderFVGView(){
+  const tbody=document.getElementById('fvgTbody');
+  const emptyEl=document.getElementById('fvgEmpty');
+  const countEl=document.getElementById('fvgCount');
+  const badgeEl=document.getElementById('fvgBadge');
+  if(!tbody) return;
+
+  let rows=fvgResults;
+  if(fvgStatusFilter!=='all') rows=rows.filter(r=>r.status===fvgStatusFilter);
+  lastFVGRows=rows;
+
+  const atCeCount=fvgResults.filter(r=>r.status==='at_ce').length;
+  if(badgeEl) badgeEl.textContent=atCeCount>0?atCeCount:(fvgResults.length||'—');
+  if(countEl) countEl.textContent=`${rows.length} open FVGs · ${atCeCount} at CE`;
+
+  if(!rows.length){
+    tbody.innerHTML='';
+    if(emptyEl) emptyEl.style.display='block';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+
+  const fmt=v=>(+v).toFixed(2);
+  const fmtPct=v=>(v>=0?'+':'')+v.toFixed(1)+'%';
+
+  tbody.innerHTML=rows.map(r=>{
+    const statusBadge = r.status==='at_ce'
+      ? `<span class="badge acc" style="background:#dcfce7;color:#166534">⚡ Respecting CE</span>`
+      : r.status==='above_ce'
+        ? `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">In FVG — Above CE</span>`
+        : r.status==='above_fvg'
+          ? `<span class="badge" style="background:var(--amber-light);color:var(--amber-dark)">Above FVG</span>`
+          : `<span class="badge dist">Below CE</span>`;
+
+    const distColor = r.status==='at_ce'    ? 'var(--green-dark)'
+                    : r.status==='above_ce'  ? 'var(--blue)'
+                    : r.status==='above_fvg' ? 'var(--amber-dark)'
+                    : 'var(--red)';
+
+    return `<tr data-ticker="${r.sym}">
+      <td><div class="ticker-cell">${tickerIcon(r.sym)}<div class="ticker-info"><div class="sym">${r.sym}</div></div></div></td>
+      <td style="font-size:12px;font-weight:600;color:var(--text-sec)">${r.formed}</td>
+      <td>${statusBadge}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--green-dark);font-weight:600">${fmt(r.fvgHigh)}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:700;color:var(--purple)">${fmt(r.ce)}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--red-dark);font-weight:600">${fmt(r.fvgLow)}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--text-sec)">${r.fvgSize.toFixed(1)}%</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:600">${fmt(r.curPrice)}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:600;color:${distColor}">${fmtPct(r.distCEPct)}</td>
+    </tr>`;
+  }).join('');
 }
 
 function copyEngulfingTickers(){
@@ -3876,6 +4075,8 @@ function renderWatchlistView(){
     renderDealerView();
     renderPdhPdlView();
     renderEngulfingView();
+    fvgResults = computeFVGResults();
+    renderFVGView();
     updateScannerCount();
   }
 })();
