@@ -784,11 +784,18 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
       <div class="table-container">
         <div class="table-toolbar">
           <div class="table-toolbar-left">
+            <div class="filter-chips" id="fvgTfTabs">
+              <button class="filter-chip active" onclick="filterFVG('tf','all',this)">All TF</button>
+              <button class="filter-chip" onclick="filterFVG('tf','daily',this)">24H</button>
+              <button class="filter-chip" onclick="filterFVG('tf','weekly',this)">Weekly</button>
+              <button class="filter-chip" onclick="filterFVG('tf','monthly',this)">Monthly</button>
+            </div>
+            <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="fvgStatusTabs">
-              <button class="filter-chip active" onclick="filterFVG('all',this)">All Open</button>
-              <button class="filter-chip" onclick="filterFVG('at_ce',this)">At CE</button>
-              <button class="filter-chip" onclick="filterFVG('above_ce',this)">Above CE</button>
-              <button class="filter-chip" onclick="filterFVG('above_fvg',this)">Above FVG</button>
+              <button class="filter-chip active" onclick="filterFVG('status','all',this)">All Open</button>
+              <button class="filter-chip" onclick="filterFVG('status','at_ce',this)">At CE</button>
+              <button class="filter-chip" onclick="filterFVG('status','above_ce',this)">Above CE</button>
+              <button class="filter-chip" onclick="filterFVG('status','above_fvg',this)">Above FVG</button>
             </div>
           </div>
           <div class="table-toolbar-right" style="display:flex;align-items:center;gap:10px">
@@ -806,6 +813,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
                 <th>Ticker</th>
                 <th>Formed</th>
                 <th>Status</th>
+                <th>TF</th>
                 <th style="color:var(--green-dark)">FVG High</th>
                 <th>50% CE</th>
                 <th style="color:var(--red-dark)">FVG Low</th>
@@ -818,7 +826,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
           </table>
         </div>
         <div id="fvgEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
-          Run scan to detect monthly FVGs
+          Run scan to detect FVGs across 24H, Weekly &amp; Monthly
         </div>
       </div>
     </div>
@@ -1261,6 +1269,7 @@ let engulfingDaysFilter=90;
 let lastEngulfingRows=[];
 let fvgResults=[];
 let fvgStatusFilter='all';
+let fvgTfFilter='all';
 let lastFVGRows=[];
 let currentView='dashboard';
 let currentTimeframe='daily';
@@ -1298,7 +1307,7 @@ function showView(view, sub, skipHash){
     q1sweep: ['Q1 Sweep Hunter', 'Q1 2026 high/low sweeps &amp; reclaim setups'],
     models: ['Trading Models', 'Entry checklists &amp; trade tracking'],
     engulfing: ['Engulfing Scanner', 'Wick sweeps one side, close through the other — daily, weekly &amp; monthly'],
-    fvg: ['FVG Radar', 'Bullish monthly fair value gaps — price respecting 50% CE'],
+    fvg: ['FVG Radar', 'Bullish fair value gaps at 50% CE — 24H · Weekly · Monthly'],
     watchlist: ['Watchlist', 'Your tracked tickers'],
     alerts: ['Alert Center', 'Phase transition notifications']
   };
@@ -2507,72 +2516,74 @@ function filterEngulfing(dimension, val, el){
 }
 
 // ══════════════════════════════════════════════════════
-// FVG RADAR — Monthly bullish FVGs, 50% CE check
+// FVG RADAR — Bullish FVGs across 24H / Weekly / Monthly
 // ══════════════════════════════════════════════════════
-
-// A bullish FVG forms when: bars[i-1].high < bars[i+1].low
-// (gap between the candle before the impulse and the candle after)
+//
+// Bullish FVG: bars[i-1].high < bars[i+1].low  (3-bar imbalance)
 // FVG Low  = bars[i-1].high
 // FVG High = bars[i+1].low
-// 50% CE   = midpoint of the FVG range
+// 50% CE   = midpoint
 //
 // Status:
-//  'at_ce'    — current low touched CE, current price still above CE  ← the setup
-//  'above_ce' — price is in the FVG but above CE (upper half)
-//  'above_fvg'— price is above the FVG high (gap not yet tested)
-//  'below_ce' — price dipped below CE (into lower half of gap)
-function computeFVGResults(){
-  const results=[];
-  for(const sym of Object.keys(monthlyTailMap)){
-    const bars=monthlyTailMap[sym];
-    if(!Array.isArray(bars)||bars.length<3) continue;
+//  'at_ce'    — current low touched CE, price still above CE  ← the setup
+//  'above_ce' — price in FVG upper half (above CE)
+//  'above_fvg'— price above FVG High (gap not yet tested)
+//  'below_ce' — price dipped below CE (into lower half)
 
-    // Current price: prefer live quote, fall back to last monthly bar
+function _scanFVGsInMap(barsMap, tf){
+  const out=[];
+  for(const sym of Object.keys(barsMap)){
+    const bars=barsMap[sym];
+    if(!Array.isArray(bars)||bars.length<3) continue;
     const lq=liveDayMap[sym];
     const lastBar=bars[bars.length-1];
-    const curPrice = lq ? lq.close : +lastBar.close;
-    const curLow   = lq ? lq.low   : +lastBar.low;
-    const curHigh  = lq ? lq.high  : +lastBar.high;
-
-    // Detect bullish FVGs across the monthly bars.
-    // b0 = bar before impulse, b1 = impulse candle, b2 = bar after impulse.
-    // We need bars[i+1] to exist, so loop to bars.length-2.
-    for(let i=1; i<=bars.length-2; i++){
+    const curPrice=lq?lq.close:+lastBar.close;
+    const curLow  =lq?lq.low  :+lastBar.low;
+    for(let i=1;i<=bars.length-2;i++){
       const b0=bars[i-1], b2=bars[i+1];
       const fvgLow=+b0.high, fvgHigh=+b2.low;
-      if(fvgLow>=fvgHigh) continue; // no gap
-
+      if(fvgLow>=fvgHigh) continue;
       const ce=(fvgLow+fvgHigh)/2;
-
-      // Check if FVG has been mitigated: any bar AFTER b2 closed below fvgLow
+      // Mitigated if any later bar closed below fvgLow
       let mitigated=false;
-      for(let j=i+2; j<bars.length; j++){
-        if(+bars[j].close<fvgLow){ mitigated=true; break; }
-      }
+      for(let j=i+2;j<bars.length;j++){ if(+bars[j].close<fvgLow){mitigated=true;break;} }
       if(mitigated) continue;
-
-      // Determine current status relative to the FVG
       const fvgSize=((fvgHigh-fvgLow)/fvgLow*100);
-      const distCEPct=((curPrice-ce)/ce*100); // +above, -below
-      let status;
-      if(curPrice>fvgHigh)          status='above_fvg';
-      else if(curLow<=ce&&curPrice>=ce) status='at_ce';   // wick touched CE, holding above
-      else if(curPrice>=ce)          status='above_ce';   // in upper half of FVG
-      else                           status='below_ce';   // below midpoint (less ideal)
-
-      results.push({ sym, fvgLow, fvgHigh, ce, fvgSize, formed:b2.date, status, distCEPct, curPrice });
+      const distCEPct=((curPrice-ce)/ce*100);
+      const status = curPrice>fvgHigh       ? 'above_fvg'
+                   : curLow<=ce&&curPrice>=ce ? 'at_ce'
+                   : curPrice>=ce             ? 'above_ce'
+                   :                           'below_ce';
+      out.push({sym,tf,fvgLow,fvgHigh,ce,fvgSize,formed:b2.date,status,distCEPct,curPrice});
     }
   }
+  return out;
+}
 
-  // Sort: at_ce first, then above_ce, above_fvg, below_ce
+function computeFVGResults(){
+  const tfs = fvgTfFilter==='all'
+    ? ['daily','weekly','monthly']
+    : [fvgTfFilter];
+
+  let results=[];
+  if(tfs.includes('daily'))   results.push(..._scanFVGsInMap(eodTailMap,    'daily'));
+  if(tfs.includes('weekly'))  results.push(..._scanFVGsInMap(weeklyTailMap,  'weekly'));
+  if(tfs.includes('monthly')) results.push(..._scanFVGsInMap(monthlyTailMap, 'monthly'));
+
   const order={at_ce:0,above_ce:1,above_fvg:2,below_ce:3};
   results.sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||Math.abs(a.distCEPct)-Math.abs(b.distCEPct));
   return results;
 }
 
-function filterFVG(val, el){
-  fvgStatusFilter=val;
-  document.querySelectorAll('#fvgStatusTabs .filter-chip').forEach(b=>b.classList.remove('active'));
+function filterFVG(dimension, val, el){
+  if(dimension==='tf'){
+    fvgTfFilter=val;
+    document.querySelectorAll('#fvgTfTabs .filter-chip').forEach(b=>b.classList.remove('active'));
+    fvgResults=computeFVGResults(); // recompute for new TF set
+  } else {
+    fvgStatusFilter=val;
+    document.querySelectorAll('#fvgStatusTabs .filter-chip').forEach(b=>b.classList.remove('active'));
+  }
   if(el) el.classList.add('active');
   renderFVGView();
 }
@@ -2625,6 +2636,12 @@ function renderFVGView(){
           ? `<span class="badge" style="background:var(--amber-light);color:var(--amber-dark)">Above FVG</span>`
           : `<span class="badge dist">Below CE</span>`;
 
+    const tfBadge = r.tf==='monthly'
+      ? `<span class="badge" style="background:#fef9c3;color:#854d0e">Monthly</span>`
+      : r.tf==='weekly'
+        ? `<span class="badge" style="background:var(--purple-light);color:var(--purple-dark)">Weekly</span>`
+        : `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">24H</span>`;
+
     const distColor = r.status==='at_ce'    ? 'var(--green-dark)'
                     : r.status==='above_ce'  ? 'var(--blue)'
                     : r.status==='above_fvg' ? 'var(--amber-dark)'
@@ -2634,6 +2651,7 @@ function renderFVGView(){
       <td><div class="ticker-cell">${tickerIcon(r.sym)}<div class="ticker-info"><div class="sym">${r.sym}</div></div></div></td>
       <td style="font-size:12px;font-weight:600;color:var(--text-sec)">${r.formed}</td>
       <td>${statusBadge}</td>
+      <td>${tfBadge}</td>
       <td style="font-family:monospace;font-size:12px;color:var(--green-dark);font-weight:600">${fmt(r.fvgHigh)}</td>
       <td style="font-family:monospace;font-size:12px;font-weight:700;color:var(--purple)">${fmt(r.ce)}</td>
       <td style="font-family:monospace;font-size:12px;color:var(--red-dark);font-weight:600">${fmt(r.fvgLow)}</td>
