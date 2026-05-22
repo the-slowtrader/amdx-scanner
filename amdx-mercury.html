@@ -2147,6 +2147,7 @@ async function runScan(){
   const nonFutures=WATCHLIST.filter(s=>!FUTURES.includes(s));
   const today=dateStr(new Date());
   const from500=dateStr(daysAgo(500));
+  const from1500=dateStr(daysAgo(1500)); // ~4+ years back for quarterly FVG history
 
   try{
     // Phase 1: EOD data
@@ -2163,7 +2164,7 @@ async function runScan(){
     const eodTailKey='mercury_eod_tail_v2_'+today;
     const weeklyTailKey='mercury_weekly_tail_v5_'+today;
     const monthlyTailKey='mercury_monthly_tail_v3_'+today;
-    const quarterlyTailKey='mercury_quarterly_tail_v1_'+today;
+    const quarterlyTailKey='mercury_quarterly_tail_v2_'+today;
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -2185,12 +2186,12 @@ async function runScan(){
         const batch=nonFutures.slice(i,i+BATCH_SIZE);
         const promises=batch.map(async sym=>{
           try{
-            // Fetch EOD + native 1M + native 1W in parallel.
-            // 1M/1W use FMP's own monthly/weekly candles (regular-session only),
-            // which match TradingView's 1M/1W charts — no pre/post-market H/L bleed.
+            // Fetch EOD + native 1M (deep, 4yr) + native 1W in parallel.
+            // 1M uses from1500 (~4 years) so quarterly FVGs from 2022-2024 bull run
+            // are captured. Monthly tail is still capped at 13 bars; quarterly gets 16.
             const [eod, monthlyDirect, weeklyDirect] = await Promise.all([
               fetchEOD(sym,from500,today),
-              fetchMonthlySeries(sym,from500,today).catch(()=>null),
+              fetchMonthlySeries(sym,from1500,today).catch(()=>null),
               fetchWeeklySeries(sym,from500,today).catch(()=>null)
             ]);
             if(!eod.length) return;
@@ -2201,12 +2202,12 @@ async function runScan(){
               ? weeklyDirect.slice(-20)
               : (weekly.length>=2 ? weekly.slice(-20) : []);
             const monthly=aggregateToMonthly(eod);
-            // Monthly tail: prefer native 1M bars (regular-session, matches TradingView 1M)
+            // Monthly tail: prefer native 1M bars — last 13 months (12 closed + current)
             const monthlyForTail = monthlyDirect&&monthlyDirect.length>=2 ? monthlyDirect : monthly;
             monthlyTailMap[sym]= monthlyForTail.length>=2 ? monthlyForTail.slice(-13) : [];
-            // Quarterly tail: aggregate from best available monthly data (last 8 quarters)
+            // Quarterly tail: aggregate native 1M (4yr) → ~16 quarters, keep all 16
             const quarterlyBars=aggregateToQuarterly(monthlyForTail);
-            quarterlyTailMap[sym]= quarterlyBars.length>=2 ? quarterlyBars.slice(-8) : [];
+            quarterlyTailMap[sym]= quarterlyBars.length>=2 ? quarterlyBars.slice(-16) : [];
             weeklyResults[sym]=classifyWeeklyAX(weekly);
             monthlyResults[sym]=classifyMonthlyAX(weekly);
             const qData=aggregateToQuarterlyPhases(eod);
@@ -4114,7 +4115,7 @@ function renderWatchlistView(){
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
     weeklyTailMap=(loadCache('mercury_weekly_tail_v5_'+today)||{}).data||{};
     monthlyTailMap=(loadCache('mercury_monthly_tail_v3_'+today)||{}).data||{};
-    quarterlyTailMap=(loadCache('mercury_quarterly_tail_v1_'+today)||{}).data||{};
+    quarterlyTailMap=(loadCache('mercury_quarterly_tail_v2_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing11_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
