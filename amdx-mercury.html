@@ -789,6 +789,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip" onclick="filterFVG('tf','daily',this)">24H</button>
               <button class="filter-chip" onclick="filterFVG('tf','weekly',this)">Weekly</button>
               <button class="filter-chip" onclick="filterFVG('tf','monthly',this)">Monthly</button>
+              <button class="filter-chip" onclick="filterFVG('tf','quarterly',this)">Quarterly</button>
             </div>
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="fvgStatusTabs">
@@ -826,7 +827,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
           </table>
         </div>
         <div id="fvgEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
-          Run scan to detect FVGs across 24H, Weekly &amp; Monthly
+          Run scan to detect FVGs across 24H, Weekly, Monthly &amp; Quarterly
         </div>
       </div>
     </div>
@@ -1261,7 +1262,7 @@ let pdhPdlResults={};
 let emaResults={};
 let reversalResults={};
 let engulfingResults=[];
-let eodTailMap={}, weeklyTailMap={}, monthlyTailMap={};
+let eodTailMap={}, weeklyTailMap={}, monthlyTailMap={}, quarterlyTailMap={};
 let liveDayMap={}; // regular-session OHLC for today, built from 4H bars (no pre/post bleed)
 let engulfingTfFilter='all';
 let engulfingDirFilter='all';
@@ -1307,7 +1308,7 @@ function showView(view, sub, skipHash){
     q1sweep: ['Q1 Sweep Hunter', 'Q1 2026 high/low sweeps &amp; reclaim setups'],
     models: ['Trading Models', 'Entry checklists &amp; trade tracking'],
     engulfing: ['Engulfing Scanner', 'Wick sweeps one side, close through the other — daily, weekly &amp; monthly'],
-    fvg: ['FVG Radar', 'Bullish fair value gaps at 50% CE — 24H · Weekly · Monthly'],
+    fvg: ['FVG Radar', 'Bullish fair value gaps at 50% CE — 24H · Weekly · Monthly · Quarterly'],
     watchlist: ['Watchlist', 'Your tracked tickers'],
     alerts: ['Alert Center', 'Phase transition notifications']
   };
@@ -1462,6 +1463,31 @@ function aggregateToWeekly(daily){
 
 // Monthly OHLC — date is set to the LAST trading day of each month so the
 // days-lookback filter works correctly (signal "closes" at month end)
+// Aggregate monthly bars into quarterly OHLC (Q1=Jan-Mar, Q2=Apr-Jun, Q3=Jul-Sep, Q4=Oct-Dec).
+// Date is the last monthly bar's date (= last trading day of the quarter).
+function aggregateToQuarterly(monthly){
+  const quarters=[];
+  let cur=null, curQ=null;
+  monthly.forEach(m=>{
+    const mo=parseInt(m.date.slice(5,7));
+    const yr=m.date.slice(0,4);
+    const q=Math.ceil(mo/3);
+    const qKey=yr+'-Q'+q;
+    if(qKey!==curQ){
+      if(cur) quarters.push(cur);
+      curQ=qKey;
+      cur={open:+m.open,high:+m.high,low:+m.low,close:+m.close,date:m.date,qKey};
+    } else {
+      cur.high=Math.max(cur.high,+m.high);
+      cur.low =Math.min(cur.low, +m.low);
+      cur.close=+m.close;
+      cur.date=m.date; // rolls to last month of quarter
+    }
+  });
+  if(cur) quarters.push(cur);
+  return quarters;
+}
+
 function aggregateToMonthly(daily){
   const months=[];
   let cur=null, curM=null;
@@ -2137,6 +2163,7 @@ async function runScan(){
     const eodTailKey='mercury_eod_tail_v2_'+today;
     const weeklyTailKey='mercury_weekly_tail_v5_'+today;
     const monthlyTailKey='mercury_monthly_tail_v3_'+today;
+    const quarterlyTailKey='mercury_quarterly_tail_v1_'+today;
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -2149,10 +2176,11 @@ async function runScan(){
       eodTailMap=(loadCache(eodTailKey)||{}).data||{};
       weeklyTailMap=(loadCache(weeklyTailKey)||{}).data||{};
       monthlyTailMap=(loadCache(monthlyTailKey)||{}).data||{};
+      quarterlyTailMap=(loadCache(quarterlyTailKey)||{}).data||{};
       updateProgress(50,'Loaded from cache...');
     } else {
       weeklyResults={};monthlyResults={};quarterlyResults={};leapResults={};q1SweepResults={};obResults={};pdhPdlResults={};reversalResults={};
-      eodTailMap={};weeklyTailMap={};monthlyTailMap={};liveDayMap={};
+      eodTailMap={};weeklyTailMap={};monthlyTailMap={};quarterlyTailMap={};liveDayMap={};
       for(let i=0;i<nonFutures.length;i+=BATCH_SIZE){
         const batch=nonFutures.slice(i,i+BATCH_SIZE);
         const promises=batch.map(async sym=>{
@@ -2174,9 +2202,11 @@ async function runScan(){
               : (weekly.length>=2 ? weekly.slice(-20) : []);
             const monthly=aggregateToMonthly(eod);
             // Monthly tail: prefer native 1M bars (regular-session, matches TradingView 1M)
-            monthlyTailMap[sym]= monthlyDirect&&monthlyDirect.length>=2
-              ? monthlyDirect.slice(-13)
-              : (monthly.length>=2 ? monthly.slice(-13) : []); // 12 closed + current
+            const monthlyForTail = monthlyDirect&&monthlyDirect.length>=2 ? monthlyDirect : monthly;
+            monthlyTailMap[sym]= monthlyForTail.length>=2 ? monthlyForTail.slice(-13) : [];
+            // Quarterly tail: aggregate from best available monthly data (last 8 quarters)
+            const quarterlyBars=aggregateToQuarterly(monthlyForTail);
+            quarterlyTailMap[sym]= quarterlyBars.length>=2 ? quarterlyBars.slice(-8) : [];
             weeklyResults[sym]=classifyWeeklyAX(weekly);
             monthlyResults[sym]=classifyMonthlyAX(weekly);
             const qData=aggregateToQuarterlyPhases(eod);
@@ -2224,6 +2254,7 @@ async function runScan(){
       saveCache(eodTailKey,eodTailMap);
       saveCache(weeklyTailKey,weeklyTailMap);
       saveCache(monthlyTailKey,monthlyTailMap);
+      saveCache(quarterlyTailKey,quarterlyTailMap);
     }
 
     // Compute engulfing from EOD + weekly tails
@@ -2562,13 +2593,14 @@ function _scanFVGsInMap(barsMap, tf){
 
 function computeFVGResults(){
   const tfs = fvgTfFilter==='all'
-    ? ['daily','weekly','monthly']
+    ? ['daily','weekly','monthly','quarterly']
     : [fvgTfFilter];
 
   let results=[];
-  if(tfs.includes('daily'))   results.push(..._scanFVGsInMap(eodTailMap,    'daily'));
-  if(tfs.includes('weekly'))  results.push(..._scanFVGsInMap(weeklyTailMap,  'weekly'));
-  if(tfs.includes('monthly')) results.push(..._scanFVGsInMap(monthlyTailMap, 'monthly'));
+  if(tfs.includes('daily'))     results.push(..._scanFVGsInMap(eodTailMap,      'daily'));
+  if(tfs.includes('weekly'))    results.push(..._scanFVGsInMap(weeklyTailMap,    'weekly'));
+  if(tfs.includes('monthly'))   results.push(..._scanFVGsInMap(monthlyTailMap,   'monthly'));
+  if(tfs.includes('quarterly')) results.push(..._scanFVGsInMap(quarterlyTailMap, 'quarterly'));
 
   const order={at_ce:0,above_ce:1,above_fvg:2,below_ce:3};
   results.sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||Math.abs(a.distCEPct)-Math.abs(b.distCEPct));
@@ -2636,11 +2668,13 @@ function renderFVGView(){
           ? `<span class="badge" style="background:var(--amber-light);color:var(--amber-dark)">Above FVG</span>`
           : `<span class="badge dist">Below CE</span>`;
 
-    const tfBadge = r.tf==='monthly'
-      ? `<span class="badge" style="background:#fef9c3;color:#854d0e">Monthly</span>`
-      : r.tf==='weekly'
-        ? `<span class="badge" style="background:var(--purple-light);color:var(--purple-dark)">Weekly</span>`
-        : `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">24H</span>`;
+    const tfBadge = r.tf==='quarterly'
+      ? `<span class="badge" style="background:#ffedd5;color:#9a3412">Quarterly</span>`
+      : r.tf==='monthly'
+        ? `<span class="badge" style="background:#fef9c3;color:#854d0e">Monthly</span>`
+        : r.tf==='weekly'
+          ? `<span class="badge" style="background:var(--purple-light);color:var(--purple-dark)">Weekly</span>`
+          : `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">24H</span>`;
 
     const distColor = r.status==='at_ce'    ? 'var(--green-dark)'
                     : r.status==='above_ce'  ? 'var(--blue)'
@@ -4080,6 +4114,7 @@ function renderWatchlistView(){
     eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
     weeklyTailMap=(loadCache('mercury_weekly_tail_v5_'+today)||{}).data||{};
     monthlyTailMap=(loadCache('mercury_monthly_tail_v3_'+today)||{}).data||{};
+    quarterlyTailMap=(loadCache('mercury_quarterly_tail_v1_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing11_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
