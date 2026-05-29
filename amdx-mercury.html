@@ -850,6 +850,14 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip" onclick="filterLotto(7,this)">7D</button>
               <button class="filter-chip" onclick="filterLotto(15,this)">15D</button>
             </div>
+            <div style="width:1px;height:24px;background:var(--card-border)"></div>
+            <div class="filter-chips" id="lottoConvTabs">
+              <button class="filter-chip active" onclick="filterLottoConv('all',this)">All</button>
+              <button class="filter-chip" onclick="filterLottoConv('high',this)">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10" style="color:var(--amber)"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                High Conviction
+              </button>
+            </div>
           </div>
           <div class="table-toolbar-right" style="display:flex;align-items:center;gap:10px">
             <span style="font-size:11px;color:var(--text-muted)" id="lottoCount"></span>
@@ -864,6 +872,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             <thead>
               <tr>
                 <th>Ticker</th>
+                <th>Conviction</th>
                 <th>HL Date</th>
                 <th>Higher Low</th>
                 <th>Sweep Date</th>
@@ -871,7 +880,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
                 <th style="color:var(--green-dark)">BSL Target</th>
                 <th>Current Price</th>
                 <th>Room to BSL</th>
-                <th>Sweep Age</th>
+                <th>Age</th>
               </tr>
             </thead>
             <tbody id="lottoTbody"></tbody>
@@ -1323,7 +1332,8 @@ let fvgStatusFilter='all';
 let fvgTfFilter='all';
 let lastFVGRows=[];
 let fridayLottoResults=[];
-let lottoMaxAge=3; // bars
+let lottoMaxAge=3;
+let lottoConvFilter='all'; // 'all' | 'high'
 let lastLottoRows=[];
 let currentView='dashboard';
 let currentTimeframe='daily';
@@ -2780,6 +2790,31 @@ function _findPivotPoints(bars, period=2){
   return {lows,highs};
 }
 
+// Check if a recent weekly bar swept below multiple prior weekly lows AND
+// closed back inside the range (the macro liquidity grab → reversal signal).
+// Returns { swept: N, weekDate } or null.
+function _checkWeeklySweepInsideClose(weeklyBars){
+  if(!weeklyBars||weeklyBars.length<5) return null;
+  // Check the last 4 weekly bars (could be current partial week or recent closed weeks)
+  for(let wi=weeklyBars.length-1; wi>=weeklyBars.length-4&&wi>=2; wi--){
+    const bar=weeklyBars[wi];
+    const barLow=+bar.low, barClose=+bar.close;
+    // Count how many prior week lows this bar's wick swept below
+    let sweptCount=0, highestSweptLow=-Infinity;
+    for(let j=wi-1; j>=Math.max(0,wi-8); j--){
+      if(barLow<+weeklyBars[j].low){
+        sweptCount++;
+        highestSweptLow=Math.max(highestSweptLow,+weeklyBars[j].low);
+      }
+    }
+    // "Closed inside the range" = close came back above the lows it swept
+    if(sweptCount>=2&&barClose>highestSweptLow){
+      return {swept:sweptCount, weekDate:bar.date};
+    }
+  }
+  return null;
+}
+
 function computeFridayLottoResults(){
   const results=[];
   for(const sym of Object.keys(eodTailMap)){
@@ -2790,7 +2825,7 @@ function computeFridayLottoResults(){
     const lastBar=bars[bars.length-1];
     const curPrice=lq?lq.close:+lastBar.close;
 
-    const {lows,highs}=_findPivotPoints(bars,2);
+    const {lows}=_findPivotPoints(bars,2);
     if(lows.length<2) continue;
 
     // Walk backward through pivot lows looking for a Higher Low that was swept
@@ -2800,46 +2835,56 @@ function computeFridayLottoResults(){
 
       if(pl2.price<=pl1.price) continue; // not a higher low
 
-      // Find a sweep bar: any bar AFTER pl2 whose low dipped below pl2.price
+      // Find first sweep bar after pl2 whose low dipped below pl2.price
       let sweep=null;
       for(let j=pl2.idx+1; j<bars.length; j++){
-        if(+bars[j].low < pl2.price){ sweep={bar:bars[j],idx:j}; break; }
+        if(+bars[j].low<pl2.price){ sweep={bar:bars[j],idx:j}; break; }
       }
-      if(!sweep) continue; // HL not yet swept — not the setup
+      if(!sweep) continue;
 
-      // BSL = highest high formed between pl1 and the sweep
-      // (the opposing buy-side liquidity the market will target next)
+      // BSL = highest high between pl1 and the sweep bar
       let bslPrice=0, bslDate='';
       for(let j=pl1.idx; j<=sweep.idx; j++){
         if(+bars[j].high>bslPrice){ bslPrice=+bars[j].high; bslDate=bars[j].date; }
       }
-      if(!bslPrice) continue;
+      if(!bslPrice||curPrice>=bslPrice) continue;
 
-      // If current price already reached BSL, setup is complete — skip
-      if(curPrice>=bslPrice) continue;
-
-      // How many bars ago was the sweep?
       const sweepAge=bars.length-1-sweep.idx;
+
+      // Weekly confluence: did a recent weekly bar also sweep multiple prior
+      // week lows and close back inside? (macro liquidity grab confirms the setup)
+      const weeklySweep=_checkWeeklySweepInsideClose(weeklyTailMap[sym]||null);
 
       results.push({
         sym,
-        hlPrice: pl2.price, hlDate: pl2.date,
-        sweepLow: +sweep.bar.low, sweepDate: sweep.bar.date,
-        bslPrice, bslDate,
-        curPrice,
-        roomToBSL: ((bslPrice-curPrice)/curPrice*100),
-        sweepAge
+        hlPrice:pl2.price, hlDate:pl2.date,
+        sweepLow:+sweep.bar.low, sweepDate:sweep.bar.date,
+        bslPrice, bslDate, curPrice,
+        roomToBSL:((bslPrice-curPrice)/curPrice*100),
+        sweepAge,
+        weeklySweep // null or {swept:N, weekDate}
       });
-      break; // one signal per ticker (most recent valid setup)
+      break;
     }
   }
-  results.sort((a,b)=>a.sweepAge-b.sweepAge||b.roomToBSL-a.roomToBSL);
+  // High conviction (weekly sweep confluence) first, then by recency, then room
+  results.sort((a,b)=>{
+    const aHC=a.weeklySweep?0:1, bHC=b.weeklySweep?0:1;
+    return aHC-bHC||a.sweepAge-b.sweepAge||b.roomToBSL-a.roomToBSL;
+  });
   return results;
 }
 
 function filterLotto(maxAge, el){
   lottoMaxAge=maxAge;
   document.querySelectorAll('#lottoDaysTabs .filter-chip').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderLottoView();
+}
+
+function filterLottoConv(val, el){
+  lottoConvFilter=val;
+  document.querySelectorAll('#lottoConvTabs .filter-chip').forEach(b=>b.classList.remove('active'));
   if(el) el.classList.add('active');
   renderLottoView();
 }
@@ -2864,11 +2909,14 @@ function renderLottoView(){
   const badgeEl=document.getElementById('lottoBadge');
   if(!tbody) return;
 
-  const rows=fridayLottoResults.filter(r=>r.sweepAge<=lottoMaxAge);
+  let rows=fridayLottoResults.filter(r=>r.sweepAge<=lottoMaxAge);
+  if(lottoConvFilter==='high') rows=rows.filter(r=>r.weeklySweep);
   lastLottoRows=rows;
 
-  if(badgeEl) badgeEl.textContent=fridayLottoResults.filter(r=>r.sweepAge<=3).length||'—';
-  if(countEl) countEl.textContent=`${rows.length} setup${rows.length!==1?'s':''} · sweep within ${lottoMaxAge}D`;
+  const highCount=fridayLottoResults.filter(r=>r.sweepAge<=3&&r.weeklySweep).length;
+  const totalFresh=fridayLottoResults.filter(r=>r.sweepAge<=3).length;
+  if(badgeEl) badgeEl.textContent=highCount>0?`⚡${highCount}`:(totalFresh||'—');
+  if(countEl) countEl.textContent=`${rows.length} setup${rows.length!==1?'s':''} · ${highCount} high conviction`;
 
   if(!rows.length){
     tbody.innerHTML='';
@@ -2882,11 +2930,20 @@ function renderLottoView(){
     const ageBadge = r.sweepAge===0
       ? `<span class="badge acc" style="background:#dcfce7;color:#166534">Today</span>`
       : r.sweepAge===1
-        ? `<span class="badge" style="background:var(--amber-light);color:var(--amber-dark)">1 bar ago</span>`
+        ? `<span class="badge" style="background:var(--amber-light);color:var(--amber-dark)">1D ago</span>`
         : `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">${r.sweepAge}D ago</span>`;
+
+    // Conviction badge — high when weekly also swept multiple lows + closed inside
+    const convBadge = r.weeklySweep
+      ? `<span class="badge acc" style="background:#dcfce7;color:#166534;gap:4px">
+           <svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+           High · Wk swept ${r.weeklySweep.swept} lows
+         </span>`
+      : `<span class="badge" style="background:var(--bg);color:var(--text-muted);border:1px solid var(--card-border)">Daily</span>`;
 
     return `<tr data-ticker="${r.sym}">
       <td><div class="ticker-cell">${tickerIcon(r.sym)}<div class="ticker-info"><div class="sym">${r.sym}</div></div></div></td>
+      <td>${convBadge}</td>
       <td style="font-size:12px;color:var(--text-sec)">${r.hlDate}</td>
       <td style="font-family:monospace;font-size:12px;color:var(--red-dark);font-weight:600">${fmt(r.hlPrice)}</td>
       <td style="font-size:12px;color:var(--text-sec)">${r.sweepDate}</td>
