@@ -357,6 +357,11 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
       <span>FVG Radar</span>
       <span class="badge-count" id="fvgBadge">—</span>
     </button>
+    <button class="nav-item" onclick="showView('lotto')" data-view="lotto">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-5"/></svg>
+      <span>Friday Lotto</span>
+      <span class="badge-count" id="lottoBadge">—</span>
+    </button>
     <button class="nav-item" onclick="showView('leap')" data-view="leap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       <span>LEAP Hunter</span>
@@ -833,6 +838,51 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
     </div>
 
     <!-- ═══════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Friday Lotto                          -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-lotto">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips" id="lottoDaysTabs">
+              <button class="filter-chip active" onclick="filterLotto(3,this)">3D</button>
+              <button class="filter-chip" onclick="filterLotto(7,this)">7D</button>
+              <button class="filter-chip" onclick="filterLotto(15,this)">15D</button>
+            </div>
+          </div>
+          <div class="table-toolbar-right" style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--text-muted)" id="lottoCount"></span>
+            <button class="topbar-btn" id="lottoCopyBtn" onclick="copyLottoTickers()" style="padding:5px 10px;font-size:11px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Tickers
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>HL Date</th>
+                <th>Higher Low</th>
+                <th>Sweep Date</th>
+                <th>Sweep Low</th>
+                <th style="color:var(--green-dark)">BSL Target</th>
+                <th>Current Price</th>
+                <th>Room to BSL</th>
+                <th>Sweep Age</th>
+              </tr>
+            </thead>
+            <tbody id="lottoTbody"></tbody>
+          </table>
+        </div>
+        <div id="lottoEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
+          Run scan to find Friday Lotto setups
+        </div>
+      </div>
+    </div>
+
     <!-- VIEW: Q1 Sweep Hunter                       -->
     <!-- ═══════════════════════════════════════════ -->
     <div class="view" id="view-q1sweep">
@@ -1272,6 +1322,9 @@ let fvgResults=[];
 let fvgStatusFilter='all';
 let fvgTfFilter='all';
 let lastFVGRows=[];
+let fridayLottoResults=[];
+let lottoMaxAge=3; // bars
+let lastLottoRows=[];
 let currentView='dashboard';
 let currentTimeframe='daily';
 let scannerFilter='all';
@@ -1304,6 +1357,7 @@ function showView(view, sub, skipHash){
     confluence: ['Confluence', 'Cross-timeframe alignment scoring'],
     dealer: ['Dealer Intel', 'HTF order block &amp; breaker zone detection'],
     sweep: ['Sweep Radar', 'Proximity to key liquidity levels'],
+    lotto: ['Friday Lotto', 'Swept higher low — opposing BSL not yet reached'],
     leap: ['LEAP Hunter', 'Prior year low sweep & reclaim tracker'],
     q1sweep: ['Q1 Sweep Hunter', 'Q1 2026 high/low sweeps &amp; reclaim setups'],
     models: ['Trading Models', 'Entry checklists &amp; trade tracking'],
@@ -2262,8 +2316,9 @@ async function runScan(){
     engulfingResults = buildEngulfingResults(eodTailMap, weeklyTailMap, monthlyTailMap);
     saveCache(engulfingKey, engulfingResults);
 
-    // Compute monthly FVG results (uses monthlyTailMap — native 1M candles)
+    // Compute multi-TF FVG results and Friday Lotto setups
     fvgResults = computeFVGResults();
+    fridayLottoResults = computeFridayLottoResults();
 
     // Progressively render what we have so far
     renderDashboard();
@@ -2276,6 +2331,7 @@ async function runScan(){
     renderPdhPdlView();
     renderEngulfingView();
     renderFVGView();
+    renderLottoView();
 
     // Phase 2: Daily intraday
     updateProgress(50,'Fetching intraday data...');
@@ -2389,7 +2445,9 @@ async function runScan(){
     renderPdhPdlView();
     renderEngulfingView();
     fvgResults = computeFVGResults(); // refresh with live quotes from Phase 3
+    fridayLottoResults = computeFridayLottoResults();
     renderFVGView();
+    renderLottoView();
     updateScannerCount();
 
   }catch(e){
@@ -2693,6 +2751,150 @@ function renderFVGView(){
       <td style="font-family:monospace;font-size:12px;color:var(--text-sec)">${r.fvgSize.toFixed(1)}%</td>
       <td style="font-family:monospace;font-size:12px;font-weight:600">${fmt(r.curPrice)}</td>
       <td style="font-family:monospace;font-size:12px;font-weight:600;color:${distColor}">${fmtPct(r.distCEPct)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// FRIDAY LOTTO — Swept Higher Low, BSL not yet reached
+// ══════════════════════════════════════════════════════
+//
+// Setup: price formed a Higher Low (HL > prior swing low), then swept
+// below that HL (liquidity grab), but has NOT yet reached the opposing
+// Buy Side Liquidity (swing high between the two lows). After the SSL
+// sweep price should target that BSL.
+//
+// Detection uses 2-bar pivot lows/highs on daily EOD bars.
+
+function _findPivotPoints(bars, period=2){
+  const lows=[], highs=[];
+  for(let i=period; i<bars.length-period; i++){
+    let isLow=true, isHigh=true;
+    for(let k=1;k<=period;k++){
+      if(+bars[i].low >=+bars[i-k].low||+bars[i].low >=+bars[i+k].low) isLow=false;
+      if(+bars[i].high<=+bars[i-k].high||+bars[i].high<=+bars[i+k].high) isHigh=false;
+    }
+    if(isLow)  lows.push({idx:i,price:+bars[i].low,date:bars[i].date});
+    if(isHigh) highs.push({idx:i,price:+bars[i].high,date:bars[i].date});
+  }
+  return {lows,highs};
+}
+
+function computeFridayLottoResults(){
+  const results=[];
+  for(const sym of Object.keys(eodTailMap)){
+    const bars=eodTailMap[sym];
+    if(!Array.isArray(bars)||bars.length<15) continue;
+
+    const lq=liveDayMap[sym];
+    const lastBar=bars[bars.length-1];
+    const curPrice=lq?lq.close:+lastBar.close;
+
+    const {lows,highs}=_findPivotPoints(bars,2);
+    if(lows.length<2) continue;
+
+    // Walk backward through pivot lows looking for a Higher Low that was swept
+    for(let li=lows.length-1; li>=1; li--){
+      const pl2=lows[li];   // candidate HL
+      const pl1=lows[li-1]; // previous swing low
+
+      if(pl2.price<=pl1.price) continue; // not a higher low
+
+      // Find a sweep bar: any bar AFTER pl2 whose low dipped below pl2.price
+      let sweep=null;
+      for(let j=pl2.idx+1; j<bars.length; j++){
+        if(+bars[j].low < pl2.price){ sweep={bar:bars[j],idx:j}; break; }
+      }
+      if(!sweep) continue; // HL not yet swept — not the setup
+
+      // BSL = highest high formed between pl1 and the sweep
+      // (the opposing buy-side liquidity the market will target next)
+      let bslPrice=0, bslDate='';
+      for(let j=pl1.idx; j<=sweep.idx; j++){
+        if(+bars[j].high>bslPrice){ bslPrice=+bars[j].high; bslDate=bars[j].date; }
+      }
+      if(!bslPrice) continue;
+
+      // If current price already reached BSL, setup is complete — skip
+      if(curPrice>=bslPrice) continue;
+
+      // How many bars ago was the sweep?
+      const sweepAge=bars.length-1-sweep.idx;
+
+      results.push({
+        sym,
+        hlPrice: pl2.price, hlDate: pl2.date,
+        sweepLow: +sweep.bar.low, sweepDate: sweep.bar.date,
+        bslPrice, bslDate,
+        curPrice,
+        roomToBSL: ((bslPrice-curPrice)/curPrice*100),
+        sweepAge
+      });
+      break; // one signal per ticker (most recent valid setup)
+    }
+  }
+  results.sort((a,b)=>a.sweepAge-b.sweepAge||b.roomToBSL-a.roomToBSL);
+  return results;
+}
+
+function filterLotto(maxAge, el){
+  lottoMaxAge=maxAge;
+  document.querySelectorAll('#lottoDaysTabs .filter-chip').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderLottoView();
+}
+
+function copyLottoTickers(){
+  if(!lastLottoRows.length) return;
+  const tickers=lastLottoRows.map(r=>r.sym);
+  navigator.clipboard.writeText(tickers.join(', ')).then(()=>{
+    const btn=document.getElementById('lottoCopyBtn');
+    if(!btn) return;
+    const orig=btn.innerHTML;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    btn.style.color='var(--green-dark)'; btn.style.borderColor='var(--green)';
+    setTimeout(()=>{ btn.innerHTML=orig; btn.style.color=''; btn.style.borderColor=''; },2000);
+  });
+}
+
+function renderLottoView(){
+  const tbody=document.getElementById('lottoTbody');
+  const emptyEl=document.getElementById('lottoEmpty');
+  const countEl=document.getElementById('lottoCount');
+  const badgeEl=document.getElementById('lottoBadge');
+  if(!tbody) return;
+
+  const rows=fridayLottoResults.filter(r=>r.sweepAge<=lottoMaxAge);
+  lastLottoRows=rows;
+
+  if(badgeEl) badgeEl.textContent=fridayLottoResults.filter(r=>r.sweepAge<=3).length||'—';
+  if(countEl) countEl.textContent=`${rows.length} setup${rows.length!==1?'s':''} · sweep within ${lottoMaxAge}D`;
+
+  if(!rows.length){
+    tbody.innerHTML='';
+    if(emptyEl) emptyEl.style.display='block';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+
+  const fmt=v=>(+v).toFixed(2);
+  tbody.innerHTML=rows.map(r=>{
+    const ageBadge = r.sweepAge===0
+      ? `<span class="badge acc" style="background:#dcfce7;color:#166534">Today</span>`
+      : r.sweepAge===1
+        ? `<span class="badge" style="background:var(--amber-light);color:var(--amber-dark)">1 bar ago</span>`
+        : `<span class="badge" style="background:var(--blue-light);color:#1d4ed8">${r.sweepAge}D ago</span>`;
+
+    return `<tr data-ticker="${r.sym}">
+      <td><div class="ticker-cell">${tickerIcon(r.sym)}<div class="ticker-info"><div class="sym">${r.sym}</div></div></div></td>
+      <td style="font-size:12px;color:var(--text-sec)">${r.hlDate}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--red-dark);font-weight:600">${fmt(r.hlPrice)}</td>
+      <td style="font-size:12px;color:var(--text-sec)">${r.sweepDate}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--red)">${fmt(r.sweepLow)}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--green-dark);font-weight:700">${fmt(r.bslPrice)}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:600">${fmt(r.curPrice)}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:700;color:var(--green-dark)">+${r.roomToBSL.toFixed(1)}%</td>
+      <td>${ageBadge}</td>
     </tr>`;
   }).join('');
 }
@@ -4130,7 +4332,9 @@ function renderWatchlistView(){
     renderPdhPdlView();
     renderEngulfingView();
     fvgResults = computeFVGResults();
+    fridayLottoResults = computeFridayLottoResults();
     renderFVGView();
+    renderLottoView();
     updateScannerCount();
   }
 })();
