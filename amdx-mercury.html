@@ -1466,22 +1466,6 @@ async function fetchIntraday(sym, tf, from, to){
   return fetchJSON(url);
 }
 
-// Native FMP 1-month candles — matches TradingView 1M chart (regular session only).
-// Returns sorted array of {date,open,high,low,close} or null on failure.
-async function fetchMonthlySeries(sym, from, to){
-  const url = `https://financialmodelingprep.com/stable/historical-chart/1month?symbol=${fmpSym(sym)}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
-  const data = await fetchJSON(url);
-  if(!Array.isArray(data)||!data.length) return null;
-  return data.map(b=>({...b,date:b.date.slice(0,10)})).sort((a,b)=>a.date.localeCompare(b.date));
-}
-
-// Native FMP 1-week candles — matches TradingView 1W chart (regular session only).
-async function fetchWeeklySeries(sym, from, to){
-  const url = `https://financialmodelingprep.com/stable/historical-chart/1week?symbol=${fmpSym(sym)}&from=${from}&to=${to}&apikey=${FMP_KEY}`;
-  const data = await fetchJSON(url);
-  if(!Array.isArray(data)||!data.length) return null;
-  return data.map(b=>({...b,date:b.date.slice(0,10)})).sort((a,b)=>a.date.localeCompare(b.date));
-}
 
 // Batch real-time quotes: returns map of sym → {price, dayHigh, dayLow, open}
 // Uses FMP /stable/quote which gives the actual live price + today's session range,
@@ -2224,11 +2208,11 @@ async function runScan(){
     const obKey='mercury_ob_'+today;
     const pdhKey='mercury_pdh_'+today;
 
-    const engulfingKey='mercury_engulfing11_'+today;
-    const eodTailKey='mercury_eod_tail_v2_'+today;
-    const weeklyTailKey='mercury_weekly_tail_v5_'+today;
-    const monthlyTailKey='mercury_monthly_tail_v3_'+today;
-    const quarterlyTailKey='mercury_quarterly_tail_v2_'+today;
+    const engulfingKey='mercury_engulfing12_'+today;
+    const eodTailKey='mercury_eod_tail_v3_'+today;
+    const weeklyTailKey='mercury_weekly_tail_v6_'+today;
+    const monthlyTailKey='mercury_monthly_tail_v4_'+today;
+    const quarterlyTailKey='mercury_quarterly_tail_v3_'+today;
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -2250,27 +2234,18 @@ async function runScan(){
         const batch=nonFutures.slice(i,i+BATCH_SIZE);
         const promises=batch.map(async sym=>{
           try{
-            // Fetch EOD + native 1M (deep, 4yr) + native 1W in parallel.
-            // 1M uses from1500 (~4 years) so quarterly FVGs from 2022-2024 bull run
-            // are captured. Monthly tail is still capped at 13 bars; quarterly gets 16.
-            const [eod, monthlyDirect, weeklyDirect] = await Promise.all([
-              fetchEOD(sym,from500,today),
-              fetchMonthlySeries(sym,from1500,today).catch(()=>null),
-              fetchWeeklySeries(sym,from500,today).catch(()=>null)
-            ]);
+            // Single deep EOD fetch (~4 years) — gives daily bars for all scanners
+            // AND enough monthly/quarterly history to capture 2022-2024 bull run FVGs.
+            // FMP native 1M/1W endpoints return 404, so EOD aggregation is the source.
+            const eod = await fetchEOD(sym,from1500,today);
             if(!eod.length) return;
-            eodTailMap[sym]=eod.slice(-70);  // ~90 trading days of history
+            eodTailMap[sym]=eod.slice(-70);  // last 70 trading days for daily scanners
             const weekly=aggregateToWeekly(eod);
-            // Weekly tail: prefer native 1W bars (regular-session, matches TradingView 1W)
-            weeklyTailMap[sym]= weeklyDirect&&weeklyDirect.length>=2
-              ? weeklyDirect.slice(-20)
-              : (weekly.length>=2 ? weekly.slice(-20) : []);
+            weeklyTailMap[sym]= weekly.length>=2 ? weekly.slice(-20) : [];
             const monthly=aggregateToMonthly(eod);
-            // Monthly tail: prefer native 1M bars — last 13 months (12 closed + current)
-            const monthlyForTail = monthlyDirect&&monthlyDirect.length>=2 ? monthlyDirect : monthly;
-            monthlyTailMap[sym]= monthlyForTail.length>=2 ? monthlyForTail.slice(-13) : [];
-            // Quarterly tail: aggregate native 1M (4yr) → ~16 quarters, keep all 16
-            const quarterlyBars=aggregateToQuarterly(monthlyForTail);
+            monthlyTailMap[sym]= monthly.length>=2 ? monthly.slice(-13) : [];
+            // Quarterly: ~4 yrs of EOD → ~16 quarters (covers 2022-2024 bull run FVGs)
+            const quarterlyBars=aggregateToQuarterly(monthly);
             quarterlyTailMap[sym]= quarterlyBars.length>=2 ? quarterlyBars.slice(-16) : [];
             weeklyResults[sym]=classifyWeeklyAX(weekly);
             monthlyResults[sym]=classifyMonthlyAX(weekly);
@@ -4371,11 +4346,11 @@ function renderWatchlistView(){
     if(dc&&dc.data) dailyResults=dc.data;
     emaResults=(loadCache('mercury_ema_'+today)||{}).data||{};
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
-    eodTailMap=(loadCache('mercury_eod_tail_v2_'+today)||{}).data||{};
-    weeklyTailMap=(loadCache('mercury_weekly_tail_v5_'+today)||{}).data||{};
-    monthlyTailMap=(loadCache('mercury_monthly_tail_v3_'+today)||{}).data||{};
-    quarterlyTailMap=(loadCache('mercury_quarterly_tail_v2_'+today)||{}).data||{};
-    engulfingResults=(loadCache('mercury_engulfing11_'+today)||{}).data||[];
+    eodTailMap=(loadCache('mercury_eod_tail_v3_'+today)||{}).data||{};
+    weeklyTailMap=(loadCache('mercury_weekly_tail_v6_'+today)||{}).data||{};
+    monthlyTailMap=(loadCache('mercury_monthly_tail_v4_'+today)||{}).data||{};
+    quarterlyTailMap=(loadCache('mercury_quarterly_tail_v3_'+today)||{}).data||{};
+    engulfingResults=(loadCache('mercury_engulfing12_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
     }
