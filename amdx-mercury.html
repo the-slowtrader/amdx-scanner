@@ -3452,14 +3452,25 @@ function computeSetupChainResults(){
     const curPrice=lq?lq.close:(eBars?.length?+eBars[eBars.length-1].close:null);
     if(!curPrice) continue;
 
-    // Find unmitigated bullish Q FVGs
+    // Find PURE unmitigated bullish Q FVGs — exclude any that have been
+    // balanced by a subsequent overlapping bearish FVG (those are BPRs, not FVGs).
+    // BPRs at the Q level belong in the BPR-in-FVG scanner, not the chain.
     const qFVGs=[];
     for(let i=1;i<qBars.length-1;i++){
       const lo=+qBars[i-1].high, hi=+qBars[i+1].low;
       if(lo>=hi) continue;
+      // Mitigated if any later bar closed below the FVG low
       let mit=false;
       for(let j=i+2;j<qBars.length;j++){if(+qBars[j].close<lo){mit=true;break;}}
-      if(!mit) qFVGs.push({low:lo,high:hi,ce:(lo+hi)/2,formed:qBars[i+1].date});
+      if(mit) continue;
+      // Balanced (= BPR) if any subsequent bearish FVG overlaps this bullish FVG
+      let balanced=false;
+      for(let j=i+1;j<qBars.length-1;j++){
+        const bHi=+qBars[j-1].low, bLo=+qBars[j+1].high;
+        if(bHi<=bLo) continue; // not a bearish FVG
+        if(Math.max(lo,bLo)<Math.min(hi,bHi)){balanced=true;break;}
+      }
+      if(!balanced) qFVGs.push({low:lo,high:hi,ce:(lo+hi)/2,formed:qBars[i+1].date});
     }
     if(!qFVGs.length) continue;
 
