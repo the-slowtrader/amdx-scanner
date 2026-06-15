@@ -357,6 +357,11 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
       <span>FVG Radar</span>
       <span class="badge-count" id="fvgBadge">—</span>
     </button>
+    <button class="nav-item" onclick="showView('chain')" data-view="chain">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="3" y="10" width="5" height="5" rx="1"/><rect x="3" y="17" width="5" height="5" rx="1"/><line x1="8" y1="5.5" x2="21" y2="5.5"/><line x1="8" y1="12.5" x2="21" y2="12.5"/><line x1="8" y1="19.5" x2="21" y2="19.5"/></svg>
+      <span>Setup Chain</span>
+      <span class="badge-count" id="chainBadge">—</span>
+    </button>
     <button class="nav-item" onclick="showView('lotto')" data-view="lotto">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-5"/></svg>
       <span>Friday Lotto</span>
@@ -838,6 +843,46 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
         </div>
         <div id="fvgEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
           Run scan to detect FVGs across 24H, Weekly, Monthly &amp; Quarterly
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: Setup Chain                           -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-chain">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips" id="chainConvTabs">
+              <button class="filter-chip active" onclick="filterChain('all',this)">All</button>
+              <button class="filter-chip" onclick="filterChain('3',this)">3+ Levels</button>
+              <button class="filter-chip" onclick="filterChain('4',this)">Full Stack</button>
+            </div>
+          </div>
+          <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted)" id="chainCount"></span>
+            <button class="icon-btn" id="chainCopyBtn" onclick="copyChainTickers()" title="Copy tickers">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>TICKER</th>
+              <th>PRICE</th>
+              <th style="min-width:320px">CHAIN  ·  Q FVG → M BPR → W BPR → D FVG</th>
+              <th>Q FVG ZONE</th>
+              <th>DIST TO CE</th>
+              <th>Q FORMED</th>
+            </tr>
+          </thead>
+          <tbody id="chainTbody"></tbody>
+        </table>
+        <div id="chainEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
+          Run scan to detect setup chains
         </div>
       </div>
     </div>
@@ -1661,6 +1706,9 @@ let fridayLottoResults=[];
 let lottoMaxAge=3;
 let lottoConvFilter='all'; // 'all' | 'high'
 let lastLottoRows=[];
+let setupChainResults=[];
+let chainConvFilter='all'; // 'all'|'3'|'4'
+let lastChainRows=[];
 let currentView='dashboard';
 let currentTimeframe='daily';
 let scannerFilter='all';
@@ -1693,6 +1741,7 @@ function showView(view, sub, skipHash){
     confluence: ['Confluence', 'Cross-timeframe alignment scoring'],
     dealer: ['Dealer Intel', 'HTF order block &amp; breaker zone detection'],
     sweep: ['Sweep Radar', 'Proximity to key liquidity levels'],
+    chain: ['Setup Chain', 'Quarterly FVG → Monthly BPR → Weekly BPR → Daily FVG confluence'],
     lotto: ['Friday Lotto', 'Swept higher low — opposing BSL not yet reached'],
     leap: ['LEAP Hunter', 'Prior year low sweep & reclaim tracker'],
     q1sweep: ['Q1 Sweep Hunter', 'Q1 2026 high/low sweeps &amp; reclaim setups'],
@@ -2629,9 +2678,10 @@ async function runScan(){
     engulfingResults = buildEngulfingResults(eodTailMap, weeklyTailMap, monthlyTailMap);
     saveCache(engulfingKey, engulfingResults);
 
-    // Compute multi-TF FVG results and Friday Lotto setups
+    // Compute multi-TF FVG results, setup chain, and Friday Lotto setups
     fvgResults = computeFVGResults();
     bprFvgResults = computeBprInFvgResults();
+    setupChainResults = computeSetupChainResults();
     fridayLottoResults = computeFridayLottoResults();
 
     // Progressively render what we have so far
@@ -2646,6 +2696,7 @@ async function runScan(){
     renderEngulfingView();
     renderFVGView();
     renderBprFvgView();
+    renderSetupChainView();
     renderLottoView();
 
     // Phase 2: Daily intraday
@@ -2761,9 +2812,11 @@ async function runScan(){
     renderEngulfingView();
     fvgResults = computeFVGResults(); // refresh with live quotes from Phase 3
     bprFvgResults = computeBprInFvgResults();
+    setupChainResults = computeSetupChainResults();
     fridayLottoResults = computeFridayLottoResults();
     renderFVGView();
     renderBprFvgView();
+    renderSetupChainView();
     renderLottoView();
     updateScannerCount();
 
@@ -3355,6 +3408,174 @@ function copyLottoTickers(){
     btn.style.color='var(--green-dark)'; btn.style.borderColor='var(--green)';
     setTimeout(()=>{ btn.innerHTML=orig; btn.style.color=''; btn.style.borderColor=''; },2000);
   });
+}
+
+// ══════════════════════════════════════════════════════
+// Setup Chain — Q FVG → M BPR → W BPR → D FVG
+// ══════════════════════════════════════════════════════
+
+function detectBullishBPRs(bars){
+  if(!Array.isArray(bars)||bars.length<5) return [];
+  const bprs=[];
+  // Collect all unmitigated bullish FVGs
+  const bullFVGs=[];
+  for(let i=1;i<bars.length-1;i++){
+    const lo=+bars[i-1].high, hi=+bars[i+1].low;
+    if(lo>=hi) continue;
+    let mit=false;
+    for(let j=i+2;j<bars.length;j++){if(+bars[j].close<lo){mit=true;break;}}
+    if(!mit) bullFVGs.push({idx:i,lo,hi});
+  }
+  // Find bearish FVGs that follow and overlap with any active bullish FVG
+  for(let i=1;i<bars.length-1;i++){
+    const bHi=+bars[i-1].low, bLo=+bars[i+1].high;
+    if(bHi<=bLo) continue;
+    for(const bull of bullFVGs){
+      if(bull.idx>=i) continue;
+      const oLo=Math.max(bull.lo,bLo), oHi=Math.min(bull.hi,bHi);
+      if(oLo>=oHi) continue;
+      let mit=false;
+      for(let j=i+2;j<bars.length;j++){if(+bars[j].close<oLo){mit=true;break;}}
+      if(!mit) bprs.push({low:oLo,high:oHi,ce:(oLo+oHi)/2,formed:bars[i+1]?.date||bars[i].date});
+    }
+  }
+  return bprs;
+}
+
+function computeSetupChainResults(){
+  const results=[];
+  for(const sym of Object.keys(quarterlyTailMap)){
+    const qBars=quarterlyTailMap[sym];
+    if(!qBars||qBars.length<3) continue;
+    const lq=liveDayMap[sym];
+    const eBars=eodTailMap[sym];
+    const curPrice=lq?lq.close:(eBars?.length?+eBars[eBars.length-1].close:null);
+    if(!curPrice) continue;
+
+    // Find unmitigated bullish Q FVGs
+    const qFVGs=[];
+    for(let i=1;i<qBars.length-1;i++){
+      const lo=+qBars[i-1].high, hi=+qBars[i+1].low;
+      if(lo>=hi) continue;
+      let mit=false;
+      for(let j=i+2;j<qBars.length;j++){if(+qBars[j].close<lo){mit=true;break;}}
+      if(!mit) qFVGs.push({low:lo,high:hi,ce:(lo+hi)/2,formed:qBars[i+1].date});
+    }
+    if(!qFVGs.length) continue;
+
+    // Closest unmitigated Q FVG to current price
+    const bestQ=qFVGs.reduce((b,f)=>{
+      const d=Math.abs(curPrice-f.ce);
+      return !b||d<Math.abs(curPrice-b.ce)?f:b;
+    },null);
+    const qDistPct=(curPrice-bestQ.ce)/bestQ.ce*100;
+    if(qDistPct<-8||qDistPct>65) continue; // price hasn't gotten there yet or left long ago
+
+    const qStatus=curPrice>bestQ.high?'above_fvg':curPrice>=bestQ.ce?'above_ce':curPrice>=bestQ.low?'in_fvg':'approaching';
+
+    // Monthly BPR
+    const mBPRs=detectBullishBPRs(monthlyTailMap[sym]||[]);
+    const mBPR=mBPRs.length?mBPRs[mBPRs.length-1]:null;
+
+    // Weekly BPR
+    const wBPRs=detectBullishBPRs(weeklyTailMap[sym]||[]);
+    const wBPR=wBPRs.length?wBPRs[wBPRs.length-1]:null;
+
+    // Daily FVG (most recent unmitigated)
+    let dFVG=null;
+    const dBars=eodTailMap[sym]||[];
+    for(let i=dBars.length-2;i>=1;i--){
+      const lo=+dBars[i-1].high, hi=+dBars[i+1].low;
+      if(lo>=hi) continue;
+      let mit=false;
+      for(let j=i+2;j<dBars.length;j++){if(+dBars[j].close<lo){mit=true;break;}}
+      if(!mit){dFVG={low:lo,high:hi,ce:(lo+hi)/2,formed:dBars[i+1]?.date||dBars[i].date};break;}
+    }
+
+    const chain=1+(mBPR?1:0)+(wBPR?1:0)+(dFVG?1:0);
+    results.push({sym,curPrice,qDistPct,qStatus,qFVG:bestQ,mBPR,wBPR,dFVG,chain});
+  }
+  results.sort((a,b)=>b.chain-a.chain||Math.abs(a.qDistPct)-Math.abs(b.qDistPct));
+  return results;
+}
+
+function filterChain(val,el){
+  chainConvFilter=val;
+  document.querySelectorAll('#chainConvTabs .filter-chip').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderSetupChainView();
+}
+
+function copyChainTickers(){
+  if(!lastChainRows.length) return;
+  const seen=new Set();
+  const tickers=lastChainRows.map(r=>r.sym).filter(s=>{if(seen.has(s))return false;seen.add(s);return true;});
+  navigator.clipboard.writeText(tickers.join(', ')).then(()=>{
+    const btn=document.getElementById('chainCopyBtn');
+    if(!btn) return;
+    const orig=btn.innerHTML;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    btn.style.color='var(--green-dark)'; btn.style.borderColor='var(--green)';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.style.borderColor='';},2000);
+  });
+}
+
+function renderSetupChainView(){
+  const tbody=document.getElementById('chainTbody');
+  const emptyEl=document.getElementById('chainEmpty');
+  const countEl=document.getElementById('chainCount');
+  const badgeEl=document.getElementById('chainBadge');
+  if(!tbody) return;
+
+  let rows=setupChainResults;
+  if(chainConvFilter!=='all') rows=rows.filter(r=>r.chain>=parseInt(chainConvFilter));
+  lastChainRows=rows;
+
+  const fullStack=setupChainResults.filter(r=>r.chain===4).length;
+  if(badgeEl) badgeEl.textContent=fullStack>0?fullStack:(rows.length||'—');
+  if(countEl) countEl.textContent=`${rows.length} ticker${rows.length!==1?'s':''} · ${fullStack} full stack`;
+
+  if(!rows.length){
+    tbody.innerHTML='';
+    if(emptyEl) emptyEl.style.display='block';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+
+  const fmt=v=>(+v).toFixed(2);
+  const lvl=(ok,label)=>ok
+    ?`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:#dcfce7;color:#166534;border-radius:var(--radius-xs);font-size:10px;font-weight:700"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="9" height="9"><polyline points="20 6 9 17 4 12"/></svg>${label}</span>`
+    :`<span style="padding:3px 8px;background:var(--bg);color:var(--text-muted);border:1px solid var(--card-border);border-radius:var(--radius-xs);font-size:10px;font-weight:600">— ${label}</span>`;
+
+  tbody.innerHTML=rows.map(r=>{
+    const distLabel=r.qDistPct>=0?`+${r.qDistPct.toFixed(1)}%`:`${r.qDistPct.toFixed(1)}%`;
+    const distColor=Math.abs(r.qDistPct)<5?'var(--green-dark)':r.qDistPct<15?'var(--amber-dark)':'var(--text-sec)';
+    const qStatusBadge={
+      in_fvg:`<span class="badge acc" style="font-size:10px;background:#dcfce7;color:#166534">In FVG</span>`,
+      above_ce:`<span class="badge" style="font-size:10px;background:var(--purple-light);color:var(--purple-dark)">Above CE</span>`,
+      above_fvg:`<span class="badge" style="font-size:10px;background:var(--blue-light);color:#1d4ed8">Above FVG</span>`,
+      approaching:`<span class="badge" style="font-size:10px;background:var(--amber-light);color:var(--amber-dark)">Approaching</span>`,
+    }[r.qStatus]||'';
+    return `<tr data-ticker="${r.sym}">
+      <td><div class="ticker-cell">${tickerIcon(r.sym)}<div class="ticker-info"><div class="sym">${r.sym}</div></div></div></td>
+      <td style="font-family:monospace;font-size:12px;font-weight:600">${fmt(r.curPrice)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:nowrap">
+          ${lvl(true,'Q FVG')}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10" style="color:var(--text-muted);flex-shrink:0"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          ${lvl(!!r.mBPR,'M BPR')}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10" style="color:var(--text-muted);flex-shrink:0"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          ${lvl(!!r.wBPR,'W BPR')}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10" style="color:var(--text-muted);flex-shrink:0"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          ${lvl(!!r.dFVG,'D FVG')}
+          ${qStatusBadge}
+        </div>
+      </td>
+      <td style="font-family:monospace;font-size:11px;color:var(--text-sec)">${fmt(r.qFVG.low)} – ${fmt(r.qFVG.high)}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:700;color:${distColor}">${distLabel}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${r.qFVG.formed}</td>
+    </tr>`;
+  }).join('');
 }
 
 function renderLottoView(){
@@ -4845,9 +5066,11 @@ function renderWatchlistView(){
     renderEngulfingView();
     fvgResults = computeFVGResults();
     bprFvgResults = computeBprInFvgResults();
+    setupChainResults = computeSetupChainResults();
     fridayLottoResults = computeFridayLottoResults();
     renderFVGView();
     renderBprFvgView();
+    renderSetupChainView();
     renderLottoView();
     updateScannerCount();
   }
