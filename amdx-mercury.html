@@ -1106,6 +1106,275 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
         </div>
       </div>
 
+
+      <!-- BPR in FVG Model -->
+      <div class="table-container" style="margin-bottom:24px">
+        <div class="table-toolbar">
+          <div>
+            <div class="section-title" style="font-size:14px">BPR in FVG Model</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Quarterly FVG → Monthly BPR · Discount zone → precision shelf · HTF rebalancing model</div>
+          </div>
+        </div>
+
+        <div style="padding:24px">
+          <!-- Model Overview -->
+          <div style="background:var(--bg);border-radius:var(--radius-sm);padding:20px;margin-bottom:24px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px">Model Thesis</div>
+            <div style="font-size:13px;color:var(--text-sec);line-height:1.7">
+              On the <strong>Quarterly timeframe</strong>, identify three candles where a displacement leg leaves an untraded gap — that gap is the <strong>Fair Value Gap (FVG)</strong>. Price rallies away, takes the buyside liquidity above, then returns to rebalance that gap. That return is your <strong>discount zone</strong> — the <em>where</em>, a whole price region price wants to revisit. Then <strong>zoom into the Monthly</strong>: inside that quarterly gap, find two opposing FVGs overlapping — a bearish FVG (down-move imbalance) sitting on top of a bullish FVG (up-move imbalance). Where they cross is the <strong>Balanced Price Range (BPR)</strong> — the <em>which shelf</em>, a tight level inside the big zone where the odds concentrate.
+            </div>
+          </div>
+
+          <!-- Visual Diagram: Two-panel SVG -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+
+            <!-- LEFT PANEL: Quarterly FVG -->
+            <div style="background:#0d1117;border-radius:var(--radius-sm);padding:20px;position:relative">
+              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8b949e;margin-bottom:2px">Quarterly</div>
+              <div style="font-size:9px;color:#484f58;margin-bottom:12px">the where — discount zone to revisit</div>
+              <svg viewBox="0 0 320 300" width="100%" xmlns="http://www.w3.org/2000/svg">
+                <line x1="30" y1="40" x2="30" y2="270" stroke="#161b22" stroke-width="0.5"/>
+                <line x1="30" y1="270" x2="310" y2="270" stroke="#161b22" stroke-width="0.5"/>
+                <line x1="30" y1="100" x2="310" y2="100" stroke="#161b22" stroke-width="0.5" stroke-dasharray="2,4"/>
+                <line x1="30" y1="170" x2="310" y2="170" stroke="#161b22" stroke-width="0.5" stroke-dasharray="2,4"/>
+                <line x1="30" y1="200" x2="310" y2="200" stroke="#161b22" stroke-width="0.5" stroke-dasharray="2,4"/>
+                <rect x="40" y="155" width="270" height="55" rx="2" fill="#26a69a" opacity="0.12"/>
+                <rect x="40" y="155" width="270" height="55" rx="2" stroke="#26a69a" stroke-width="0.7" fill="none" opacity="0.4" stroke-dasharray="3,3"/>
+                <text x="42" y="187" font-size="8" fill="#26a69a" opacity="0.8" font-weight="600" font-family="Inter,sans-serif">QUARTERLY FVG</text>
+                <text x="42" y="197" font-size="7" fill="#26a69a" opacity="0.5" font-family="Inter,sans-serif">imbalance — untraded gap</text>
+                <line x1="70" y1="130" x2="70" y2="220" stroke="#26a69a" stroke-width="1"/>
+                <rect x="62" y="155" width="16" height="50" rx="1" fill="#26a69a"/>
+                <line x1="105" y1="145" x2="105" y2="250" stroke="#ef5350" stroke-width="1"/>
+                <rect x="97" y="150" width="16" height="85" rx="1" fill="#ef5350"/>
+                <line x1="140" y1="200" x2="140" y2="260" stroke="#26a69a" stroke-width="1"/>
+                <rect x="132" y="210" width="16" height="35" rx="1" fill="#26a69a"/>
+                <text x="88" y="268" font-size="7" fill="#484f58" text-anchor="middle" font-family="Inter,sans-serif">1 — 2 — 3</text>
+                <line x1="175" y1="140" x2="175" y2="230" stroke="#26a69a" stroke-width="1"/>
+                <rect x="167" y="155" width="16" height="55" rx="1" fill="#26a69a"/>
+                <line x1="200" y1="90" x2="200" y2="175" stroke="#26a69a" stroke-width="1"/>
+                <rect x="192" y="100" width="16" height="55" rx="1" fill="#26a69a"/>
+                <line x1="30" y1="80" x2="260" y2="80" stroke="#ef5350" stroke-width="0.7" stroke-dasharray="4,3" opacity="0.6"/>
+                <text x="262" y="83" font-size="7" fill="#ef5350" opacity="0.7" font-family="Inter,sans-serif">buyside liquidity</text>
+                <line x1="225" y1="60" x2="225" y2="115" stroke="#26a69a" stroke-width="1"/>
+                <rect x="217" y="65" width="16" height="40" rx="1" fill="#26a69a"/>
+                <path d="M 240,70 C 260,50 280,90 280,120" stroke="#c9d1d9" stroke-width="0.8" fill="none" opacity="0.4"/>
+                <polygon points="278,118 280,126 282,118" fill="#c9d1d9" opacity="0.4"/>
+                <text x="268" y="94" font-size="7" fill="#c9d1d9" opacity="0.5" transform="rotate(20,268,94)" font-family="Inter,sans-serif">return</text>
+                <line x1="255" y1="85" x2="255" y2="170" stroke="#ef5350" stroke-width="1"/>
+                <rect x="247" y="90" width="16" height="60" rx="1" fill="#ef5350"/>
+                <line x1="280" y1="120" x2="280" y2="195" stroke="#ef5350" stroke-width="1"/>
+                <rect x="272" y="130" width="16" height="50" rx="1" fill="#ef5350"/>
+                <rect x="270" y="163" width="30" height="18" rx="2" fill="#d4a843" opacity="0.25"/>
+                <text x="285" y="175" font-size="7" fill="#d4a843" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">BPR</text>
+                <line x1="35" y1="155" x2="55" y2="155" stroke="#26a69a" stroke-width="0.5" opacity="0.5"/>
+                <text x="33" y="153" font-size="6" fill="#26a69a" opacity="0.5" text-anchor="end" font-family="Inter,sans-serif">C1 high</text>
+                <line x1="35" y1="210" x2="55" y2="210" stroke="#26a69a" stroke-width="0.5" opacity="0.5"/>
+                <text x="33" y="213" font-size="6" fill="#26a69a" opacity="0.5" text-anchor="end" font-family="Inter,sans-serif">C3 low</text>
+              </svg>
+            </div>
+
+            <!-- RIGHT PANEL: Monthly BPR -->
+            <div style="background:#0d1117;border-radius:var(--radius-sm);padding:20px;position:relative">
+              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8b949e;margin-bottom:2px">Monthly <span style="font-weight:400;color:#484f58">(zoom)</span></div>
+              <div style="font-size:9px;color:#484f58;margin-bottom:12px">the which shelf — where odds concentrate</div>
+              <svg viewBox="0 0 320 300" width="100%" xmlns="http://www.w3.org/2000/svg">
+                <line x1="20" y1="40" x2="20" y2="270" stroke="#161b22" stroke-width="0.5"/>
+                <line x1="20" y1="270" x2="310" y2="270" stroke="#161b22" stroke-width="0.5"/>
+                <rect x="20" y="60" width="290" height="180" rx="2" fill="#26a69a" opacity="0.04"/>
+                <rect x="20" y="60" width="290" height="180" rx="2" stroke="#26a69a" stroke-width="0.5" fill="none" opacity="0.15" stroke-dasharray="4,4"/>
+                <text x="305" y="75" font-size="6.5" fill="#26a69a" opacity="0.35" text-anchor="end" font-family="Inter,sans-serif">quarterly FVG</text>
+                <rect x="20" y="118" width="290" height="52" rx="1" fill="#ef5350" opacity="0.1"/>
+                <line x1="20" y1="118" x2="310" y2="118" stroke="#ef5350" stroke-width="0.5" opacity="0.35" stroke-dasharray="3,3"/>
+                <line x1="20" y1="170" x2="310" y2="170" stroke="#ef5350" stroke-width="0.5" opacity="0.35" stroke-dasharray="3,3"/>
+                <rect x="20" y="145" width="290" height="55" rx="1" fill="#26a69a" opacity="0.1"/>
+                <line x1="20" y1="145" x2="310" y2="145" stroke="#26a69a" stroke-width="0.5" opacity="0.35" stroke-dasharray="3,3"/>
+                <line x1="20" y1="200" x2="310" y2="200" stroke="#26a69a" stroke-width="0.5" opacity="0.35" stroke-dasharray="3,3"/>
+                <rect x="20" y="145" width="290" height="25" rx="1" fill="#d4a843" opacity="0.22"/>
+                <rect x="20" y="145" width="290" height="25" rx="1" stroke="#d4a843" stroke-width="1" fill="none" opacity="0.5"/>
+                <text x="308" y="132" font-size="7" fill="#ef5350" opacity="0.7" text-anchor="end" font-family="Inter,sans-serif">bearish FVG</text>
+                <text x="308" y="140" font-size="6" fill="#ef5350" opacity="0.4" text-anchor="end" font-family="Inter,sans-serif">down-move imbalance</text>
+                <text x="308" y="192" font-size="7" fill="#26a69a" opacity="0.7" text-anchor="end" font-family="Inter,sans-serif">bullish FVG</text>
+                <text x="308" y="200" font-size="6" fill="#26a69a" opacity="0.4" text-anchor="end" font-family="Inter,sans-serif">up-move imbalance</text>
+                <rect x="130" y="150" width="60" height="14" rx="3" fill="#d4a843" opacity="0.3"/>
+                <text x="160" y="160" font-size="8" fill="#d4a843" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">BPR</text>
+                <line x1="40" y1="200" x2="40" y2="255" stroke="#26a69a" stroke-width="0.8"/>
+                <rect x="35" y="210" width="10" height="30" rx="1" fill="#26a69a"/>
+                <line x1="58" y1="175" x2="58" y2="240" stroke="#26a69a" stroke-width="0.8"/>
+                <rect x="53" y="185" width="10" height="35" rx="1" fill="#26a69a"/>
+                <line x1="76" y1="130" x2="76" y2="200" stroke="#26a69a" stroke-width="0.8"/>
+                <rect x="71" y="140" width="10" height="40" rx="1" fill="#26a69a"/>
+                <line x1="94" y1="100" x2="94" y2="185" stroke="#ef5350" stroke-width="0.8"/>
+                <rect x="89" y="110" width="10" height="55" rx="1" fill="#ef5350"/>
+                <line x1="112" y1="115" x2="112" y2="210" stroke="#ef5350" stroke-width="0.8"/>
+                <rect x="107" y="120" width="10" height="70" rx="1" fill="#ef5350"/>
+                <line x1="130" y1="155" x2="130" y2="230" stroke="#ef5350" stroke-width="0.8"/>
+                <rect x="125" y="165" width="10" height="45" rx="1" fill="#ef5350"/>
+                <line x1="148" y1="140" x2="148" y2="210" stroke="#26a69a" stroke-width="0.8"/>
+                <rect x="143" y="148" width="10" height="42" rx="1" fill="#26a69a"/>
+                <line x1="166" y1="95" x2="166" y2="165" stroke="#26a69a" stroke-width="0.8"/>
+                <rect x="161" y="105" width="10" height="40" rx="1" fill="#26a69a"/>
+                <line x1="184" y1="65" x2="184" y2="120" stroke="#26a69a" stroke-width="0.8"/>
+                <rect x="179" y="72" width="10" height="35" rx="1" fill="#26a69a"/>
+                <line x1="20" y1="55" x2="230" y2="55" stroke="#ef5350" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.5"/>
+                <text x="232" y="58" font-size="6" fill="#ef5350" opacity="0.5" font-family="Inter,sans-serif">buyside</text>
+                <line x1="202" y1="48" x2="202" y2="85" stroke="#26a69a" stroke-width="0.8"/>
+                <rect x="197" y="50" width="10" height="28" rx="1" fill="#26a69a"/>
+                <line x1="220" y1="60" x2="220" y2="130" stroke="#ef5350" stroke-width="0.8"/>
+                <rect x="215" y="65" width="10" height="50" rx="1" fill="#ef5350"/>
+                <line x1="238" y1="100" x2="238" y2="170" stroke="#ef5350" stroke-width="0.8"/>
+                <rect x="233" y="108" width="10" height="45" rx="1" fill="#ef5350"/>
+                <line x1="256" y1="125" x2="256" y2="185" stroke="#ef5350" stroke-width="0.8"/>
+                <rect x="251" y="133" width="10" height="35" rx="1" fill="#ef5350"/>
+                <line x1="274" y1="130" x2="274" y2="175" stroke="#26a69a" stroke-width="0.8"/>
+                <rect x="269" y="138" width="10" height="22" rx="1" fill="#26a69a"/>
+                <path d="M 150,145 C 165,100 175,80 185,68" stroke="#c9d1d9" stroke-width="0.6" fill="none" opacity="0.3"/>
+                <text x="168" y="88" font-size="6" fill="#c9d1d9" opacity="0.35" transform="rotate(-50,168,88)" font-family="Inter,sans-serif">ride to buyside</text>
+                <path d="M 222,70 C 240,100 248,130 255,148" stroke="#c9d1d9" stroke-width="0.6" fill="none" opacity="0.3"/>
+                <text x="248" y="108" font-size="6" fill="#c9d1d9" opacity="0.35" transform="rotate(55,248,108)" font-family="Inter,sans-serif">return</text>
+                <text x="282" y="133" font-size="6" fill="#26a69a" opacity="0.6" font-family="Inter,sans-serif">reaction</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Reading the Model -->
+          <div style="background:var(--bg);border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:24px;font-size:12px;color:var(--text-sec);line-height:1.7">
+            <strong style="color:var(--text)">Read it left to right.</strong> The quarterly FVG gives you the zone — a whole price region the market wants to revisit. The monthly BPR gives you the shelf — the tight level inside that zone where two imbalances overlap and the odds stack up. The FVG is <em>where</em>. The BPR is <em>which level</em>.
+          </div>
+
+          <!-- Entry Checklist -->
+          <div style="font-size:13px;font-weight:700;margin-bottom:16px">Entry Checklist</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+
+            <!-- Step 1 -->
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:20px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">1</div>
+                <div style="font-size:13px;font-weight:700">Identify Quarterly FVG</div>
+              </div>
+              <div style="font-size:12px;color:var(--text-sec);line-height:1.7">
+                Find <strong>three consecutive quarterly candles</strong> where a displacement leg creates an untraded gap. The FVG sits between <strong>Candle 1's high and Candle 3's low</strong>. This is the broad discount zone price wants to revisit.
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--card-border);font-size:11px;color:var(--text-muted)">
+                ✦ Green band = quarterly FVG<br>
+                ✦ Bigger gap = stronger magnet
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:20px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">2</div>
+                <div style="font-size:13px;font-weight:700">Wait for Buyside Sweep + Return</div>
+              </div>
+              <div style="font-size:12px;color:var(--text-sec);line-height:1.7">
+                Price rallies away from the FVG, <strong>takes buyside liquidity</strong> above, then reverses. That return back toward the quarterly gap is your signal the <strong>rebalancing phase</strong> is beginning. Now you know <em>where</em> — zoom in.
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--card-border);font-size:11px;color:var(--text-muted)">
+                ✦ Buyside swept = manipulation done<br>
+                ✦ Return to FVG = rebalancing begins
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:20px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">3</div>
+                <div style="font-size:13px;font-weight:700">Find the Monthly BPR</div>
+              </div>
+              <div style="font-size:12px;color:var(--text-sec);line-height:1.7">
+                Drop to the <strong>Monthly timeframe</strong> inside that quarterly FVG. Look for a <strong>bearish FVG</strong> (down-move imbalance) overlapping a <strong>bullish FVG</strong> (up-move imbalance). The overlap zone is the <strong>Balanced Price Range</strong> — the gold band.
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--card-border);font-size:11px;color:var(--text-muted)">
+                ✦ Bearish FVG ∩ Bullish FVG = BPR<br>
+                ✦ Price delivered both directions here
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:20px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">4</div>
+                <div style="font-size:13px;font-weight:700">Entry at BPR Reaction</div>
+              </div>
+              <div style="font-size:12px;color:var(--text-sec);line-height:1.7">
+                When price enters the BPR on the monthly, watch for a <strong>reaction</strong> — a displacement candle, a market structure shift, or a lower-timeframe BMS. The BPR is your precision shelf. <strong>That's where you take the trade</strong>, not anywhere in the broad quarterly gap.
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--card-border);font-size:11px;color:var(--text-muted)">
+                ✦ Reaction off BPR = entry confirmation<br>
+                ✦ Target: opposing liquidity pool
+              </div>
+            </div>
+          </div>
+
+          <!-- Key Rules -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+            <div style="background:var(--green-light);border-radius:var(--radius-sm);padding:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">The Zone</div>
+              <div style="font-size:12px;color:var(--green-dark);line-height:1.6">
+                Quarterly FVG = the discount zone. It's the broad region price wants to revisit after sweeping buyside. Don't enter here — it's too wide.
+              </div>
+            </div>
+            <div style="background:var(--amber-light);border-radius:var(--radius-sm);padding:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--amber-dark);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">The Shelf</div>
+              <div style="font-size:12px;color:var(--amber-dark);line-height:1.6">
+                Monthly BPR = the precision level. Two opposing imbalances overlap here — price has been delivered through both directions. This is where odds concentrate.
+              </div>
+            </div>
+            <div style="background:var(--purple-light);border-radius:var(--radius-sm);padding:16px">
+              <div style="font-size:11px;font-weight:700;color:var(--purple-dark);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">The Sequence</div>
+              <div style="font-size:12px;color:var(--purple-dark);line-height:1.6">
+                FVG tells you where. BPR tells you which level. The reaction tells you when. Always work from the quarterly down to the monthly — never the other way.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BPR in FVG Scanner Results -->
+      <div class="table-container" style="margin-bottom:24px">
+        <div class="table-toolbar">
+          <div>
+            <div class="section-title" style="font-size:14px">BPR in FVG Scanner</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Quarterly FVGs with monthly BPR overlap &middot; Run scan to detect</div>
+          </div>
+          <div class="table-toolbar-right">
+            <div class="filter-chips" id="bprFvgFilterTabs">
+              <button class="filter-chip active" onclick="filterBprFvg('all',this)">All</button>
+              <button class="filter-chip" onclick="filterBprFvg('at_bpr',this)">At BPR</button>
+              <button class="filter-chip" onclick="filterBprFvg('approaching',this)">Approaching</button>
+              <button class="filter-chip" onclick="filterBprFvg('bullish_q',this)">Bullish Q</button>
+              <button class="filter-chip" onclick="filterBprFvg('bearish_q',this)">Bearish Q</button>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted)" id="bprFvgCount"></span>
+            <button class="topbar-btn" id="bprFvgCopyBtn" onclick="copyBprFvgTickers()" style="padding:5px 10px;font-size:11px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              Copy Tickers
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Q FVG</th>
+                <th>Q FVG Zone</th>
+                <th style="color:var(--amber-dark)">Monthly BPR</th>
+                <th>BPR Size</th>
+                <th>Price</th>
+                <th>Dist to BPR</th>
+                <th>Status</th>
+                <th>Formed</th>
+              </tr>
+            </thead>
+            <tbody id="bprFvgTbody"></tbody>
+          </table>
+        </div>
+        <div id="bprFvgEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
+          Run scan to detect BPR-in-FVG setups across quarterly &amp; monthly timeframes
+        </div>
+      </div>
+
       <!-- PDH/PDL Sweep Scanner -->
       <div class="table-container" style="margin-bottom:24px">
         <div class="table-toolbar">
@@ -1331,6 +1600,9 @@ let fvgResults=[];
 let fvgStatusFilter='all';
 let fvgTfFilter='all';
 let lastFVGRows=[];
+let bprFvgResults=[];
+let bprFvgFilter='all';
+let lastBprFvgRows=[];
 let fridayLottoResults=[];
 let lottoMaxAge=3;
 let lottoConvFilter='all'; // 'all' | 'high'
@@ -1381,7 +1653,7 @@ function showView(view, sub, skipHash){
   document.getElementById('viewSubtitle').innerHTML = t[1] + ' &middot; <span id="currentDate">'+formatDate(new Date())+'</span>';
   if(sub && view==='scanner') switchTimeframe(sub);
   if(view==='watchlist') renderWatchlistView();
-  if(view==='models'){renderPdhPdlView();renderTradeLog();}
+  if(view==='models'){renderBprFvgView();renderPdhPdlView();renderTradeLog();}
   // Update URL hash (unless restoring from hash)
   if(!skipHash) updateHash();
 }
@@ -2303,6 +2575,7 @@ async function runScan(){
 
     // Compute multi-TF FVG results and Friday Lotto setups
     fvgResults = computeFVGResults();
+    bprFvgResults = computeBprInFvgResults();
     fridayLottoResults = computeFridayLottoResults();
 
     // Progressively render what we have so far
@@ -2316,6 +2589,7 @@ async function runScan(){
     renderPdhPdlView();
     renderEngulfingView();
     renderFVGView();
+    renderBprFvgView();
     renderLottoView();
 
     // Phase 2: Daily intraday
@@ -2430,8 +2704,10 @@ async function runScan(){
     renderPdhPdlView();
     renderEngulfingView();
     fvgResults = computeFVGResults(); // refresh with live quotes from Phase 3
+    bprFvgResults = computeBprInFvgResults();
     fridayLottoResults = computeFridayLottoResults();
     renderFVGView();
+    renderBprFvgView();
     renderLottoView();
     updateScannerCount();
 
@@ -2633,6 +2909,139 @@ function _scanFVGsInMap(barsMap, tf){
     }
   }
   return out;
+}
+
+// ── BPR in FVG Scanner ──────────────────────────────────────────────
+function computeBprInFvgResults(){
+  const results=[];
+  for(const sym of Object.keys(quarterlyTailMap)){
+    const qBars=quarterlyTailMap[sym];
+    const mBars=monthlyTailMap[sym];
+    if(!qBars||qBars.length<3||!mBars||mBars.length<3) continue;
+    const lq=liveDayMap[sym];
+    const lastDaily=eodTailMap[sym];
+    const curPrice=lq?lq.close:(lastDaily&&lastDaily.length?+lastDaily[lastDaily.length-1].close:+qBars[qBars.length-1].close);
+    // Find quarterly FVGs (both directions)
+    const qFvgs=[];
+    for(let i=1;i<=qBars.length-2;i++){
+      const b0=qBars[i-1],b1=qBars[i],b2=qBars[i+1];
+      if(+b2.low>+b0.high) qFvgs.push({dir:'bullish',low:+b0.high,high:+b2.low,date:b1.date,idx:i});
+      if(+b0.low>+b2.high) qFvgs.push({dir:'bearish',low:+b2.high,high:+b0.low,date:b1.date,idx:i});
+    }
+    for(const qf of qFvgs){
+      const bullishMFvgs=[];
+      const bearishMFvgs=[];
+      for(let j=1;j<=mBars.length-2;j++){
+        const m0=mBars[j-1],m1=mBars[j],m2=mBars[j+1];
+        if(+m2.low>+m0.high){
+          const mfvg={low:+m0.high,high:+m2.low,date:m1.date,idx:j};
+          if(mfvg.high>qf.low&&mfvg.low<qf.high) bullishMFvgs.push(mfvg);
+        }
+        if(+m0.low>+m2.high){
+          const mfvg={low:+m2.high,high:+m0.low,date:m1.date,idx:j};
+          if(mfvg.high>qf.low&&mfvg.low<qf.high) bearishMFvgs.push(mfvg);
+        }
+      }
+      for(const bear of bearishMFvgs){
+        for(const bull of bullishMFvgs){
+          const bprLow=Math.max(bear.low,bull.low);
+          const bprHigh=Math.min(bear.high,bull.high);
+          if(bprLow>=bprHigh) continue;
+          const latestIdx=Math.max(bear.idx,bull.idx);
+          let mitigated=false;
+          for(let k=latestIdx+1;k<mBars.length;k++){
+            const cOpen=+mBars[k].open,cClose=+mBars[k].close;
+            const bodyHi=Math.max(cOpen,cClose),bodyLo=Math.min(cOpen,cClose);
+            if(bodyLo<=bprLow&&bodyHi>=bprHigh){mitigated=true;break;}
+          }
+          if(mitigated) continue;
+          const bprSize=((bprHigh-bprLow)/bprLow*100);
+          const mid=(bprLow+bprHigh)/2;
+          const distPct=((curPrice-mid)/mid*100);
+          const formedDate=bear.date>bull.date?bear.date:bull.date;
+          let status;
+          if(curPrice>=bprLow&&curPrice<=bprHigh) status='at_bpr';
+          else if(curPrice>bprHigh&&distPct<5) status='approaching';
+          else if(curPrice<bprLow&&distPct>-5) status='approaching';
+          else if(curPrice>bprHigh) status='above';
+          else status='below';
+          results.push({sym,qDir:qf.dir,qLow:qf.low,qHigh:qf.high,qDate:qf.date,bprLow,bprHigh,bprSize,curPrice,distPct,status,formed:formedDate});
+        }
+      }
+    }
+  }
+  const order={at_bpr:0,approaching:1,above:2,below:3};
+  results.sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||Math.abs(a.distPct)-Math.abs(b.distPct));
+  return results;
+}
+
+function filterBprFvg(val,el){
+  bprFvgFilter=val;
+  document.querySelectorAll('#bprFvgFilterTabs .filter-chip').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderBprFvgView();
+}
+
+function copyBprFvgTickers(){
+  if(!lastBprFvgRows.length) return;
+  const seen=new Set();
+  const tickers=lastBprFvgRows.map(r=>r.sym).filter(s=>{if(seen.has(s)) return false;seen.add(s);return true;});
+  navigator.clipboard.writeText(tickers.join(', ')).then(()=>{
+    const btn=document.getElementById('bprFvgCopyBtn');
+    if(!btn) return;
+    const orig=btn.innerHTML;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    btn.style.color='var(--green-dark)';btn.style.borderColor='var(--green)';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.style.borderColor='';},2000);
+  });
+}
+
+function renderBprFvgView(){
+  const tbody=document.getElementById('bprFvgTbody');
+  const emptyEl=document.getElementById('bprFvgEmpty');
+  const countEl=document.getElementById('bprFvgCount');
+  if(!tbody) return;
+  let rows=bprFvgResults;
+  if(bprFvgFilter==='at_bpr') rows=rows.filter(r=>r.status==='at_bpr');
+  else if(bprFvgFilter==='approaching') rows=rows.filter(r=>r.status==='approaching');
+  else if(bprFvgFilter==='bullish_q') rows=rows.filter(r=>r.qDir==='bullish');
+  else if(bprFvgFilter==='bearish_q') rows=rows.filter(r=>r.qDir==='bearish');
+  lastBprFvgRows=rows;
+  const atBprCount=bprFvgResults.filter(r=>r.status==='at_bpr').length;
+  const approachCount=bprFvgResults.filter(r=>r.status==='approaching').length;
+  if(countEl) countEl.textContent=rows.length+' setups \u00b7 '+atBprCount+' at BPR \u00b7 '+approachCount+' approaching';
+  if(!rows.length){
+    tbody.innerHTML='';
+    if(emptyEl) emptyEl.style.display='block';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+  const fmt=v=>'$'+(+v).toFixed(2);
+  const fmtPct=v=>(v>=0?'+':'')+v.toFixed(1)+'%';
+  tbody.innerHTML=rows.map(r=>{
+    const statusBadge=r.status==='at_bpr'
+      ?'<span class="badge acc" style="background:#dcfce7;color:#166534">At BPR</span>'
+      :r.status==='approaching'
+        ?'<span class="badge" style="background:var(--amber-light);color:var(--amber-dark)">Approaching</span>'
+        :r.status==='above'
+          ?'<span class="badge" style="background:var(--blue-light);color:#1d4ed8">Above</span>'
+          :'<span class="badge" style="background:var(--red-light);color:var(--red-dark)">Below</span>';
+    const qDirBadge=r.qDir==='bullish'
+      ?'<span class="badge" style="background:var(--green-light);color:var(--green-dark)">Bullish</span>'
+      :'<span class="badge" style="background:var(--red-light);color:var(--red-dark)">Bearish</span>';
+    const distColor=r.status==='at_bpr'?'var(--green-dark)':r.status==='approaching'?'var(--amber-dark)':'var(--text-sec)';
+    return '<tr data-ticker="'+r.sym+'">'
+      +'<td><div style="display:flex;align-items:center;gap:8px">'+tickerIcon(r.sym)+'<strong>'+r.sym+'</strong></div></td>'
+      +'<td>'+qDirBadge+'</td>'
+      +'<td style="font-size:12px;color:var(--text-sec)">'+fmt(r.qLow)+' \u2013 '+fmt(r.qHigh)+'</td>'
+      +'<td style="font-weight:600;color:var(--amber-dark)">'+fmt(r.bprLow)+' \u2013 '+fmt(r.bprHigh)+'</td>'
+      +'<td>'+r.bprSize.toFixed(1)+'%</td>'
+      +'<td style="font-weight:600">'+fmt(r.curPrice)+'</td>'
+      +'<td style="font-weight:600;color:'+distColor+'">'+fmtPct(r.distPct)+'</td>'
+      +'<td>'+statusBadge+'</td>'
+      +'<td style="font-size:11px;color:var(--text-muted)">'+r.formed+'</td>'
+      +'</tr>';
+  }).join('');
 }
 
 function computeFVGResults(){
@@ -4364,8 +4773,10 @@ function renderWatchlistView(){
     renderPdhPdlView();
     renderEngulfingView();
     fvgResults = computeFVGResults();
+    bprFvgResults = computeBprInFvgResults();
     fridayLottoResults = computeFridayLottoResults();
     renderFVGView();
+    renderBprFvgView();
     renderLottoView();
     updateScannerCount();
   }
