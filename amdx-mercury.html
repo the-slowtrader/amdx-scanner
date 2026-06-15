@@ -366,6 +366,11 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       <span>LEAP Hunter</span>
     </button>
+    <button class="nav-item" onclick="showView('bprfvg')" data-view="bprfvg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="6" width="4" height="9" rx="1" fill="rgba(124,58,237,0.15)"/><rect x="14" y="4" width="4" height="11" rx="1" fill="rgba(245,158,11,0.15)"/><line x1="7" y1="10" x2="18" y2="10" stroke-dasharray="2 2" stroke="currentColor" opacity="0.5"/><line x1="7" y1="12" x2="18" y2="12" stroke-dasharray="2 2" stroke="currentColor" opacity="0.5"/></svg>
+      <span>BPR in FVG</span>
+      <span class="badge-count" id="bprFvgBadge">—</span>
+    </button>
     <button class="nav-item" onclick="showView('q1sweep')" data-view="q1sweep">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-8"/></svg>
       <span>Q1 Sweep</span>
@@ -981,6 +986,55 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
           </div>
         </div>
         <div id="fullWatchlistGrid" style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: BPR in FVG Scanner                    -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-bprfvg">
+      <div class="table-container" style="margin-bottom:24px">
+        <div class="table-toolbar">
+          <div>
+            <div class="section-title" style="font-size:14px">BPR in FVG Scanner</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Quarterly FVGs with monthly BPR overlap &middot; Hit Scan Now to detect</div>
+          </div>
+          <div class="table-toolbar-right">
+            <div class="filter-chips" id="bprFvgFilterTabs2">
+              <button class="filter-chip active" onclick="filterBprFvg('all',this)">All</button>
+              <button class="filter-chip" onclick="filterBprFvg('at_bpr',this)">At BPR</button>
+              <button class="filter-chip" onclick="filterBprFvg('approaching',this)">Approaching</button>
+              <button class="filter-chip" onclick="filterBprFvg('bullish_q',this)">Bullish Q</button>
+              <button class="filter-chip" onclick="filterBprFvg('bearish_q',this)">Bearish Q</button>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted)" id="bprFvgCount2"></span>
+            <button class="topbar-btn" id="bprFvgCopyBtn2" onclick="copyBprFvgTickers()" style="padding:5px 10px;font-size:11px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              Copy Tickers
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Q FVG</th>
+                <th>Q FVG Zone</th>
+                <th style="color:var(--amber-dark)">Monthly BPR</th>
+                <th>BPR Size</th>
+                <th>Price</th>
+                <th>Dist to BPR</th>
+                <th>Status</th>
+                <th>Formed</th>
+              </tr>
+            </thead>
+            <tbody id="bprFvgTbody2"></tbody>
+          </table>
+        </div>
+        <div id="bprFvgEmpty2" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
+          Hit <strong>Scan Now</strong> to detect BPR-in-FVG setups across quarterly &amp; monthly timeframes
+        </div>
       </div>
     </div>
 
@@ -1645,6 +1699,7 @@ function showView(view, sub, skipHash){
     models: ['Trading Models', 'Entry checklists &amp; trade tracking'],
     engulfing: ['Engulfing Scanner', 'Wick sweeps one side, close through the other — daily, weekly &amp; monthly'],
     fvg: ['FVG Radar', 'Bullish fair value gaps at 50% CE — 24H · Weekly · Monthly · Quarterly'],
+    bprfvg: ['BPR in FVG', 'Quarterly FVG &rarr; Monthly BPR overlap &middot; precision shelf scanner'],
     watchlist: ['Watchlist', 'Your tracked tickers'],
     alerts: ['Alert Center', 'Phase transition notifications']
   };
@@ -1653,6 +1708,7 @@ function showView(view, sub, skipHash){
   document.getElementById('viewSubtitle').innerHTML = t[1] + ' &middot; <span id="currentDate">'+formatDate(new Date())+'</span>';
   if(sub && view==='scanner') switchTimeframe(sub);
   if(view==='watchlist') renderWatchlistView();
+  if(view==='bprfvg') renderBprFvgView();
   if(view==='models'){renderBprFvgView();renderPdhPdlView();renderTradeLog();}
   // Update URL hash (unless restoring from hash)
   if(!skipHash) updateHash();
@@ -2977,8 +3033,9 @@ function computeBprInFvgResults(){
 
 function filterBprFvg(val,el){
   bprFvgFilter=val;
-  document.querySelectorAll('#bprFvgFilterTabs .filter-chip').forEach(b=>b.classList.remove('active'));
-  if(el) el.classList.add('active');
+  document.querySelectorAll('#bprFvgFilterTabs .filter-chip, #bprFvgFilterTabs2 .filter-chip').forEach(b=>{
+    b.classList.toggle('active', b.textContent.trim()===({'all':'All','at_bpr':'At BPR','approaching':'Approaching','bullish_q':'Bullish Q','bearish_q':'Bearish Q'}[val]||''));
+  });
   renderBprFvgView();
 }
 
@@ -2997,9 +3054,23 @@ function copyBprFvgTickers(){
 }
 
 function renderBprFvgView(){
-  const tbody=document.getElementById('bprFvgTbody');
-  const emptyEl=document.getElementById('bprFvgEmpty');
-  const countEl=document.getElementById('bprFvgCount');
+  // Update sidebar badge
+  const badge=document.getElementById('bprFvgBadge');
+  if(badge){
+    const atBpr=bprFvgResults.filter(r=>r.status==='at_bpr').length;
+    const appr=bprFvgResults.filter(r=>r.status==='approaching').length;
+    const hot=atBpr+appr;
+    badge.textContent=bprFvgResults.length||'\u2014';
+    if(hot>0){badge.style.background='rgba(124,58,237,0.3)';badge.style.color='var(--purple)';}
+  }
+  // Render into both locations (models + standalone view)
+  _renderBprTable('bprFvgTbody','bprFvgEmpty','bprFvgCount');
+  _renderBprTable('bprFvgTbody2','bprFvgEmpty2','bprFvgCount2');
+}
+function _renderBprTable(tbodyId,emptyId,countId){
+  const tbody=document.getElementById(tbodyId);
+  const emptyEl=document.getElementById(emptyId);
+  const countEl=document.getElementById(countId);
   if(!tbody) return;
   let rows=bprFvgResults;
   if(bprFvgFilter==='at_bpr') rows=rows.filter(r=>r.status==='at_bpr');
