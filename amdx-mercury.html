@@ -1637,32 +1637,44 @@ const FETCH_DELAY = 300;
 const MID_TOL = 0.001; // 0.1% mid-price tolerance for A/X
 
 const DEFAULT_WATCHLIST = [
-  'AMDL','NFXL','MSFL','CRWV','INTC','AAPL','KHC','AFRM','AVGO','MNST',
-  'APP','NVDA','TSLA','EVGO','ZS','HOOD','DLO','SOUN','CSCO','META',
-  'MARA','SBUX','PYPL','SMCI','ASML','SRPT','FANG','LULU','RCAT','NEON',
-  'IBKR','MDLZ','AEVA','NBIS','IBIT','PANW','AMAT','ARM','MCHP','SBET',
-  'ABNB','MU','INTU','XRPT','QRVO','AVAV','IREN','CIFR','MRVL','COIN',
-  'COST','FIVE','OPEN','TLN','CEG','MSFT','EYE','ALAB','DPRO','SLNH',
-  'LYTS','DUOL','FSLR','FTNT','JD','PLTR','MKTX','ABAT','USLM','RIVN',
-  'RXRX','RGTI','FRHC','LSCC','ENPH','SOFI','KTOS','DOMO','MSTR','DOCU',
-  'CRWD','DKNG','MDLN','ZM','TEM','RIOT','GOOGL','DAVE','AXTI','LCID',
-  'EOSE','AMD','NFLX','DNTH','USAR','CELH','TTWO','MSTX','POOL','SNDK',
-  'HIVE','MELI','DDOG','CLSK','ASTS','MSFU','ORCX','AAPU',
-  'JPM','HD','PFE','LLY','TGT','XOM','UPS','NVO','HIMS','PATH',
-  'KLAR','CAT','AXP','MIR','CHWY','MCD','UNH','KBH','DIS','NKE',
-  'LUMN','MA','CRM','BA','MET','CI','FUBO','LMND','PLD','OXY',
-  'DEO','ONTO','NIO','U','FN','AIG','TDOC','CMG','FLR','TSM',
-  'TWLO','DELL','NU','HLT','SG','FIG','BBY','GNRC','DHI','PRIM',
-  'SNOW','FDX','DE','RGR','ORCL','AI','CVX','W','JOBY','GS',
-  'VST','AON','CVNA','WRBY','BP','BBAI','LMT','AES','SNAP','CRCL',
-  'MP','WELL','SPOT','ABBV','TOST','BIRK','JNJ','GLW','OKLO','UI',
-  'IOT','NOW','CAVA','IONQ','OSCR','DRI','CNC','M','RBLX','HAL',
-  'RCL','NET','WFC','KO','DG','RDDT','COP','EOG','UBER',
-  'SPY','QQQ','DIA','IWM','UVXY','SQQQ','TQQQ','SOXL','BULL',
-  'XLV','XLP','XLE','XLF','XLU','XLY','XLI','XLK','XLRE',
-  'NVOX','UUUU','TGEN','GDX','SMH','TLT','TSLL',
-  'GLD','SLV','LIT','USO',
-  'ETHU','ETHA','IBIT',
+  'IBM','TSLA','ARM','SOXL','LSCC','IREN','AOSL','CROX','RCL','NBIS',
+  'SOFI','META','HIMS','LLY','NVO','MSFT','MCD','COST','NVDA','UNH',
+  'SOUN','LMND','COIN','JPM','IWM','UVXY','AMDL','HD','NFXL','MSFL',
+  'CRWV','PFE','KHC','AVGO','SLV','GLD','LIT','TGT','APP','PATH',
+  'XOM','KLAR','UPS','XLV','SPY','EVGO','ZS','HOOD','MIR','DLO',
+  'CHWY','KBH','MARA','DIS','NKE','LUMN','USO','MA','SBUX','SQQQ',
+  'TQQQ','XLP','XLE','CRM','XLF','BA','PYPL','ASML','DIA','SRPT',
+  'FANG','LULU','CI','RCAT','NEON','PLD','OXY','IBKR','DEO','XLU',
+  'TSLL','ONTO','ETHU','MDLZ','NIO','U','AEVA','BULL','STNG','TGI',
+  'FN','AIG','CMG','FLR','PANW','TSM','TWLO','DELL','AMAT','NU',
+  'HLT','FIG','XLY','GNRC','DHI','PRIM','SMH','MCHP','SBET','ABNB',
+  'SNOW','TCEHY','FDX','INTU','DE','RGR','TGEN','XRPT','QRVO','ORCL',
+  'AI','QQQ','CVX','W','XLI','OPEN','GS','TLN','CEG','VST',
+  'AON','CVNA','WRBY','BP','ALAB','SWPPX','LMT','SLNH','AES','DUOL',
+  'FSLR','FTNT','JD','PLTR','CRCL','MP','WELL','SPOT','MKTX','ABAT',
+  'USLM','NVOX','RIVN','RXRX','BRK.B','ABBV','TOST','BIRK','FRHC','GLW',
+  'OKLO','UI','IOT','NOW','XLK','CAVA','ENPH','DOMO','CVS','MSTR',
+  'DKNG','IONQ','MDLN','XLRE','TEM','RIOT','GOOGL','DRI','DAVE','CNC',
+  'AXTI','SMTOY','UUUU','LCID','EOSE','NFLX','DNTH','M','RBLX','HAL',
+  'USAR','TTWO','MSTX','NET','AMZN','KO','DG','SNDK','HIVE','MELI',
+  'DDOG','CLSK','RDDT','COP','EOG','ASTS','MSFU','TLT','GDX','ORCX',
+  'UBER','BTCI','ETHT','AAPU','IGV','BABA','CORZ','CDNS','RKLB','VRT',
+  'DOCU','CRWD','AMGN','KMX','BLK','CITI','WYFI','INTC','SG','SNAP',
+  'FUBO','ACN','ETN','POOL','GEV','HUBB','PWR','NEE','COHR','SW',
+  'RH','CELC','ARDX','AMKR','MKC','PLUG','TXN','NXPI','STM','CGW',
+  'PDD','IBRX','ALMS','BE','CRDO','ZIM','NVT','ZETA','SIMO','XOVR',
+  'OI','NOK','CIEN','QCOM','SNXX','ET','AAPL','CIFR','FIVE','SMCI',
+  'OSCR','STRL','WFC','MAGS','CHAT','NBIL','ENTG','MARS','RBRK','XLC',
+  'WLDN','DGXX','IMSR','MRAM','SE','WDC','SNPS','BSX','NVTS','COIG',
+  'V','PENG','ANET','ELF','RR','RDW','HIMX','AKAM','HRB','FA',
+  'GKOS','TXRH','ONDS','CRBG','APLD','JNJ','VVV','GTLB','FLNC','HNST',
+  'DRAM','GILD','OKTA','ULTA','CHPT','TTAN','GWRE','DOCN','FPS','AVAV',
+  'BBAI','BBY','DPRO','JOBY','KTOS','TDOC','PL','IBIT','ETHA','INFQ',
+  'HELE','TDG','ZM','RGTI','STI','STAK','SDOT','LASE','AAOI','AMBA',
+  'SITM','NTAP','MRVL','AMD','ADBE','EWY','WDAY','NOV','DLR','UPST',
+  'RUM','HRL','BRBR','NFLU','SYK','SKHY','ELV','LRCX','STX','NVMI',
+  'BURL','AXP','CELH','CAT','CSCO','EYE','LYTS','MET','AFRM','MNST',
+  'MU','AMZU','AXPG',
   'ES=F','NQ=F','YM=F','RTY=F'
 ];
 // Merge defaults with user-added tickers from localStorage
@@ -2586,10 +2598,10 @@ async function runScan(){
     const pdhKey='mercury_pdh_'+today;
 
     const engulfingKey='mercury_engulfing12_'+today;
-    const eodTailKey='mercury_eod_tail_v3_'+today;
-    const weeklyTailKey='mercury_weekly_tail_v6_'+today;
-    const monthlyTailKey='mercury_monthly_tail_v4_'+today;
-    const quarterlyTailKey='mercury_quarterly_tail_v3_'+today;
+    const eodTailKey='mercury_eod_tail_v4_'+today;
+    const weeklyTailKey='mercury_weekly_tail_v7_'+today;
+    const monthlyTailKey='mercury_monthly_tail_v5_'+today;
+    const quarterlyTailKey='mercury_quarterly_tail_v4_'+today;
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -5058,10 +5070,10 @@ function renderWatchlistView(){
     if(dc&&dc.data) dailyResults=dc.data;
     emaResults=(loadCache('mercury_ema_'+today)||{}).data||{};
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
-    eodTailMap=(loadCache('mercury_eod_tail_v3_'+today)||{}).data||{};
-    weeklyTailMap=(loadCache('mercury_weekly_tail_v6_'+today)||{}).data||{};
-    monthlyTailMap=(loadCache('mercury_monthly_tail_v4_'+today)||{}).data||{};
-    quarterlyTailMap=(loadCache('mercury_quarterly_tail_v3_'+today)||{}).data||{};
+    eodTailMap=(loadCache('mercury_eod_tail_v4_'+today)||{}).data||{};
+    weeklyTailMap=(loadCache('mercury_weekly_tail_v7_'+today)||{}).data||{};
+    monthlyTailMap=(loadCache('mercury_monthly_tail_v5_'+today)||{}).data||{};
+    quarterlyTailMap=(loadCache('mercury_quarterly_tail_v4_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing12_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
