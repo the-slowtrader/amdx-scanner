@@ -329,6 +329,11 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
       <span>Scanner</span>
       <span class="badge-count" id="scannerCount">—</span>
     </button>
+    <button class="nav-item" onclick="showView('amdxcycle')" data-view="amdxcycle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+      <span>AMDX Cycle</span>
+      <span class="badge-count" id="amdxCycleBadge">—</span>
+    </button>
     <button class="nav-item" onclick="showView('confluence')" data-view="confluence">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93 4.93 19.07"/></svg>
       <span>Confluence</span>
@@ -569,6 +574,37 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             <tbody id="scannerTbody">
               <!-- Populated by JS -->
             </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- VIEW: AMDX Cycle                            -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="view" id="view-amdxcycle">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-toolbar-left">
+            <div class="filter-chips" id="amdxCycleTfTabs">
+              <button class="filter-chip active" onclick="switchAMDXCycleTf('weekly',this)">Weekly</button>
+              <button class="filter-chip" onclick="switchAMDXCycleTf('quarterly',this)">Quarterly</button>
+            </div>
+            <div style="width:1px;height:24px;background:var(--card-border)"></div>
+            <div class="filter-chips" id="amdxCycleFilterTabs">
+              <button class="filter-chip active" onclick="filterAMDXCycle('all',this)">All</button>
+              <button class="filter-chip" onclick="filterAMDXCycle('AMDX',this)">AMDX</button>
+              <button class="filter-chip" onclick="filterAMDXCycle('XAMD',this)">XAMD</button>
+            </div>
+          </div>
+          <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted)" id="amdxCycleCount"></span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead id="amdxCycleThead"></thead>
+            <tbody id="amdxCycleTbody"></tbody>
           </table>
         </div>
       </div>
@@ -1720,6 +1756,8 @@ let lottoConvFilter='all'; // 'all' | 'high'
 let lastLottoRows=[];
 let setupChainResults=[];
 let chainConvFilter='all'; // 'all'|'3'|'4'
+let amdxCycleTf='weekly';
+let amdxCycleFilter='all';
 let lastChainRows=[];
 let currentView='dashboard';
 let currentTimeframe='daily';
@@ -1753,6 +1791,7 @@ function showView(view, sub, skipHash){
     confluence: ['Confluence', 'Cross-timeframe alignment scoring'],
     dealer: ['Dealer Intel', 'HTF order block &amp; breaker zone detection'],
     sweep: ['Sweep Radar', 'Proximity to key liquidity levels'],
+    amdxcycle: ['AMDX Cycle', 'Weekly &amp; Quarterly A/X classification — AMDX vs XAMD across all tickers'],
     chain: ['Setup Chain', 'Quarterly FVG → Monthly BPR → Weekly BPR → Daily FVG confluence'],
     lotto: ['Friday Lotto', 'Swept higher low — opposing BSL not yet reached'],
     leap: ['LEAP Hunter', 'Prior year low sweep & reclaim tracker'],
@@ -1769,6 +1808,7 @@ function showView(view, sub, skipHash){
   document.getElementById('viewSubtitle').innerHTML = t[1] + ' &middot; <span id="currentDate">'+formatDate(new Date())+'</span>';
   if(sub && view==='scanner') switchTimeframe(sub);
   if(view==='watchlist') renderWatchlistView();
+  if(view==='amdxcycle') renderAMDXCycleView();
   if(view==='bprfvg') renderBprFvgView();
   if(view==='models'){renderBprFvgView();renderPdhPdlView();renderTradeLog();}
   // Update URL hash (unless restoring from hash)
@@ -2709,6 +2749,7 @@ async function runScan(){
     renderFVGView();
     renderBprFvgView();
     renderSetupChainView();
+    renderAMDXCycleView();
     renderLottoView();
 
     // Phase 2: Daily intraday
@@ -2829,6 +2870,7 @@ async function runScan(){
     renderFVGView();
     renderBprFvgView();
     renderSetupChainView();
+    renderAMDXCycleView();
     renderLottoView();
     updateScannerCount();
 
@@ -3116,6 +3158,133 @@ function copyBprFvgTickers(){
     btn.style.color='var(--green-dark)';btn.style.borderColor='var(--green)';
     setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.style.borderColor='';},2000);
   });
+}
+
+function switchAMDXCycleTf(tf, btn){
+  amdxCycleTf=tf;
+  document.querySelectorAll('#amdxCycleTfTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderAMDXCycleView();
+}
+
+function filterAMDXCycle(f, btn){
+  amdxCycleFilter=f;
+  document.querySelectorAll('#amdxCycleFilterTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderAMDXCycleView();
+}
+
+function renderAMDXCycleView(){
+  const thead=document.getElementById('amdxCycleThead');
+  const tbody=document.getElementById('amdxCycleTbody');
+  const badge=document.getElementById('amdxCycleBadge');
+  const countEl=document.getElementById('amdxCycleCount');
+  if(!thead||!tbody) return;
+
+  const res=amdxCycleTf==='weekly'?weeklyResults:quarterlyResults;
+  const isWeekly=amdxCycleTf==='weekly';
+
+  // For weekly: ax is 'A' or 'X'; for quarterly: ax is 'AMDX' or 'XAMD'
+  const normalize=ax=>{
+    if(!ax) return null;
+    if(ax==='A'||ax==='AMDX') return 'AMDX';
+    if(ax==='X'||ax==='XAMD') return 'XAMD';
+    return null;
+  };
+
+  const entries=Object.entries(res).filter(([,d])=>d&&d.ax&&d.ax!=='pending'&&d.ax!=='N/A');
+  const filtered=entries.filter(([,d])=>{
+    const norm=normalize(d.ax);
+    if(amdxCycleFilter==='all') return true;
+    return norm===amdxCycleFilter;
+  });
+
+  // Sort: AMDX first, then XAMD, then by ticker
+  filtered.sort(([sa,da],[sb,db])=>{
+    const na=normalize(da.ax)||'Z', nb=normalize(db.ax)||'Z';
+    if(na!==nb) return na.localeCompare(nb);
+    return sa.localeCompare(sb);
+  });
+
+  const amdxCount=entries.filter(([,d])=>normalize(d.ax)==='AMDX').length;
+  const xamdCount=entries.filter(([,d])=>normalize(d.ax)==='XAMD').length;
+  if(badge) badge.textContent=amdxCount+'/'+xamdCount;
+  if(countEl) countEl.textContent=`${filtered.length} tickers · AMDX ${amdxCount} / XAMD ${xamdCount}`;
+
+  if(isWeekly){
+    thead.innerHTML=`<tr>
+      <th>Ticker</th>
+      <th>Cycle</th>
+      <th>Break Dir</th>
+      <th>Prior Wk H</th>
+      <th>Prior Wk L</th>
+      <th>Mon H</th>
+      <th>Mon L</th>
+      <th>Swept</th>
+      <th>Manipulation</th>
+    </tr>`;
+    tbody.innerHTML=filtered.map(([sym,d])=>{
+      const norm=normalize(d.ax);
+      const cycleCls=norm==='AMDX'?'acc':'exp';
+      let sweptBadge='<span style="color:var(--text-muted)">—</span>';
+      if(d.sweptHigh&&d.sweptLow) sweptBadge='<span class="badge exp">Both</span>';
+      else if(d.sweptHigh) sweptBadge='<span class="badge swept">PWH ↑</span>';
+      else if(d.sweptLow)  sweptBadge='<span class="badge dist">PWL ↓</span>';
+      let manipBadge='<span style="color:var(--text-muted)">—</span>';
+      if(d.manip){
+        if(d.manip.status==='pending') manipBadge=`<span class="badge muted">Pending (${d.manip.day||'—'})</span>`;
+        else if(d.manip.status==='resolved'){
+          const dir=d.manip.grabbed==='high'?'↑':'↓';
+          manipBadge=d.manip.agreed?
+            `<span class="badge agree">Agreed ${dir}</span>`:
+            `<span class="badge disagree">Disagreed ${dir}</span>`;
+        }
+      }
+      const breakBadge=d.breakDir?`<span class="badge ${d.breakDir==='break-high'?'swept':'dist'}" style="font-size:10px">${d.breakDir}</span>`:'<span style="color:var(--text-muted)">inside</span>';
+      return `<tr data-ticker="${sym}">
+        <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
+        <td><span class="badge ${cycleCls}">${norm}</span></td>
+        <td>${breakBadge}</td>
+        <td class="sensitive">${d.c1?.high?.toFixed(2)||'—'}</td>
+        <td class="sensitive">${d.c1?.low?.toFixed(2)||'—'}</td>
+        <td class="sensitive">${d.monday?.high?.toFixed(2)||d.c0?.high?.toFixed(2)||'—'}</td>
+        <td class="sensitive">${d.monday?.low?.toFixed(2)||d.c0?.low?.toFixed(2)||'—'}</td>
+        <td>${sweptBadge}</td>
+        <td>${manipBadge}</td>
+      </tr>`;
+    }).join('');
+  } else {
+    // Quarterly
+    thead.innerHTML=`<tr>
+      <th>Ticker</th>
+      <th>Cycle</th>
+      <th>Stage</th>
+      <th>Sequence</th>
+      <th>Phase</th>
+      <th>Quarter</th>
+      <th>Break Dir</th>
+    </tr>`;
+    tbody.innerHTML=filtered.map(([sym,d])=>{
+      const norm=normalize(d.ax);
+      const cycleCls=norm==='AMDX'?'acc':'exp';
+      const seq=(d.sequence||[]).map((s,i)=>{
+        if(!s||s==='N/A') return '<span style="color:var(--text-muted)">·</span>';
+        const isCurrentPhase=(i+1)===d.currentPhase;
+        const cls=s==='A'?'acc':'exp';
+        return isCurrentPhase?`<span class="badge ${cls}" style="font-size:10px">${s}</span>`:`<span style="color:var(--text-sec);font-size:11px">${s}</span>`;
+      }).join('<span style="color:var(--text-muted)"> → </span>');
+      const breakBadge=d.breakDir?`<span class="badge ${d.breakDir==='break-high'?'swept':'dist'}" style="font-size:10px">${d.breakDir}</span>`:'<span style="color:var(--text-muted)">—</span>';
+      return `<tr data-ticker="${sym}">
+        <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
+        <td><span class="badge ${cycleCls}">${norm}</span></td>
+        <td style="font-weight:600;color:var(--text-pri)">${d.stage||'—'}</td>
+        <td style="font-size:11px">${seq}</td>
+        <td style="color:var(--text-sec)">${d.currentPhase||'—'}/4</td>
+        <td style="font-size:11px;color:var(--text-muted)">${d.quarterLabel||'—'}</td>
+        <td>${breakBadge}</td>
+      </tr>`;
+    }).join('');
+  }
 }
 
 function renderBprFvgView(){
