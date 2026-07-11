@@ -587,7 +587,8 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
         <div class="table-toolbar">
           <div class="table-toolbar-left">
             <div class="filter-chips" id="amdxCycleTfTabs">
-              <button class="filter-chip active" onclick="switchAMDXCycleTf('weekly',this)">Weekly</button>
+              <button class="filter-chip active" onclick="switchAMDXCycleTf('weekly',this)">Weekly (24H)</button>
+              <button class="filter-chip" onclick="switchAMDXCycleTf('monthly',this)">Monthly (Weekly)</button>
               <button class="filter-chip" onclick="switchAMDXCycleTf('quarterly',this)">Quarterly</button>
             </div>
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
@@ -1791,7 +1792,7 @@ function showView(view, sub, skipHash){
     confluence: ['Confluence', 'Cross-timeframe alignment scoring'],
     dealer: ['Dealer Intel', 'HTF order block &amp; breaker zone detection'],
     sweep: ['Sweep Radar', 'Proximity to key liquidity levels'],
-    amdxcycle: ['AMDX Cycle', 'Weekly &amp; Quarterly A/X classification — AMDX vs XAMD across all tickers'],
+    amdxcycle: ['AMDX Cycle', 'Weekly (Mon/Fri) · Monthly (W1/last wk) · Quarterly (4-phase) — AMDX vs XAMD'],
     chain: ['Setup Chain', 'Quarterly FVG → Monthly BPR → Weekly BPR → Daily FVG confluence'],
     lotto: ['Friday Lotto', 'Swept higher low — opposing BSL not yet reached'],
     leap: ['LEAP Hunter', 'Prior year low sweep & reclaim tracker'],
@@ -3181,8 +3182,9 @@ function renderAMDXCycleView(){
   const countEl=document.getElementById('amdxCycleCount');
   if(!thead||!tbody) return;
 
-  const res=amdxCycleTf==='weekly'?weeklyResults:quarterlyResults;
+  const res=amdxCycleTf==='weekly'?weeklyResults:amdxCycleTf==='monthly'?monthlyResults:quarterlyResults;
   const isWeekly=amdxCycleTf==='weekly';
+  const isMonthly=amdxCycleTf==='monthly';
 
   // For weekly: ax is 'A' or 'X'; for quarterly: ax is 'AMDX' or 'XAMD'
   const normalize=ax=>{
@@ -3253,33 +3255,86 @@ function renderAMDXCycleView(){
         <td>${manipBadge}</td>
       </tr>`;
     }).join('');
-  } else {
-    // Quarterly
+  } else if(isMonthly){
+    // Monthly: W1 of current month vs last week of prior month
     thead.innerHTML=`<tr>
       <th>Ticker</th>
       <th>Cycle</th>
-      <th>Stage</th>
-      <th>Sequence</th>
+      <th>Break Dir</th>
+      <th>Prior Mo Last Wk H</th>
+      <th>Prior Mo Last Wk L</th>
+      <th>W1 H</th>
+      <th>W1 L</th>
+      <th>PM H/L Swept</th>
+      <th>Manipulation</th>
+    </tr>`;
+    tbody.innerHTML=filtered.map(([sym,d])=>{
+      const norm=normalize(d.ax);
+      const cycleCls=norm==='AMDX'?'acc':'exp';
+      let sweptBadge='<span style="color:var(--text-muted)">—</span>';
+      if(d.sweptHigh&&d.sweptLow) sweptBadge='<span class="badge exp">Both</span>';
+      else if(d.sweptHigh) sweptBadge='<span class="badge swept">PMH ↑</span>';
+      else if(d.sweptLow)  sweptBadge='<span class="badge dist">PML ↓</span>';
+      let manipBadge='<span style="color:var(--text-muted)">—</span>';
+      if(d.manip){
+        const wk=d.manip.week||'—';
+        if(d.manip.status==='pending') manipBadge=`<span class="badge muted">Pending (${wk})</span>`;
+        else if(d.manip.status==='resolved'){
+          const dir=d.manip.grabbed==='high'?'↑':'↓';
+          manipBadge=d.manip.agreed?
+            `<span class="badge agree">Agreed ${dir} (${wk})</span>`:
+            `<span class="badge disagree">Disagreed ${dir} (${wk})</span>`;
+        }
+      }
+      const breakBadge=d.breakDir?`<span class="badge ${d.breakDir==='break-high'?'swept':'dist'}" style="font-size:10px">${d.breakDir}</span>`:'<span style="color:var(--text-muted)">inside</span>';
+      return `<tr data-ticker="${sym}">
+        <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
+        <td><span class="badge ${cycleCls}">${norm}</span></td>
+        <td>${breakBadge}</td>
+        <td class="sensitive">${d.c1?.high?.toFixed(2)||'—'}</td>
+        <td class="sensitive">${d.c1?.low?.toFixed(2)||'—'}</td>
+        <td class="sensitive">${d.c0?.high?.toFixed(2)||'—'}</td>
+        <td class="sensitive">${d.c0?.low?.toFixed(2)||'—'}</td>
+        <td>${sweptBadge}</td>
+        <td>${manipBadge}</td>
+      </tr>`;
+    }).join('');
+  } else {
+    // Quarterly: quarter split into 4 equal phases, classified vs prior quarter's last phase
+    thead.innerHTML=`<tr>
+      <th>Ticker</th>
+      <th>Cycle</th>
+      <th>Current Stage</th>
       <th>Phase</th>
+      <th>Full Sequence</th>
       <th>Quarter</th>
       <th>Break Dir</th>
     </tr>`;
     tbody.innerHTML=filtered.map(([sym,d])=>{
       const norm=normalize(d.ax);
       const cycleCls=norm==='AMDX'?'acc':'exp';
+      const phaseLabels=['A','M','D','X'];
+      const cycleOrder=norm==='AMDX'?['A','M','D','X']:['X','A','M','D'];
+      // Current stage badge — prominent
+      const stageLabel=d.stage||'—';
+      const stageCls=stageLabel==='A'?'acc':stageLabel==='X'?'exp':stageLabel==='M'?'dist':'muted';
+      const stageBadge=`<span class="badge ${stageCls}" style="font-size:12px;padding:4px 10px">${stageLabel}</span>`;
+      // Phase progress: highlight current phase in sequence
       const seq=(d.sequence||[]).map((s,i)=>{
-        if(!s||s==='N/A') return '<span style="color:var(--text-muted)">·</span>';
-        const isCurrentPhase=(i+1)===d.currentPhase;
+        if(!s||s==='N/A') return `<span style="color:var(--text-muted)">P${i+1}:·</span>`;
+        const isCur=(i+1)===d.currentPhase;
         const cls=s==='A'?'acc':'exp';
-        return isCurrentPhase?`<span class="badge ${cls}" style="font-size:10px">${s}</span>`:`<span style="color:var(--text-sec);font-size:11px">${s}</span>`;
+        return isCur
+          ? `<span class="badge ${cls}" style="font-size:10px;outline:2px solid currentColor">P${i+1}:${s}</span>`
+          : `<span style="color:var(--text-sec);font-size:11px">P${i+1}:${s}</span>`;
       }).join('<span style="color:var(--text-muted)"> → </span>');
       const breakBadge=d.breakDir?`<span class="badge ${d.breakDir==='break-high'?'swept':'dist'}" style="font-size:10px">${d.breakDir}</span>`:'<span style="color:var(--text-muted)">—</span>';
       return `<tr data-ticker="${sym}">
         <td><div class="ticker-cell">${tickerIcon(sym)}<div class="ticker-info"><div class="sym">${sym}</div></div></div></td>
         <td><span class="badge ${cycleCls}">${norm}</span></td>
-        <td style="font-weight:600;color:var(--text-pri)">${d.stage||'—'}</td>
+        <td>${stageBadge}</td>
+        <td style="color:var(--text-sec);font-weight:600">${d.currentPhase||'—'}/4</td>
         <td style="font-size:11px">${seq}</td>
-        <td style="color:var(--text-sec)">${d.currentPhase||'—'}/4</td>
         <td style="font-size:11px;color:var(--text-muted)">${d.quarterLabel||'—'}</td>
         <td>${breakBadge}</td>
       </tr>`;
