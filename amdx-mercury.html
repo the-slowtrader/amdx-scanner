@@ -5263,8 +5263,12 @@ function renderWatchlistView(){
     renderFVGView();
     renderBprFvgView();
     renderSetupChainView();
+    renderAMDXCycleView();
     renderLottoView();
     updateScannerCount();
+  } else {
+    // No same-day cache — auto-scan so the user never opens a blank dashboard
+    scan();
   }
 })();
 </script>
