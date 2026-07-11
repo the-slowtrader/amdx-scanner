@@ -2645,10 +2645,10 @@ async function runScan(){
     const pdhKey='mercury_pdh_'+today;
 
     const engulfingKey='mercury_engulfing12_'+today;
-    const eodTailKey='mercury_eod_tail_v4_'+today;
-    const weeklyTailKey='mercury_weekly_tail_v7_'+today;
-    const monthlyTailKey='mercury_monthly_tail_v5_'+today;
-    const quarterlyTailKey='mercury_quarterly_tail_v4_'+today;
+    const eodTailKey='mercury_eod_tail_v5_'+today;
+    const weeklyTailKey='mercury_weekly_tail_v8_'+today;
+    const monthlyTailKey='mercury_monthly_tail_v6_'+today;
+    const quarterlyTailKey='mercury_quarterly_tail_v5_'+today;
     if(isCacheFresh(weeklyKey) && isCacheFresh(eodTailKey)){
       weeklyResults=loadCache(weeklyKey).data;
       monthlyResults=loadCache(monthlyKey).data;
@@ -2675,14 +2675,16 @@ async function runScan(){
             // FMP native 1M/1W endpoints return 404, so EOD aggregation is the source.
             const eod = await fetchEOD(sym,from1500,today);
             if(!eod.length) return;
-            eodTailMap[sym]=eod.slice(-70);  // last 70 trading days for daily scanners
+            // Strip to essential fields only — raw FMP bars carry volume/change/etc that bloat localStorage
+            const slim=b=>({date:b.date,open:+b.open,high:+b.high,low:+b.low,close:+b.close});
+            eodTailMap[sym]=eod.slice(-35).map(slim);  // ~7 weeks of daily bars
             const weekly=aggregateToWeekly(eod);
-            weeklyTailMap[sym]= weekly.length>=2 ? weekly.slice(-20) : [];
+            weeklyTailMap[sym]= weekly.length>=2 ? weekly.slice(-8) : [];
             const monthly=aggregateToMonthly(eod);
-            monthlyTailMap[sym]= monthly.length>=2 ? monthly.slice(-13) : [];
-            // Quarterly: ~4 yrs of EOD → ~16 quarters (covers 2022-2024 bull run FVGs)
+            monthlyTailMap[sym]= monthly.length>=2 ? monthly.slice(-6) : [];
+            // Quarterly: ~4 yrs of EOD → ~12 quarters (covers 2023-2025 bull run FVGs)
             const quarterlyBars=aggregateToQuarterly(monthly);
-            quarterlyTailMap[sym]= quarterlyBars.length>=2 ? quarterlyBars.slice(-16) : [];
+            quarterlyTailMap[sym]= quarterlyBars.length>=2 ? quarterlyBars.slice(-12) : [];
             weeklyResults[sym]=classifyWeeklyAX(weekly);
             monthlyResults[sym]=classifyMonthlyAX(weekly);
             const qData=aggregateToQuarterlyPhases(eod);
@@ -3181,6 +3183,49 @@ function filterAMDXCycle(f, btn){
   renderAMDXCycleView();
 }
 
+// Weekly (24H) AMDX Cycle: Monday's daily candle vs prior Friday's daily candle
+function classifyMondayVsFridayFromEOD(bars){
+  if(!bars||bars.length<3) return null;
+  let mondayIdx=-1;
+  for(let i=bars.length-1;i>=0;i--){
+    if(new Date(bars[i].date+'T12:00:00').getDay()===1){mondayIdx=i;break;}
+  }
+  if(mondayIdx<0) return null;
+  let fridayIdx=-1;
+  for(let i=mondayIdx-1;i>=0;i--){
+    if(new Date(bars[i].date+'T12:00:00').getDay()===5){fridayIdx=i;break;}
+  }
+  if(fridayIdx<0) return null;
+  const mon=bars[mondayIdx], fri=bars[fridayIdx];
+  const friH=+fri.high,friL=+fri.low,monH=+mon.high,monL=+mon.low;
+  const tol=(friH-friL)*MID_TOL;
+  const isA=monH<=(friH+tol)&&monL>=(friL-tol);
+  const ax=isA?'AMDX':'XAMD';
+  const sweptHigh=monH>friH, sweptLow=monL<friL;
+  let breakDir=null;
+  if(sweptHigh&&!sweptLow) breakDir='break-high';
+  else if(sweptLow&&!sweptHigh) breakDir='break-low';
+  let manip={status:'pending',day:'Tue'};
+  for(let i=mondayIdx+1;i<bars.length;i++){
+    const dow=new Date(bars[i].date+'T12:00:00').getDay();
+    if(dow===2){
+      const tH=+bars[i].high,tL=+bars[i].low,tC=+bars[i].close;
+      const grabbed=tH>friH?'high':tL<friL?'low':null;
+      if(grabbed) manip={status:'resolved',grabbed,agreed:grabbed==='high'?tC>friH:tC<friL,day:'Tue'};
+      else manip={status:'none',day:'Tue'};
+      break;
+    }
+    if(dow>2&&dow<=5) break;
+  }
+  return {
+    ax,
+    c0:{high:monH,low:monL,close:+mon.close,date:mon.date},
+    c1:{high:friH,low:friL,close:+fri.close,date:fri.date},
+    monday:{high:monH,low:monL,close:+mon.close,date:mon.date},
+    sweptHigh,sweptLow,breakDir,manip
+  };
+}
+
 function copyAMDXCycleTickers(){
   if(!lastAMDXCycleRows.length) return;
   const tickers=lastAMDXCycleRows.map(([sym])=>sym);
@@ -3201,9 +3246,19 @@ function renderAMDXCycleView(){
   const countEl=document.getElementById('amdxCycleCount');
   if(!thead||!tbody) return;
 
-  const res=amdxCycleTf==='weekly'?weeklyResults:amdxCycleTf==='monthly'?monthlyResults:quarterlyResults;
   const isWeekly=amdxCycleTf==='weekly';
   const isMonthly=amdxCycleTf==='monthly';
+  // Weekly (24H): Monday candle vs prior Friday candle — computed from EOD tail
+  let res;
+  if(isWeekly){
+    res={};
+    WATCHLIST.filter(s=>!FUTURES.includes(s)).forEach(sym=>{
+      const bars=eodTailMap[sym];
+      if(bars&&bars.length){const r=classifyMondayVsFridayFromEOD(bars);if(r) res[sym]=r;}
+    });
+  } else {
+    res=isMonthly?monthlyResults:quarterlyResults;
+  }
 
   // For weekly: ax is 'A' or 'X'; for quarterly: ax is 'AMDX' or 'XAMD'
   const normalize=ax=>{
@@ -3254,8 +3309,8 @@ function renderAMDXCycleView(){
       <th>Ticker</th>
       <th>Cycle</th>
       <th>Break Dir</th>
-      <th>Prior Wk H</th>
-      <th>Prior Wk L</th>
+      <th>Prior Fri H</th>
+      <th>Prior Fri L</th>
       <th>Mon H</th>
       <th>Mon L</th>
       <th>Swept</th>
@@ -3266,8 +3321,8 @@ function renderAMDXCycleView(){
       const cycleCls=norm==='AMDX'?'acc':'exp';
       let sweptBadge='<span style="color:var(--text-muted)">—</span>';
       if(d.sweptHigh&&d.sweptLow) sweptBadge='<span class="badge exp">Both</span>';
-      else if(d.sweptHigh) sweptBadge='<span class="badge swept">PWH ↑</span>';
-      else if(d.sweptLow)  sweptBadge='<span class="badge dist">PWL ↓</span>';
+      else if(d.sweptHigh) sweptBadge='<span class="badge swept">PFH ↑</span>';
+      else if(d.sweptLow)  sweptBadge='<span class="badge dist">PFL ↓</span>';
       let manipBadge='<span style="color:var(--text-muted)">—</span>';
       if(d.manip){
         if(d.manip.status==='pending') manipBadge=`<span class="badge muted">Pending (${d.manip.day||'—'})</span>`;
@@ -5330,10 +5385,10 @@ function renderWatchlistView(){
     if(dc&&dc.data) dailyResults=dc.data;
     emaResults=(loadCache('mercury_ema_'+today)||{}).data||{};
     reversalResults=(loadCache('mercury_reversal_'+today)||{}).data||{};
-    eodTailMap=(loadCache('mercury_eod_tail_v4_'+today)||{}).data||{};
-    weeklyTailMap=(loadCache('mercury_weekly_tail_v7_'+today)||{}).data||{};
-    monthlyTailMap=(loadCache('mercury_monthly_tail_v5_'+today)||{}).data||{};
-    quarterlyTailMap=(loadCache('mercury_quarterly_tail_v4_'+today)||{}).data||{};
+    eodTailMap=(loadCache('mercury_eod_tail_v5_'+today)||{}).data||{};
+    weeklyTailMap=(loadCache('mercury_weekly_tail_v8_'+today)||{}).data||{};
+    monthlyTailMap=(loadCache('mercury_monthly_tail_v6_'+today)||{}).data||{};
+    quarterlyTailMap=(loadCache('mercury_quarterly_tail_v5_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing12_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
