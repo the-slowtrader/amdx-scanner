@@ -599,7 +599,12 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             </div>
           </div>
           <div class="table-toolbar-right">
+            <span style="font-size:11px;color:var(--text-muted);margin-right:4px" id="amdxCycleDateRange"></span>
             <span style="font-size:11px;color:var(--text-muted)" id="amdxCycleCount"></span>
+            <button class="topbar-btn" id="amdxCycleCopyBtn" onclick="copyAMDXCycleTickers()" style="padding:5px 10px;font-size:11px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Tickers
+            </button>
           </div>
         </div>
         <div class="table-wrap">
@@ -1759,6 +1764,7 @@ let setupChainResults=[];
 let chainConvFilter='all'; // 'all'|'3'|'4'
 let amdxCycleTf='weekly';
 let amdxCycleFilter='all';
+let lastAMDXCycleRows=[];
 let lastChainRows=[];
 let currentView='dashboard';
 let currentTimeframe='daily';
@@ -2102,8 +2108,8 @@ function classifyMonthlyAX(weekly){
 
   return {
     ax:cycleType, stage, sequence, currentPhase,
-    c0:{high:cH,low:cL,close:cC,open:cur.weeks[0].open},
-    c1:{high:pmh,low:pml},
+    c0:{high:cH,low:cL,close:cC,open:cur.weeks[0].open,date:cur.weeks[0].date},
+    c1:{high:pmh,low:pml,date:priorLastWeek.date},
     pmh, pml, cmh:cH, cml:cL,
     sweptHigh, sweptLow,
     // Agree/Disagree on sweeps
@@ -3175,6 +3181,19 @@ function filterAMDXCycle(f, btn){
   renderAMDXCycleView();
 }
 
+function copyAMDXCycleTickers(){
+  if(!lastAMDXCycleRows.length) return;
+  const tickers=lastAMDXCycleRows.map(([sym])=>sym);
+  navigator.clipboard.writeText(tickers.join(', ')).then(()=>{
+    const btn=document.getElementById('amdxCycleCopyBtn');
+    if(!btn) return;
+    const orig=btn.innerHTML;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    btn.style.color='var(--green-dark)';btn.style.borderColor='var(--green)';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.style.borderColor='';},2000);
+  });
+}
+
 function renderAMDXCycleView(){
   const thead=document.getElementById('amdxCycleThead');
   const tbody=document.getElementById('amdxCycleTbody');
@@ -3207,6 +3226,23 @@ function renderAMDXCycleView(){
     if(na!==nb) return na.localeCompare(nb);
     return sa.localeCompare(sb);
   });
+
+  lastAMDXCycleRows=filtered;
+
+  // Date range label
+  const dateRangeEl=document.getElementById('amdxCycleDateRange');
+  if(dateRangeEl){
+    const fmtD=d=>{if(!d) return '—';const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});};
+    if(isWeekly&&filtered.length){
+      const {c1,c0}=filtered[0][1];
+      dateRangeEl.textContent=`Prior Wk: ${fmtD(c1?.date)} · Current: ${fmtD(c0?.date)}`;
+    } else if(isMonthly&&filtered.length){
+      const {c1,c0}=filtered[0][1];
+      dateRangeEl.textContent=`Ref Wk: ${fmtD(c1?.date)} · W1: ${fmtD(c0?.date)}`;
+    } else {
+      dateRangeEl.textContent='';
+    }
+  }
 
   const amdxCount=entries.filter(([,d])=>normalize(d.ax)==='AMDX').length;
   const xamdCount=entries.filter(([,d])=>normalize(d.ax)==='XAMD').length;
