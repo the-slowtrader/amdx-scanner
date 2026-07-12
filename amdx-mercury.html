@@ -903,6 +903,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
           <div class="table-toolbar-left">
             <div class="filter-chips" id="candle2TfTabs">
               <button class="filter-chip active" onclick="filterCandle2('tf','all',this)">All TF</button>
+              <button class="filter-chip" onclick="filterCandle2('tf','24H',this)">24H</button>
               <button class="filter-chip" onclick="filterCandle2('tf','4H',this)">4H</button>
               <button class="filter-chip" onclick="filterCandle2('tf','Weekly',this)">Weekly</button>
               <button class="filter-chip" onclick="filterCandle2('tf','Monthly',this)">Monthly</button>
@@ -3555,11 +3556,15 @@ function computeCandle2Results(){
           else respectsMid=+c3.high<=wickMid;
         }
 
-        // HTF POI: 4H checks weekly levels; Weekly checks monthly; Monthly checks quarterly
+        // HTF POI: 24H/4H check weekly levels; Weekly checks monthly; Monthly checks quarterly
         const poi=[];
-        if(tf==='4H'&&wkRes){
+        if((tf==='24H'||tf==='4H')&&wkRes){
           if(wkRes.pmh&&Math.abs(sweepLevel-wkRes.pmh)/wkRes.pmh<0.015) poi.push('PWH');
           if(wkRes.pml&&Math.abs(sweepLevel-wkRes.pml)/wkRes.pml<0.015) poi.push('PWL');
+          if(moRes){
+            if(moRes.pmh&&Math.abs(sweepLevel-moRes.pmh)/moRes.pmh<0.02) poi.push('PMH');
+            if(moRes.pml&&Math.abs(sweepLevel-moRes.pml)/moRes.pml<0.02) poi.push('PML');
+          }
         }
         if(tf==='Weekly'&&moRes){
           if(moRes.pmh&&Math.abs(sweepLevel-moRes.pmh)/moRes.pmh<0.02) poi.push('PMH');
@@ -3578,6 +3583,7 @@ function computeCandle2Results(){
       }
     }
 
+    scanBars(eodTailMap[sym],'24H',10);
     scanBars(fourHTailMap[sym],'4H',20);
     scanBars(weeklyTailMap[sym],'Weekly',5);
     scanBars(monthlyTailMap[sym],'Monthly',5);
@@ -3655,6 +3661,8 @@ function renderCandle2View(){
       ?`<span style="font-size:10px;font-weight:700;color:var(--orange,#f97316);background:rgba(249,115,22,0.08);padding:2px 6px;border-radius:4px">M</span>`
       :r.tf==='Weekly'
       ?`<span style="font-size:10px;font-weight:700;color:var(--purple);background:rgba(124,58,237,0.08);padding:2px 6px;border-radius:4px">W</span>`
+      :r.tf==='24H'
+      ?`<span style="font-size:10px;font-weight:700;color:var(--blue,#3b82f6);background:rgba(59,130,246,0.08);padding:2px 6px;border-radius:4px">D</span>`
       :`<span style="font-size:10px;font-weight:700;color:var(--text-sec);background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--card-border)">4H</span>`;
 
     let statusBadge;
