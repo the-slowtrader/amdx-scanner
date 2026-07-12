@@ -2942,8 +2942,11 @@ async function runScan(){
             // Store 7H session bars + raw 1H for Candle 2 scanner (futures only)
             if(isFut){
               const slim=b=>({date:b.date,open:+b.open,high:+b.high,low:+b.low,close:+b.close});
-              sevenHTailMap[sym]=build7HSessionBars(bars).slice(-15);
+              const h7built=build7HSessionBars(bars);
+              sevenHTailMap[sym]=h7built.slice(-15);
               oneHFutMap[sym]=bars.slice(-120).map(slim);
+              const hourSet=[...new Set(bars.map(b=>new Date(b.date).getHours()))].sort((a,b)=>a-b);
+              console.log('[7H debug]',sym,'rawBars:',bars.length,'hours:',hourSet,'7Hbars:',h7built.length,'tail:',h7built.slice(-3).map(b=>b.date));
             }
             // Regular-session OHLC for today — used by live engulfing scanner
             if(!isIndex && !isFut){
@@ -3763,6 +3766,7 @@ function computeCandle2Results(){
       return false;
     }
 
+    console.log('[7H scan]',sym,'h7len:',h7.length,'h1len:',h1.length,'bars:',h7.map(b=>b.date));
     const start=Math.max(1,h7.length-12);
     for(let i=start;i<h7.length;i++){
       const c1=h7[i-1],c2=h7[i],c3=i<h7.length-1?h7[i+1]:null;
@@ -3770,6 +3774,7 @@ function computeCandle2Results(){
       const c2H2=parseInt((c2.date.split(' ')[1]||'').split(':')[0]);
       if(c2H2!==1) continue;
       const c1H=+c1.high,c1L=+c1.low,c2H=+c2.high,c2L=+c2.low,c2C=+c2.close;
+      console.log('[7H c2 check]',sym,c2.date,'c1L:',c1L,'c1H:',c1H,'c2L:',c2L,'c2H:',c2H,'c2C:',c2C);
       const bull=c2L<c1L&&c2C>c1L, bear=c2H>c1H&&c2C<c1H;
       if(!bull&&!bear) continue;
       const dir=bull?'bullish':'bearish', sweepLevel=bull?c1L:c1H;
