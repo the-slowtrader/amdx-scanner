@@ -3609,9 +3609,11 @@ function computeCandle2Results(){
         {
           const c2d=new Date(c2.date.slice(0,10)+'T12:00:00');
           if(tf==='4H'){
+            // Only the 8 AM bar is a valid C2: pre-market manipulation before NY open
+            // C1=4AM (overnight range), C2=8AM (sweep), C3=12PM (trade, 12-4PM)
             const tStr=c2.date.includes(' ')?c2.date.split(' ')[1]:'';
             const h=parseInt(tStr.split(':')[0]||'0');
-            if(h===9) continue; // 9:30 AM = opening range bar
+            if(h!==8) continue;
           }
           if(tf==='24H' && c2d.getDay()===1) continue; // Monday = opening range of week
           if(tf==='Weekly' && c2d.getDate()<=7) continue; // first week = opening range of month
