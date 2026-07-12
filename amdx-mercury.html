@@ -942,7 +942,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
                 <th>C2 Range</th>
                 <th>C3 Status</th>
                 <th>HTF POI</th>
-                <th>Wick Mid</th>
+                <th>Emb. OB</th>
                 <th>Age</th>
               </tr>
             </thead>
@@ -3529,6 +3529,35 @@ function computeCandle2Results(){
     const wkRes=weeklyResults[sym];
     const moRes=monthlyResults[sym];
     const qtRes=quarterlyResults[sym];
+    const h4bars=fourHTailMap[sym]||[];
+    const wkBars=weeklyTailMap[sym]||[];
+
+    // Returns true=OB found, false=no OB (invalid C2), null=can't verify (no sub-TF data)
+    function findEmbeddedOB(tf,c2DateStr,sweepLevel,dir){
+      const dk=c2DateStr.slice(0,10);
+      const d=new Date(dk+'T12:00:00');
+      const cisd=(b)=>dir==='bullish'?(+b.low<sweepLevel&&+b.close>sweepLevel):(+b.high>sweepLevel&&+b.close<sweepLevel);
+
+      if(tf==='24H'){
+        if(!h4bars.length) return null;
+        return h4bars.some(b=>b.date.slice(0,10)===dk&&cisd(b));
+      }
+      if(tf==='Weekly'){
+        if(!h4bars.length) return null;
+        // weekly bar date is Monday (or first trading day); scan +8 days
+        const end=new Date(d); end.setDate(d.getDate()+8);
+        const eKey=end.toISOString().slice(0,10);
+        return h4bars.some(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey&&cisd(b);});
+      }
+      if(tf==='Monthly'){
+        if(!wkBars.length) return null;
+        // monthly bar date is first trading day; scan +35 days to cover the month
+        const end=new Date(d); end.setDate(d.getDate()+35);
+        const eKey=end.toISOString().slice(0,10);
+        return wkBars.some(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey&&cisd(b);});
+      }
+      return null; // 4H: no 1H data — can't verify embedded OB
+    }
 
     function scanBars(bars,tf,lookback){
       if(!bars||bars.length<2) return;
@@ -3542,6 +3571,10 @@ function computeCandle2Results(){
         const dir=bull?'bullish':'bearish';
         const sweepLevel=bull?c1L:c1H;
 
+        // Hard filter: for verifiable TFs, require embedded LTF CISD in the sweep wick
+        const embOB=findEmbeddedOB(tf,c2.date,sweepLevel,dir);
+        if(embOB===false) continue; // verified no OB → not a valid C2
+
         let c3Status='pending';
         if(c3){
           const c3C=+c3.close;
@@ -3550,13 +3583,8 @@ function computeCandle2Results(){
         }
 
         const wickMid=bull?(c2L+c1L)/2:(c2H+c1H)/2;
-        let respectsMid=null;
-        if(c3){
-          if(dir==='bullish') respectsMid=+c3.low>=wickMid;
-          else respectsMid=+c3.high<=wickMid;
-        }
 
-        // HTF POI: 24H/4H check weekly levels; Weekly checks monthly; Monthly checks quarterly
+        // HTF POI: 24H/4H check weekly + monthly levels; Weekly checks monthly; Monthly checks quarterly
         const poi=[];
         if((tf==='24H'||tf==='4H')&&wkRes){
           if(wkRes.pmh&&Math.abs(sweepLevel-wkRes.pmh)/wkRes.pmh<0.015) poi.push('PWH');
@@ -3578,7 +3606,8 @@ function computeCandle2Results(){
         const ageInBars=bars.length-1-i;
         const curPrice=c3?+c3.close:c2C;
         out.push({sym,dir,tf,c2Date:c2.date,c3Date:c3?c3.date:null,
-          c1H,c1L,c2H,c2L,sweepLevel,c3Status,wickMid,respectsMid,
+          c1H,c1L,c2H,c2L,sweepLevel,c3Status,wickMid,
+          embOB, // true=verified OB, null=unverifiable (4H needs 1H data)
           poi,hasHTFPOI:poi.length>0,ageInBars,curPrice});
       }
     }
@@ -3675,9 +3704,9 @@ function renderCandle2View(){
       ?r.poi.map(p=>`<span class="badge swept" style="font-size:9px;padding:2px 5px">${p}</span>`).join(' ')
       :'<span style="color:var(--text-muted);font-size:11px">—</span>';
 
-    const midHtml=r.respectsMid===null?'<span style="color:var(--text-muted)">—</span>'
-      :r.respectsMid?'<span style="color:var(--green-dark);font-weight:600">✓ Yes</span>'
-      :'<span style="color:var(--red-dark);font-weight:600">✗ No</span>';
+    const embOBHtml=r.embOB===true
+      ?'<span style="color:var(--green-dark);font-weight:600;font-size:11px">✓ Confirmed</span>'
+      :'<span style="color:var(--text-muted);font-size:10px">⚠ Verify</span>';
 
     const age=r.ageInBars===0?'<span style="color:var(--green-dark);font-weight:600">Today</span>'
       :r.ageInBars===1?'1 bar ago':`${r.ageInBars} bars ago`;
@@ -3691,7 +3720,7 @@ function renderCandle2View(){
       <td class="sensitive" style="font-size:11px;color:var(--text-sec)">$${r.c2L.toFixed(2)} – $${r.c2H.toFixed(2)}</td>
       <td>${statusBadge}</td>
       <td>${poiHtml}</td>
-      <td>${midHtml}</td>
+      <td>${embOBHtml}</td>
       <td style="font-size:11px;color:var(--text-muted)">${age}</td>
     </tr>`;
   }).join('');
