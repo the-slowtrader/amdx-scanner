@@ -3532,31 +3532,61 @@ function computeCandle2Results(){
     const h4bars=fourHTailMap[sym]||[];
     const wkBars=weeklyTailMap[sym]||[];
 
-    // Returns true=OB found, false=no OB (invalid C2), null=can't verify (no sub-TF data)
-    function findEmbeddedOB(tf,c2DateStr,sweepLevel,dir){
+    // CISD: a sequence of candles closing in one direction, then a candle that closes past
+    // the OPEN of the first candle in that sequence in the opposite direction.
+    // Returns true=CISD found in sweep zone, false=none found, null=can't verify (4H)
+    function findEmbeddedCISD(tf,c2DateStr,sweepLevel,dir){
       const dk=c2DateStr.slice(0,10);
       const d=new Date(dk+'T12:00:00');
-      const cisd=(b)=>dir==='bullish'?(+b.low<sweepLevel&&+b.close>sweepLevel):(+b.high>sweepLevel&&+b.close<sweepLevel);
+      let ltf=[];
 
       if(tf==='24H'){
         if(!h4bars.length) return null;
-        return h4bars.some(b=>b.date.slice(0,10)===dk&&cisd(b));
-      }
-      if(tf==='Weekly'){
+        ltf=h4bars.filter(b=>b.date.slice(0,10)===dk);
+      } else if(tf==='Weekly'){
         if(!h4bars.length) return null;
-        // weekly bar date is Monday (or first trading day); scan +8 days
         const end=new Date(d); end.setDate(d.getDate()+8);
         const eKey=end.toISOString().slice(0,10);
-        return h4bars.some(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey&&cisd(b);});
-      }
-      if(tf==='Monthly'){
+        ltf=h4bars.filter(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey;});
+      } else if(tf==='Monthly'){
         if(!wkBars.length) return null;
-        // monthly bar date is first trading day; scan +35 days to cover the month
         const end=new Date(d); end.setDate(d.getDate()+35);
         const eKey=end.toISOString().slice(0,10);
-        return wkBars.some(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey&&cisd(b);});
+        ltf=wkBars.filter(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey;});
+      } else {
+        return null; // 4H: no 1H data
       }
-      return null; // 4H: no 1H data — can't verify embedded OB
+
+      if(ltf.length<2) return null;
+
+      // For bullish C2 (swept low): need bearish→bullish CISD touching sweep zone
+      // Bearish sequence = consecutive down-closes; CISD = close > open of first bar in sequence
+      // For bearish C2 (swept high): need bullish→bearish CISD touching sweep zone
+      // Bullish sequence = consecutive up-closes; CISD = close < open of first bar in sequence
+      let seqFirstOpen=null, inSweepZone=false;
+
+      for(let i=0;i<ltf.length;i++){
+        const b=ltf[i];
+        const bO=+b.open,bC=+b.close,bH=+b.high,bL=+b.low;
+        const inSequence=dir==='bullish'?(bC<bO):(bC>bO); // bearish bar for bull C2, vice versa
+
+        if(inSequence){
+          if(seqFirstOpen===null){
+            seqFirstOpen=bO;
+            inSweepZone=dir==='bullish'?bL<=sweepLevel:bH>=sweepLevel;
+          } else {
+            inSweepZone=inSweepZone||(dir==='bullish'?bL<=sweepLevel:bH>=sweepLevel);
+          }
+        } else {
+          // Potential CISD bar — check if it reclaims past the first sequence bar's open
+          if(seqFirstOpen!==null && inSweepZone){
+            const isCISD=dir==='bullish'?(bC>seqFirstOpen):(bC<seqFirstOpen);
+            if(isCISD) return true;
+          }
+          seqFirstOpen=null; inSweepZone=false;
+        }
+      }
+      return false;
     }
 
     function scanBars(bars,tf,lookback){
@@ -3571,9 +3601,9 @@ function computeCandle2Results(){
         const dir=bull?'bullish':'bearish';
         const sweepLevel=bull?c1L:c1H;
 
-        // Hard filter: for verifiable TFs, require embedded LTF CISD in the sweep wick
-        const embOB=findEmbeddedOB(tf,c2.date,sweepLevel,dir);
-        if(embOB===false) continue; // verified no OB → not a valid C2
+        // Hard filter: for verifiable TFs, require embedded LTF CISD in the sweep zone
+        const embOB=findEmbeddedCISD(tf,c2.date,sweepLevel,dir);
+        if(embOB===false) continue; // verified no CISD → not a valid C2
 
         let c3Status='pending';
         if(c3){
