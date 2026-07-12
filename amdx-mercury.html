@@ -3601,6 +3601,26 @@ function computeCandle2Results(){
         const dir=bull?'bullish':'bearish';
         const sweepLevel=bull?c1L:c1H;
 
+        // C2 cannot BE the opening range bar — it's the manipulation of the range, not the range itself
+        // 4H: 9:30 AM bar = opening range of the day
+        // 24H: Monday = opening range of the week
+        // Weekly: first week of the month (date ≤ 7) = opening range of the month
+        // Monthly: first month of the quarter (Jan/Apr/Jul/Oct) = opening range of the quarter
+        {
+          const c2d=new Date(c2.date.slice(0,10)+'T12:00:00');
+          if(tf==='4H'){
+            const tStr=c2.date.includes(' ')?c2.date.split(' ')[1]:'';
+            const h=parseInt(tStr.split(':')[0]||'0');
+            if(h===9) continue; // 9:30 AM = opening range bar
+          }
+          if(tf==='24H' && c2d.getDay()===1) continue; // Monday = opening range of week
+          if(tf==='Weekly' && c2d.getDate()<=7) continue; // first week = opening range of month
+          if(tf==='Monthly'){
+            const m=c2d.getMonth();
+            if(m===0||m===3||m===6||m===9) continue; // Jan/Apr/Jul/Oct = opening range of quarter
+          }
+        }
+
         // Hard filter: for verifiable TFs, require embedded LTF CISD in the sweep zone
         const embOB=findEmbeddedCISD(tf,c2.date,sweepLevel,dir);
         if(embOB===false) continue; // verified no CISD → not a valid C2
