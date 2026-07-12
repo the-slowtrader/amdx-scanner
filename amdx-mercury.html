@@ -904,6 +904,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
             <div class="filter-chips" id="candle2TfTabs">
               <button class="filter-chip active" onclick="filterCandle2('tf','all',this)">All TF</button>
               <button class="filter-chip" onclick="filterCandle2('tf','24H',this)">24H</button>
+              <button class="filter-chip" onclick="filterCandle2('tf','7H',this)">7H</button>
               <button class="filter-chip" onclick="filterCandle2('tf','4H',this)">4H</button>
               <button class="filter-chip" onclick="filterCandle2('tf','2D',this)">2D</button>
               <button class="filter-chip" onclick="filterCandle2('tf','Monthly',this)">Monthly</button>
@@ -1809,7 +1810,7 @@ let pdhPdlResults={};
 let emaResults={};
 let reversalResults={};
 let engulfingResults=[];
-let eodTailMap={}, weeklyTailMap={}, monthlyTailMap={}, quarterlyTailMap={}, fourHTailMap={};
+let eodTailMap={}, weeklyTailMap={}, monthlyTailMap={}, quarterlyTailMap={}, fourHTailMap={}, sevenHTailMap={}, oneHFutMap={};
 let liveDayMap={}; // regular-session OHLC for today, built from 4H bars (no pre/post bleed)
 let engulfingTfFilter='all';
 let engulfingDirFilter='all';
@@ -2633,6 +2634,43 @@ function aggregateTo6H(bars, targetDate){
     return {high:Math.max(...w.map(b=>b.high)),low:Math.min(...w.map(b=>b.low)),open:w[0].open,close:w[w.length-1].close};
   });
 }
+// Build 7H session bars for index futures: C1=6PM-1AM, C2=1AM-8AM, C3=8AM-3PM
+// Each "trading day" for futures starts at 18:00 ET prior calendar day
+function build7HSessionBars(bars1H){
+  const tradingDates=new Set();
+  bars1H.forEach(b=>{
+    const ds=b.date.slice(0,10);
+    const h=new Date(b.date).getHours();
+    if(h>=18){const nd=new Date(ds+'T00:00:00');nd.setDate(nd.getDate()+1);tradingDates.add(nd.toISOString().slice(0,10));}
+    else tradingDates.add(ds);
+  });
+  const out=[];
+  [...tradingDates].sort().forEach(td=>{
+    const pd=new Date(td+'T00:00:00');pd.setDate(pd.getDate()-1);
+    const pdStr=pd.toISOString().slice(0,10);
+    const sess=bars1H.filter(b=>{
+      const ds=b.date.slice(0,10),h=new Date(b.date).getHours();
+      return (ds===pdStr&&h>=18)||(ds===td&&h<15);
+    });
+    if(!sess.length) return;
+    const wins=[[],[],[]];
+    sess.forEach(b=>{
+      const h=new Date(b.date).getHours();
+      const sh=h>=18?h-18:h+6; // session hour: 18:00=0, 01:00=7, 08:00=14
+      const w=Math.floor(sh/7);
+      if(w<3) wins[w].push(b);
+    });
+    const labels=['00:00','01:00','08:00']; // C1, C2, C3 start labels (C1 labelled to td)
+    wins.forEach((w,wi)=>{
+      if(!w.length) return;
+      out.push({date:td+' '+labels[wi],open:+w[0].open,
+        high:Math.max(...w.map(b=>+b.high)),low:Math.min(...w.map(b=>+b.low)),
+        close:+w[w.length-1].close});
+    });
+  });
+  return out;
+}
+
 function aggregateFutures6H(bars, targetDate){
   // Futures 24h: 18:00 prior day → 17:59 target day
   const td=new Date(targetDate+'T00:00:00');
@@ -2841,13 +2879,17 @@ async function runScan(){
     const dailyKey='mercury_daily_'+today;
     const emaKey='mercury_ema_'+today;
     const fourHTailKey='mercury_4h_tail_v1_'+today;
-    if(isCacheFresh(dailyKey,30*60*1000)&&isCacheFresh(fourHTailKey)){
+    const sevenHTailKey='mercury_7h_tail_v1_'+today;
+    const oneHFutKey='mercury_1h_fut_v1_'+today;
+    if(isCacheFresh(dailyKey,30*60*1000)&&isCacheFresh(fourHTailKey)&&isCacheFresh(sevenHTailKey)){
       dailyResults=loadCache(dailyKey).data;
       emaResults=(loadCache(emaKey)||{}).data||{};
       fourHTailMap=(loadCache(fourHTailKey)||{}).data||{};
+      sevenHTailMap=(loadCache(sevenHTailKey)||{}).data||{};
+      oneHFutMap=(loadCache(oneHFutKey)||{}).data||{};
       updateProgress(100,'Complete');
     } else {
-      dailyResults={};emaResults={};fourHTailMap={};
+      dailyResults={};emaResults={};fourHTailMap={};sevenHTailMap={};oneHFutMap={};
       const twoDaysAgo=dateStr(daysAgo(5));
       for(let i=0;i<WATCHLIST.length;i+=BATCH_SIZE){
         const batch=WATCHLIST.slice(i,i+BATCH_SIZE);
@@ -2897,6 +2939,12 @@ async function runScan(){
               const s4h=b=>({date:b.date,open:+b.open,high:+b.high,low:+b.low,close:+b.close});
               fourHTailMap[sym]=bars.slice(-40).map(s4h);
             }
+            // Store 7H session bars + raw 1H for Candle 2 scanner (futures only)
+            if(isFut){
+              const slim=b=>({date:b.date,open:+b.open,high:+b.high,low:+b.low,close:+b.close});
+              sevenHTailMap[sym]=build7HSessionBars(bars).slice(-15);
+              oneHFutMap[sym]=bars.slice(-120).map(slim);
+            }
             // Regular-session OHLC for today — used by live engulfing scanner
             if(!isIndex && !isFut){
               const todayBars=bars.filter(b=>b.date.startsWith(latestDate));
@@ -2928,6 +2976,8 @@ async function runScan(){
       saveCache(dailyKey,dailyResults);
       saveCache(emaKey,emaResults);
       saveCache(fourHTailKey,fourHTailMap);
+      saveCache(sevenHTailKey,sevenHTailMap);
+      saveCache(oneHFutKey,oneHFutMap);
     }
 
     // Phase 3: Live quotes — real-time price + today's session H/L
@@ -3569,7 +3619,15 @@ function computeCandle2Results(){
       const d=new Date(dk+'T12:00:00');
       let ltf=[];
 
-      if(tf==='24H'||tf==='2D'){
+      if(tf==='7H'){
+        // CISD check uses 1H bars within the C2 window (01:00-08:00 ET)
+        const h1=oneHFutMap[sym]||[];
+        if(!h1.length) return null;
+        ltf=h1.filter(b=>{
+          const bd=b.date.slice(0,10),h=new Date(b.date).getHours();
+          return bd===dk&&h>=1&&h<8;
+        });
+      } else if(tf==='24H'||tf==='2D'){
         if(!h4bars.length) return null;
         // 24H = same date; 2D = Wed+Thu (2 days)
         const days=tf==='2D'?2:0;
@@ -3676,8 +3734,57 @@ function computeCandle2Results(){
     const twoDayBars=build2DayBars(eodTailMap[sym]||[]);
     scanBars(eodTailMap[sym],'24H',10);
     scanBars(fourHTailMap[sym],'4H',20);
-    scanBars(twoDayBars,'2D',9); // last 3 weeks = 9 2D bars
+    scanBars(twoDayBars,'2D',9);
     scanBars(monthlyTailMap[sym],'Monthly',5);
+  });
+
+  // Index futures — 7H session bars: C1=6PM-1AM, C2=1AM-8AM, C3=8AM-3PM
+  FUTURES.forEach(sym=>{
+    const h7=sevenHTailMap[sym]||[];
+    if(h7.length<2) return;
+    const wkRes=weeklyResults[sym], moRes=monthlyResults[sym];
+    const h1=oneHFutMap[sym]||[];
+
+    function cisd7H(dk,sweepLevel,dir){
+      if(!h1.length) return null;
+      const ltf=h1.filter(b=>{const h=new Date(b.date).getHours();return b.date.slice(0,10)===dk&&h>=1&&h<8;});
+      if(ltf.length<2) return null;
+      let sfO=null,inZ=false;
+      for(const b of ltf){
+        const bO=+b.open,bC=+b.close,inSeq=dir==='bullish'?(bC<bO):(bC>bO);
+        if(inSeq){
+          if(sfO===null){sfO=bO;inZ=dir==='bullish'?+b.low<=sweepLevel:+b.high>=sweepLevel;}
+          else inZ=inZ||(dir==='bullish'?+b.low<=sweepLevel:+b.high>=sweepLevel);
+        } else {
+          if(sfO!==null&&inZ&&(dir==='bullish'?bC>sfO:bC<sfO)) return true;
+          sfO=null;inZ=false;
+        }
+      }
+      return false;
+    }
+
+    const start=Math.max(1,h7.length-12);
+    for(let i=start;i<h7.length;i++){
+      const c1=h7[i-1],c2=h7[i],c3=i<h7.length-1?h7[i+1]:null;
+      // C2 must be the 01:00 bar (European session / pre-NY manipulation)
+      const c2H2=parseInt((c2.date.split(' ')[1]||'').split(':')[0]);
+      if(c2H2!==1) continue;
+      const c1H=+c1.high,c1L=+c1.low,c2H=+c2.high,c2L=+c2.low,c2C=+c2.close;
+      const bull=c2L<c1L&&c2C>c1L, bear=c2H>c1H&&c2C<c1H;
+      if(!bull&&!bear) continue;
+      const dir=bull?'bullish':'bearish', sweepLevel=bull?c1L:c1H;
+      const embOB=cisd7H(c2.date.slice(0,10),sweepLevel,dir);
+      if(embOB===false) continue;
+      let c3Status='pending';
+      if(c3){const c3C=+c3.close;if(dir==='bullish')c3Status=c3C>c2H?'confirmed':c3C<c2L?'failed':'inside';else c3Status=c3C<c2L?'confirmed':c3C>c2H?'failed':'inside';}
+      const poi=[];
+      if(wkRes){if(wkRes.pmh&&Math.abs(sweepLevel-wkRes.pmh)/wkRes.pmh<0.015)poi.push('PWH');if(wkRes.pml&&Math.abs(sweepLevel-wkRes.pml)/wkRes.pml<0.015)poi.push('PWL');}
+      if(moRes){if(moRes.pmh&&Math.abs(sweepLevel-moRes.pmh)/moRes.pmh<0.02)poi.push('PMH');if(moRes.pml&&Math.abs(sweepLevel-moRes.pml)/moRes.pml<0.02)poi.push('PML');}
+      const ageInBars=h7.length-1-i;
+      out.push({sym,dir,tf:'7H',c2Date:c2.date,c3Date:c3?c3.date:null,
+        c1H,c1L,c2H,c2L,sweepLevel,c3Status,wickMid:bull?(c2L+c1L)/2:(c2H+c1H)/2,
+        embOB,poi,hasHTFPOI:poi.length>0,ageInBars,curPrice:c3?+c3.close:c2C});
+    }
   });
 
   const sOrd={pending:0,inside:1,confirmed:2,failed:3};
@@ -3748,7 +3855,9 @@ function renderCandle2View(){
   tbody.innerHTML=rows.map(r=>{
     const dirCls=r.dir==='bullish'?'acc':'dist';
     const dirLabel=r.dir==='bullish'?'↑ Bullish':'↓ Bearish';
-    const tfBadge=r.tf==='Monthly'
+    const tfBadge=r.tf==='7H'
+      ?`<span style="font-size:10px;font-weight:700;color:#eab308;background:rgba(234,179,8,0.1);padding:2px 6px;border-radius:4px">7H</span>`
+      :r.tf==='Monthly'
       ?`<span style="font-size:10px;font-weight:700;color:var(--orange,#f97316);background:rgba(249,115,22,0.08);padding:2px 6px;border-radius:4px">M</span>`
       :r.tf==='2D'
       ?`<span style="font-size:10px;font-weight:700;color:var(--purple);background:rgba(124,58,237,0.08);padding:2px 6px;border-radius:4px">2D</span>`
@@ -5745,6 +5854,8 @@ function renderWatchlistView(){
     monthlyTailMap=(loadCache('mercury_monthly_tail_v6_'+today)||{}).data||{};
     quarterlyTailMap=(loadCache('mercury_quarterly_tail_v5_'+today)||{}).data||{};
     fourHTailMap=(loadCache('mercury_4h_tail_v1_'+today)||{}).data||{};
+    sevenHTailMap=(loadCache('mercury_7h_tail_v1_'+today)||{}).data||{};
+    oneHFutMap=(loadCache('mercury_1h_fut_v1_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing12_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
