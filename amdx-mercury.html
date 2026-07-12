@@ -903,8 +903,9 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
           <div class="table-toolbar-left">
             <div class="filter-chips" id="candle2TfTabs">
               <button class="filter-chip active" onclick="filterCandle2('tf','all',this)">All TF</button>
-              <button class="filter-chip" onclick="filterCandle2('tf','Daily',this)">Daily</button>
+              <button class="filter-chip" onclick="filterCandle2('tf','4H',this)">4H</button>
               <button class="filter-chip" onclick="filterCandle2('tf','Weekly',this)">Weekly</button>
+              <button class="filter-chip" onclick="filterCandle2('tf','Monthly',this)">Monthly</button>
             </div>
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="candle2DirTabs">
@@ -1807,7 +1808,7 @@ let pdhPdlResults={};
 let emaResults={};
 let reversalResults={};
 let engulfingResults=[];
-let eodTailMap={}, weeklyTailMap={}, monthlyTailMap={}, quarterlyTailMap={};
+let eodTailMap={}, weeklyTailMap={}, monthlyTailMap={}, quarterlyTailMap={}, fourHTailMap={};
 let liveDayMap={}; // regular-session OHLC for today, built from 4H bars (no pre/post bleed)
 let engulfingTfFilter='all';
 let engulfingDirFilter='all';
@@ -2838,12 +2839,14 @@ async function runScan(){
     updateProgress(50,'Fetching intraday data...');
     const dailyKey='mercury_daily_'+today;
     const emaKey='mercury_ema_'+today;
-    if(isCacheFresh(dailyKey,30*60*1000)){
+    const fourHTailKey='mercury_4h_tail_v1_'+today;
+    if(isCacheFresh(dailyKey,30*60*1000)&&isCacheFresh(fourHTailKey)){
       dailyResults=loadCache(dailyKey).data;
       emaResults=(loadCache(emaKey)||{}).data||{};
+      fourHTailMap=(loadCache(fourHTailKey)||{}).data||{};
       updateProgress(100,'Complete');
     } else {
-      dailyResults={};emaResults={};
+      dailyResults={};emaResults={};fourHTailMap={};
       const twoDaysAgo=dateStr(daysAgo(5));
       for(let i=0;i<WATCHLIST.length;i+=BATCH_SIZE){
         const batch=WATCHLIST.slice(i,i+BATCH_SIZE);
@@ -2888,6 +2891,11 @@ async function runScan(){
             dailyResults[sym]=classified;
             // 9/21 EMA cross on 4H bars
             emaResults[sym]=detectEMACross(bars);
+            // Store 4H tail for Candle 2 scanner (regular stocks only, not index ETFs/futures)
+            if(!isIndex&&!isFut){
+              const s4h=b=>({date:b.date,open:+b.open,high:+b.high,low:+b.low,close:+b.close});
+              fourHTailMap[sym]=bars.slice(-40).map(s4h);
+            }
             // Regular-session OHLC for today — used by live engulfing scanner
             if(!isIndex && !isFut){
               const todayBars=bars.filter(b=>b.date.startsWith(latestDate));
@@ -2918,6 +2926,7 @@ async function runScan(){
       }
       saveCache(dailyKey,dailyResults);
       saveCache(emaKey,emaResults);
+      saveCache(fourHTailKey,fourHTailMap);
     }
 
     // Phase 3: Live quotes — real-time price + today's session H/L
@@ -2954,6 +2963,8 @@ async function runScan(){
     renderSetupChainView();
     renderAMDXCycleView();
     renderLottoView();
+    candle2Results = computeCandle2Results();
+    renderCandle2View();
     updateScannerCount();
 
   }catch(e){
@@ -3512,29 +3523,24 @@ function renderAMDXCycleView(){
 function computeCandle2Results(){
   const out=[];
   const nonFut=WATCHLIST.filter(s=>!FUTURES.includes(s));
+
   nonFut.forEach(sym=>{
-    const eod=eodTailMap[sym];
-    const wkBars=weeklyTailMap[sym];
     const wkRes=weeklyResults[sym];
     const moRes=monthlyResults[sym];
+    const qtRes=quarterlyResults[sym];
 
-    // Helper: detect C2 closure in a bar array
-    function scanBars(bars,tf){
+    function scanBars(bars,tf,lookback){
       if(!bars||bars.length<2) return;
-      // Look at last 8 bars for C2 patterns (don't go stale)
-      const start=Math.max(1,bars.length-(tf==='Daily'?8:5));
+      const start=Math.max(1,bars.length-lookback);
       for(let i=start;i<bars.length;i++){
         const c1=bars[i-1], c2=bars[i], c3=i<bars.length-1?bars[i+1]:null;
         const c1H=+c1.high,c1L=+c1.low,c2H=+c2.high,c2L=+c2.low,c2C=+c2.close;
-        // Bullish: C2 sweeps C1's low AND closes back above it
         const bull=c2L<c1L&&c2C>c1L;
-        // Bearish: C2 sweeps C1's high AND closes back below it
         const bear=c2H>c1H&&c2C<c1H;
         if(!bull&&!bear) continue;
         const dir=bull?'bullish':'bearish';
         const sweepLevel=bull?c1L:c1H;
 
-        // C3 status
         let c3Status='pending';
         if(c3){
           const c3C=+c3.close;
@@ -3542,40 +3548,41 @@ function computeCandle2Results(){
           else c3Status=c3C<c2L?'confirmed':c3C>c2H?'failed':'inside';
         }
 
-        // Wick midpoint (between sweep wick tip and the swept level)
         const wickMid=bull?(c2L+c1L)/2:(c2H+c1H)/2;
-        // Did C3 respect the wick midpoint?
         let respectsMid=null;
         if(c3){
           if(dir==='bullish') respectsMid=+c3.low>=wickMid;
           else respectsMid=+c3.high<=wickMid;
         }
 
-        // HTF POI proximity check (1.5% for weekly levels, 2% for monthly)
+        // HTF POI: 4H checks weekly levels; Weekly checks monthly; Monthly checks quarterly
         const poi=[];
-        if(tf==='Daily'&&wkRes){
+        if(tf==='4H'&&wkRes){
           if(wkRes.pmh&&Math.abs(sweepLevel-wkRes.pmh)/wkRes.pmh<0.015) poi.push('PWH');
           if(wkRes.pml&&Math.abs(sweepLevel-wkRes.pml)/wkRes.pml<0.015) poi.push('PWL');
         }
-        if(moRes){
+        if(tf==='Weekly'&&moRes){
           if(moRes.pmh&&Math.abs(sweepLevel-moRes.pmh)/moRes.pmh<0.02) poi.push('PMH');
           if(moRes.pml&&Math.abs(sweepLevel-moRes.pml)/moRes.pml<0.02) poi.push('PML');
         }
+        if(tf==='Monthly'&&qtRes){
+          if(qtRes.pmh&&Math.abs(sweepLevel-qtRes.pmh)/qtRes.pmh<0.025) poi.push('PQH');
+          if(qtRes.pml&&Math.abs(sweepLevel-qtRes.pml)/qtRes.pml<0.025) poi.push('PQL');
+        }
 
-        const ageInBars=bars.length-1-i; // 0 = C2 is the most recent bar
+        const ageInBars=bars.length-1-i;
         const curPrice=c3?+c3.close:c2C;
-
         out.push({sym,dir,tf,c2Date:c2.date,c3Date:c3?c3.date:null,
           c1H,c1L,c2H,c2L,sweepLevel,c3Status,wickMid,respectsMid,
           poi,hasHTFPOI:poi.length>0,ageInBars,curPrice});
       }
     }
 
-    scanBars(eod,'Daily');
-    scanBars(wkBars,'Weekly');
+    scanBars(fourHTailMap[sym],'4H',20);
+    scanBars(weeklyTailMap[sym],'Weekly',5);
+    scanBars(monthlyTailMap[sym],'Monthly',5);
   });
 
-  // Sort: active (pending/inside) first → HTF POI → recency
   const sOrd={pending:0,inside:1,confirmed:2,failed:3};
   out.sort((a,b)=>{
     const sd=sOrd[a.c3Status]-sOrd[b.c3Status];
@@ -3644,9 +3651,11 @@ function renderCandle2View(){
   tbody.innerHTML=rows.map(r=>{
     const dirCls=r.dir==='bullish'?'acc':'dist';
     const dirLabel=r.dir==='bullish'?'↑ Bullish':'↓ Bearish';
-    const tfBadge=r.tf==='Weekly'
+    const tfBadge=r.tf==='Monthly'
+      ?`<span style="font-size:10px;font-weight:700;color:var(--orange,#f97316);background:rgba(249,115,22,0.08);padding:2px 6px;border-radius:4px">M</span>`
+      :r.tf==='Weekly'
       ?`<span style="font-size:10px;font-weight:700;color:var(--purple);background:rgba(124,58,237,0.08);padding:2px 6px;border-radius:4px">W</span>`
-      :`<span style="font-size:10px;font-weight:700;color:var(--text-sec);background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--card-border)">D</span>`;
+      :`<span style="font-size:10px;font-weight:700;color:var(--text-sec);background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--card-border)">4H</span>`;
 
     let statusBadge;
     if(r.c3Status==='confirmed') statusBadge='<span class="badge acc">C3 ✓ Confirmed</span>';
@@ -5636,6 +5645,7 @@ function renderWatchlistView(){
     weeklyTailMap=(loadCache('mercury_weekly_tail_v8_'+today)||{}).data||{};
     monthlyTailMap=(loadCache('mercury_monthly_tail_v6_'+today)||{}).data||{};
     quarterlyTailMap=(loadCache('mercury_quarterly_tail_v5_'+today)||{}).data||{};
+    fourHTailMap=(loadCache('mercury_4h_tail_v1_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing12_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
       engulfingResults=buildEngulfingResults(eodTailMap,weeklyTailMap,monthlyTailMap);
