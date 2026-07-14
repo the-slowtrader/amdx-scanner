@@ -3799,6 +3799,8 @@ function computeCandle2Results(){
     if(a.hasHTFPOI!==b.hasHTFPOI) return a.hasHTFPOI?-1:1;
     return a.ageInBars-b.ageInBars;
   });
+  const _dbg={};out.forEach(r=>{_dbg[r.tf]=(_dbg[r.tf]||0)+1;});
+  console.log('[C2 results]',_dbg,'total:',out.length);
   return out;
 }
 
