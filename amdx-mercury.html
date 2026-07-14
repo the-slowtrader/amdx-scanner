@@ -2879,7 +2879,7 @@ async function runScan(){
     const dailyKey='mercury_daily_'+today;
     const emaKey='mercury_ema_'+today;
     const fourHTailKey='mercury_4h_tail_v2_'+today;
-    const sevenHTailKey='mercury_7h_tail_v1_'+today;
+    const sevenHTailKey='mercury_7h_tail_v2_'+today;
     const oneHFutKey='mercury_1h_fut_v1_'+today;
     if(isCacheFresh(dailyKey,30*60*1000)&&isCacheFresh(fourHTailKey)&&isCacheFresh(sevenHTailKey)){
       dailyResults=loadCache(dailyKey).data;
@@ -2890,7 +2890,7 @@ async function runScan(){
       updateProgress(100,'Complete');
     } else {
       dailyResults={};emaResults={};fourHTailMap={};sevenHTailMap={};oneHFutMap={};
-      const twoDaysAgo=dateStr(daysAgo(5));
+      const twoDaysAgo=dateStr(daysAgo(14));
       for(let i=0;i<WATCHLIST.length;i+=BATCH_SIZE){
         const batch=WATCHLIST.slice(i,i+BATCH_SIZE);
         const promises=batch.map(async sym=>{
@@ -5861,7 +5861,7 @@ function renderWatchlistView(){
     monthlyTailMap=(loadCache('mercury_monthly_tail_v6_'+today)||{}).data||{};
     quarterlyTailMap=(loadCache('mercury_quarterly_tail_v5_'+today)||{}).data||{};
     fourHTailMap=(loadCache('mercury_4h_tail_v2_'+today)||{}).data||{};
-    sevenHTailMap=(loadCache('mercury_7h_tail_v1_'+today)||{}).data||{};
+    sevenHTailMap=(loadCache('mercury_7h_tail_v2_'+today)||{}).data||{};
     oneHFutMap=(loadCache('mercury_1h_fut_v1_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing12_'+today)||{}).data||[];
     if(!engulfingResults.length && Object.keys(eodTailMap).length){
