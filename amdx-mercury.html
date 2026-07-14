@@ -1972,7 +1972,7 @@ async function fetchEOD(sym, from, to){
 }
 
 async function fetchIntraday(sym, tf, from, to){
-  const url = `https://financialmodelingprep.com/stable/historical-chart/${tf}?symbol=${fmpSym(sym)}&from=${from}&to=${to}${tf==='1hour'?'&extended=true':''}&apikey=${FMP_KEY}`;
+  const url = `https://financialmodelingprep.com/stable/historical-chart/${tf}?symbol=${fmpSym(sym)}&from=${from}&to=${to}${(tf==='1hour'||tf==='4hour')?'&extended=true':''}&apikey=${FMP_KEY}`;
   return fetchJSON(url);
 }
 
@@ -2878,7 +2878,7 @@ async function runScan(){
     updateProgress(50,'Fetching intraday data...');
     const dailyKey='mercury_daily_'+today;
     const emaKey='mercury_ema_'+today;
-    const fourHTailKey='mercury_4h_tail_v1_'+today;
+    const fourHTailKey='mercury_4h_tail_v2_'+today;
     const sevenHTailKey='mercury_7h_tail_v1_'+today;
     const oneHFutKey='mercury_1h_fut_v1_'+today;
     if(isCacheFresh(dailyKey,30*60*1000)&&isCacheFresh(fourHTailKey)&&isCacheFresh(sevenHTailKey)){
@@ -5860,7 +5860,7 @@ function renderWatchlistView(){
     weeklyTailMap=(loadCache('mercury_weekly_tail_v8_'+today)||{}).data||{};
     monthlyTailMap=(loadCache('mercury_monthly_tail_v6_'+today)||{}).data||{};
     quarterlyTailMap=(loadCache('mercury_quarterly_tail_v5_'+today)||{}).data||{};
-    fourHTailMap=(loadCache('mercury_4h_tail_v1_'+today)||{}).data||{};
+    fourHTailMap=(loadCache('mercury_4h_tail_v2_'+today)||{}).data||{};
     sevenHTailMap=(loadCache('mercury_7h_tail_v1_'+today)||{}).data||{};
     oneHFutMap=(loadCache('mercury_1h_fut_v1_'+today)||{}).data||{};
     engulfingResults=(loadCache('mercury_engulfing12_'+today)||{}).data||[];
