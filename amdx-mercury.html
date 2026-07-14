@@ -3692,6 +3692,7 @@ function computeCandle2Results(){
             if(h!==8) continue;
           }
           if(tf==='24H'&&c2d.getDay()===1) continue; // Monday = opening range of week
+          if(tf==='2D'&&i===bars.length-1) continue; // current week not closed yet — wait for Friday
           if(tf==='Monthly'){
             const m=c2d.getMonth();
             if(m===0||m===3||m===6||m===9) continue; // first month of quarter = opening range
