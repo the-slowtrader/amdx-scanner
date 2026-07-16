@@ -3632,8 +3632,8 @@ function computeCandle2Results(){
         });
       } else if(tf==='24H'||tf==='2D'){
         if(!h4bars.length) return null;
-        // 24H = same day; 2D (Weekly) = full week Mon-Fri (4 days)
-        const days=tf==='2D'?4:0;
+        // 24H = same day; 2D = Wed+Thu (2 days within the week)
+        const days=tf==='2D'?2:0;
         const end=new Date(d); end.setDate(d.getDate()+days);
         const eKey=end.toISOString().slice(0,10);
         ltf=h4bars.filter(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey;});
@@ -3692,7 +3692,8 @@ function computeCandle2Results(){
             if(h!==8) continue;
           }
           if(tf==='24H'&&c2d.getDay()===1) continue; // Monday = opening range of week
-          if(tf==='2D'&&i===bars.length-1) continue; // current week not closed yet — wait for Friday
+          if(tf==='2D'&&c2d.getDay()!==3) continue;  // C2 must be the Wed+Thu bar (labeled Wednesday)
+          if(tf==='2D'&&i===bars.length-1) continue; // skip if no Friday bar yet — wait for weekly close
           if(tf==='Monthly'){
             const m=c2d.getMonth();
             if(m===0||m===3||m===6||m===9) continue; // first month of quarter = opening range
@@ -3736,7 +3737,8 @@ function computeCandle2Results(){
 
     scanBars(eodTailMap[sym],'24H',10);
     scanBars(fourHTailMap[sym],'4H',20);
-    scanBars(weeklyTailMap[sym],'2D',7);
+    const twoDayBars=build2DayBars(eodTailMap[sym]||[]);
+    scanBars(twoDayBars,'2D',9);
     scanBars(monthlyTailMap[sym],'Monthly',5);
   });
 
