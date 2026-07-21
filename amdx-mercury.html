@@ -2719,7 +2719,19 @@ function classifyDailyAMDX(todayPhases, priorLastPhase, isFutures){
 
 // ── Cache ──
 function loadCache(key){ try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;} }
-function saveCache(key,data){ try{localStorage.setItem(key,JSON.stringify({timestamp:Date.now(),data}));}catch(e){} }
+function saveCache(key,data){
+  const payload=JSON.stringify({timestamp:Date.now(),data});
+  try{ localStorage.setItem(key,payload); }
+  catch(e){
+    // Quota exceeded — evict all keys from prior days then retry
+    const todayPrefix='mercury_'+today;
+    for(let i=localStorage.length-1;i>=0;i--){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith('mercury_')&&!k.startsWith(todayPrefix)) localStorage.removeItem(k);
+    }
+    try{ localStorage.setItem(key,payload); }catch(e2){ console.warn('[cache] quota exceeded even after eviction, skipping:',key); }
+  }
+}
 function isCacheFresh(key,maxAge=6*60*60*1000){ const c=loadCache(key); return c&&(Date.now()-c.timestamp)<maxAge; }
 
 // ══════════════════════════════════════════════════════
@@ -2850,12 +2862,11 @@ async function runScan(){
     engulfingResults = buildEngulfingResults(eodTailMap, weeklyTailMap, monthlyTailMap);
     saveCache(engulfingKey, engulfingResults);
 
-    // Compute multi-TF FVG results, setup chain, Friday Lotto, and Candle 2 setups
+    // Compute multi-TF FVG results, setup chain, Friday Lotto (Candle 2 deferred until intraday data loads)
     fvgResults = computeFVGResults();
     bprFvgResults = computeBprInFvgResults();
     setupChainResults = computeSetupChainResults();
     fridayLottoResults = computeFridayLottoResults();
-    candle2Results = computeCandle2Results();
 
     // Progressively render what we have so far
     renderDashboard();
@@ -2872,7 +2883,6 @@ async function runScan(){
     renderSetupChainView();
     renderAMDXCycleView();
     renderLottoView();
-    renderCandle2View();
 
     // Phase 2: Daily intraday
     updateProgress(50,'Fetching intraday data...');
