@@ -2724,7 +2724,7 @@ function saveCache(key,data){
   try{ localStorage.setItem(key,payload); }
   catch(e){
     // Quota exceeded — evict all keys from prior days then retry
-    const todayPrefix='mercury_'+today;
+    const todayPrefix='mercury_'+new Date().toISOString().slice(0,10);
     for(let i=localStorage.length-1;i>=0;i--){
       const k=localStorage.key(i);
       if(k&&k.startsWith('mercury_')&&!k.startsWith(todayPrefix)) localStorage.removeItem(k);
