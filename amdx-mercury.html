@@ -907,6 +907,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip" onclick="filterCandle2('tf','7H',this)">7H</button>
               <button class="filter-chip" onclick="filterCandle2('tf','4H',this)">4H</button>
               <button class="filter-chip" onclick="filterCandle2('tf','2D',this)">2D</button>
+              <button class="filter-chip" onclick="filterCandle2('tf','1W',this)">1W</button>
               <button class="filter-chip" onclick="filterCandle2('tf','Monthly',this)">Monthly</button>
             </div>
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
@@ -3652,6 +3653,12 @@ function computeCandle2Results(){
         const end=new Date(d); end.setDate(d.getDate()+days);
         const eKey=end.toISOString().slice(0,10);
         ltf=h4bars.filter(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey;});
+      } else if(tf==='1W'){
+        if(!h4bars.length) return null;
+        // CISD window = the 5 trading days of the C2 week
+        const end=new Date(d); end.setDate(d.getDate()+5);
+        const eKey=end.toISOString().slice(0,10);
+        ltf=h4bars.filter(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey;});
       } else if(tf==='Monthly'){
         if(!wkBars.length) return null;
         const end=new Date(d); end.setDate(d.getDate()+35);
@@ -3709,6 +3716,13 @@ function computeCandle2Results(){
           if(tf==='24H'&&c2d.getDay()===1) continue; // Monday = opening range of week
           if(tf==='2D'&&c2d.getDay()!==3) continue;  // C2 must be the Wed+Thu bar (labeled Wednesday)
           if(tf==='2D'&&i===bars.length-1) continue; // skip if no Friday bar yet — wait for weekly close
+          if(tf==='1W'){
+            // C2 must be Week 2 of its month — skip Week 1 (opening range)
+            const c2month=c2.date.slice(0,7);
+            const isWeek1=!bars.slice(0,i).some(b=>b.date.slice(0,7)===c2month);
+            if(isWeek1) continue;
+            if(i===bars.length-1) continue; // skip current incomplete week — wait for it to close
+          }
           if(tf==='Monthly'){
             const m=c2d.getMonth();
             if(m===0||m===3||m===6||m===9) continue; // first month of quarter = opening range
@@ -3737,6 +3751,10 @@ function computeCandle2Results(){
             if(moRes.pml&&Math.abs(sweepLevel-moRes.pml)/moRes.pml<0.02) poi.push('PML');
           }
         }
+        if(tf==='1W'&&moRes){
+          if(moRes.pmh&&Math.abs(sweepLevel-moRes.pmh)/moRes.pmh<0.02) poi.push('PMH');
+          if(moRes.pml&&Math.abs(sweepLevel-moRes.pml)/moRes.pml<0.02) poi.push('PML');
+        }
         if(tf==='Monthly'&&qtRes){
           if(qtRes.pmh&&Math.abs(sweepLevel-qtRes.pmh)/qtRes.pmh<0.025) poi.push('PQH');
           if(qtRes.pml&&Math.abs(sweepLevel-qtRes.pml)/qtRes.pml<0.025) poi.push('PQL');
@@ -3754,6 +3772,7 @@ function computeCandle2Results(){
     scanBars(fourHTailMap[sym],'4H',20);
     const twoDayBars=build2DayBars(eodTailMap[sym]||[]);
     scanBars(twoDayBars,'2D',9);
+    scanBars(weeklyTailMap[sym],'1W',8);
     scanBars(monthlyTailMap[sym],'Monthly',5);
   });
 
@@ -3882,6 +3901,8 @@ function renderCandle2View(){
       ?`<span style="font-size:10px;font-weight:700;color:#eab308;background:rgba(234,179,8,0.1);padding:2px 6px;border-radius:4px">7H</span>`
       :r.tf==='Monthly'
       ?`<span style="font-size:10px;font-weight:700;color:var(--orange,#f97316);background:rgba(249,115,22,0.08);padding:2px 6px;border-radius:4px">M</span>`
+      :r.tf==='1W'
+      ?`<span style="font-size:10px;font-weight:700;color:#10b981;background:rgba(16,185,129,0.08);padding:2px 6px;border-radius:4px">1W</span>`
       :r.tf==='2D'
       ?`<span style="font-size:10px;font-weight:700;color:var(--purple);background:rgba(124,58,237,0.08);padding:2px 6px;border-radius:4px">2D</span>`
       :r.tf==='24H'
