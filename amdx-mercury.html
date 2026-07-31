@@ -922,6 +922,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip" onclick="filterCandle2('status','active',this)">Active</button>
               <button class="filter-chip" onclick="filterCandle2('status','confirmed',this)">Confirmed</button>
               <button class="filter-chip" onclick="filterCandle2('status','poi',this)">At HTF POI</button>
+              <button class="filter-chip" onclick="filterCandle2('status','discount',this)">In Discount</button>
             </div>
           </div>
           <div class="table-toolbar-right">
@@ -3759,9 +3760,11 @@ function computeCandle2Results(){
 
         const ageInBars=bars.length-1-i;
         const curPrice=c3?+c3.close:c2C;
+        const c2Mid=(c2H+c2L)/2;
+        const inDiscount=dir==='bullish'?curPrice<=c2Mid:curPrice>=c2Mid;
         out.push({sym,dir,tf,c2Date:c2.date,c3Date:c3?c3.date:null,
           c1H,c1L,c2H,c2L,sweepLevel,c3Status,wickMid,
-          embOB,poi,hasHTFPOI:poi.length>0,ageInBars,curPrice});
+          embOB,poi,hasHTFPOI:poi.length>0,ageInBars,curPrice,inDiscount});
       }
     }
 
@@ -3878,6 +3881,7 @@ function renderCandle2View(){
   if(candle2StatusFilter==='active') rows=rows.filter(r=>r.c3Status==='pending'||r.c3Status==='inside');
   else if(candle2StatusFilter==='confirmed') rows=rows.filter(r=>r.c3Status==='confirmed');
   else if(candle2StatusFilter==='poi') rows=rows.filter(r=>r.hasHTFPOI);
+  else if(candle2StatusFilter==='discount') rows=rows.filter(r=>r.inDiscount);
 
   lastCandle2Rows=rows;
   const activeCount=candle2Results.filter(r=>r.c3Status==='pending'||r.c3Status==='inside').length;
