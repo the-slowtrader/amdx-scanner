@@ -3630,6 +3630,13 @@ function computeCandle2Results(){
     const qtRes=quarterlyResults[sym];
     const h4bars=fourHTailMap[sym]||[];
     const wkBars=weeklyTailMap[sym]||[];
+    // HTF discount ranges — 3M for weekly-level TFs, 12M for monthly-level TFs
+    const mo3=( monthlyTailMap[sym]||[]).slice(-3);
+    const range3mH=mo3.length?Math.max(...mo3.map(b=>+b.high)):null;
+    const range3mL=mo3.length?Math.min(...mo3.map(b=>+b.low)):null;
+    const qt4=(quarterlyTailMap[sym]||[]).slice(-4);
+    const range12mH=qt4.length?Math.max(...qt4.map(b=>+b.high)):null;
+    const range12mL=qt4.length?Math.min(...qt4.map(b=>+b.low)):null;
 
     // CISD: sequence of candles closing in one direction, then a candle that closes past
     // the OPEN of the first candle in that sequence in the opposite direction.
@@ -3760,8 +3767,12 @@ function computeCandle2Results(){
 
         const ageInBars=bars.length-1-i;
         const curPrice=c3?+c3.close:c2C;
-        const c2Mid=(c2H+c2L)/2;
-        const inDiscount=dir==='bullish'?curPrice<=c2Mid:curPrice>=c2Mid;
+        // Discount = price in lower 50% of HTF range (3M for weekly-level, 12M for monthly-level)
+        const isMonthlyTf=tf==='1W'||tf==='Monthly';
+        const htfH=isMonthlyTf?range12mH:range3mH;
+        const htfL=isMonthlyTf?range12mL:range3mL;
+        const htfMid=(htfH!=null&&htfL!=null)?(htfH+htfL)/2:null;
+        const inDiscount=htfMid!=null?(dir==='bullish'?curPrice<=htfMid:curPrice>=htfMid):null;
         out.push({sym,dir,tf,c2Date:c2.date,c3Date:c3?c3.date:null,
           c1H,c1L,c2H,c2L,sweepLevel,c3Status,wickMid,
           embOB,poi,hasHTFPOI:poi.length>0,ageInBars,curPrice,inDiscount});
@@ -3881,7 +3892,7 @@ function renderCandle2View(){
   if(candle2StatusFilter==='active') rows=rows.filter(r=>r.c3Status==='pending'||r.c3Status==='inside');
   else if(candle2StatusFilter==='confirmed') rows=rows.filter(r=>r.c3Status==='confirmed');
   else if(candle2StatusFilter==='poi') rows=rows.filter(r=>r.hasHTFPOI);
-  else if(candle2StatusFilter==='discount') rows=rows.filter(r=>r.inDiscount);
+  else if(candle2StatusFilter==='discount') rows=rows.filter(r=>r.inDiscount===true);
 
   lastCandle2Rows=rows;
   const activeCount=candle2Results.filter(r=>r.c3Status==='pending'||r.c3Status==='inside').length;
