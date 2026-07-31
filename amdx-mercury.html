@@ -3723,10 +3723,7 @@ function computeCandle2Results(){
             if(isWeek1) continue;
             if(i===bars.length-1) continue; // skip current incomplete week — wait for it to close
           }
-          if(tf==='Monthly'){
-            const m=c2d.getMonth();
-            if(m===0||m===3||m===6||m===9) continue; // first month of quarter = opening range
-          }
+          // Monthly: any month can be C2 vs prior month — no quarterly constraint
         }
 
         const embOB=findEmbeddedCISD(tf,c2.date,sweepLevel,dir);
