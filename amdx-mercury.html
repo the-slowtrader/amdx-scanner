@@ -946,7 +946,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
                 <th>C3 Status</th>
                 <th>HTF POI</th>
                 <th>Emb. OB</th>
-                <th>Age</th>
+                <th id="candle2AgeHeader" onclick="toggleCandle2AgeSort()" style="cursor:pointer;user-select:none">Age <span id="candle2AgeSortArrow"></span></th>
               </tr>
             </thead>
             <tbody id="candle2Tbody"></tbody>
@@ -1838,6 +1838,7 @@ let candle2Results=[];
 let candle2TfFilter='all';
 let candle2DirFilter='all';
 let candle2StatusFilter='all';
+let candle2AgeSortDir=null; // null=default, 'asc', 'desc'
 let lastCandle2Rows=[];
 let lastChainRows=[];
 let currentView='dashboard';
@@ -3850,6 +3851,13 @@ function computeCandle2Results(){
   return out;
 }
 
+function toggleCandle2AgeSort(){
+  if(candle2AgeSortDir===null) candle2AgeSortDir='asc';
+  else if(candle2AgeSortDir==='asc') candle2AgeSortDir='desc';
+  else candle2AgeSortDir=null;
+  renderCandle2View();
+}
+
 function filterCandle2(type,val,btn){
   if(type==='tf'){
     candle2TfFilter=val;
@@ -3893,6 +3901,13 @@ function renderCandle2View(){
   else if(candle2StatusFilter==='confirmed') rows=rows.filter(r=>r.c3Status==='confirmed');
   else if(candle2StatusFilter==='poi') rows=rows.filter(r=>r.hasHTFPOI);
   else if(candle2StatusFilter==='discount') rows=rows.filter(r=>r.inDiscount===true);
+
+  if(candle2AgeSortDir==='asc') rows=[...rows].sort((a,b)=>a.ageInBars-b.ageInBars);
+  else if(candle2AgeSortDir==='desc') rows=[...rows].sort((a,b)=>b.ageInBars-a.ageInBars);
+  const ageHdr=document.getElementById('candle2AgeHeader');
+  const ageArrow=document.getElementById('candle2AgeSortArrow');
+  if(ageHdr) ageHdr.classList.toggle('sorted', candle2AgeSortDir!==null);
+  if(ageArrow) ageArrow.textContent=candle2AgeSortDir==='asc'?'▲':candle2AgeSortDir==='desc'?'▼':'';
 
   lastCandle2Rows=rows;
   const activeCount=candle2Results.filter(r=>r.c3Status==='pending'||r.c3Status==='inside').length;
