@@ -2010,13 +2010,18 @@ async function fetchQuotesBatch(syms){
 // ── Aggregation ──
 function aggregateToWeekly(daily){
   const weeks=[];
-  let cur=null;
+  let cur=null, curWeekMon=null;
   daily.forEach(d=>{
     const dt=new Date(d.date+'T12:00:00');
-    const day=dt.getDay();
-    if(day===1||!cur){ // Monday or first bar
+    const dow=dt.getDay(); // 0=Sun,1=Mon,...,6=Sat
+    // Compute the ISO Monday of this bar's week (handles holiday Mondays correctly)
+    const mon=new Date(dt);
+    mon.setDate(dt.getDate()-(dow===0?6:dow-1));
+    const weekMonStr=mon.toISOString().slice(0,10);
+    if(!cur||weekMonStr!==curWeekMon){
       if(cur) weeks.push(cur);
-      cur={open:d.open,high:d.high,low:d.low,close:d.close,date:d.date,monday:{high:d.high,low:d.low,open:d.open,close:d.close}};
+      curWeekMon=weekMonStr;
+      cur={open:d.open,high:d.high,low:d.low,close:d.close,date:weekMonStr,monday:{high:d.high,low:d.low,open:d.open,close:d.close}};
     } else {
       cur.high=Math.max(cur.high,d.high);
       cur.low=Math.min(cur.low,d.low);
@@ -3730,7 +3735,13 @@ function computeCandle2Results(){
             const c2month=c2.date.slice(0,7);
             const isWeek1=!bars.slice(0,i).some(b=>b.date.slice(0,7)===c2month);
             if(isWeek1) continue;
-            if(i===bars.length-1) continue; // skip current incomplete week — wait for it to close
+            if(i===bars.length-1){
+              // Only skip if the week's Friday hasn't passed yet (week still forming)
+              const barFri=new Date(c2.date.slice(0,10)+'T12:00:00');
+              barFri.setDate(barFri.getDate()+4); // Monday + 4 = Friday
+              const nowDay=new Date(); nowDay.setHours(0,0,0,0); barFri.setHours(0,0,0,0);
+              if(barFri>=nowDay) continue; // week's Friday hasn't closed yet
+            }
           }
           // Monthly: any month can be C2 vs prior month — no quarterly constraint
         }
