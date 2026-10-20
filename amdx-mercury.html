@@ -908,6 +908,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip" onclick="filterCandle2('tf','4H',this)">4H</button>
               <button class="filter-chip" onclick="filterCandle2('tf','2D',this)">2D</button>
               <button class="filter-chip" onclick="filterCandle2('tf','1W',this)">1W</button>
+              <button class="filter-chip" onclick="filterCandle2('tf','2W',this)">2W</button>
               <button class="filter-chip" onclick="filterCandle2('tf','Monthly',this)">Monthly</button>
             </div>
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
@@ -3667,7 +3668,7 @@ function computeCandle2Results(){
         const end=new Date(d); end.setDate(d.getDate()+days);
         const eKey=end.toISOString().slice(0,10);
         ltf=h4bars.filter(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey;});
-      } else if(tf==='1W'){
+      } else if(tf==='1W'||tf==='2W'){
         if(!h4bars.length) return null;
         // CISD window = the 5 trading days of the C2 week
         const end=new Date(d); end.setDate(d.getDate()+5);
@@ -3743,6 +3744,16 @@ function computeCandle2Results(){
               if(barFri>=nowDay) continue; // week's Friday hasn't closed yet
             }
           }
+          if(tf==='2W'){
+            // 2W: any consecutive week pair qualifies — no monthly constraint
+            // Only skip if the C2 week's Friday hasn't closed yet
+            if(i===bars.length-1){
+              const barFri=new Date(c2.date.slice(0,10)+'T12:00:00');
+              barFri.setDate(barFri.getDate()+4); // Monday + 4 = Friday
+              const nowDay=new Date(); nowDay.setHours(0,0,0,0); barFri.setHours(0,0,0,0);
+              if(barFri>=nowDay) continue;
+            }
+          }
           // Monthly: any month can be C2 vs prior month — no quarterly constraint
         }
 
@@ -3768,7 +3779,7 @@ function computeCandle2Results(){
             if(moRes.pml&&Math.abs(sweepLevel-moRes.pml)/moRes.pml<0.02) poi.push('PML');
           }
         }
-        if(tf==='1W'&&moRes){
+        if((tf==='1W'||tf==='2W')&&moRes){
           if(moRes.pmh&&Math.abs(sweepLevel-moRes.pmh)/moRes.pmh<0.02) poi.push('PMH');
           if(moRes.pml&&Math.abs(sweepLevel-moRes.pml)/moRes.pml<0.02) poi.push('PML');
         }
@@ -3795,6 +3806,7 @@ function computeCandle2Results(){
     scanBars(fourHTailMap[sym],'4H',20);
     const twoDayBars=build2DayBars(eodTailMap[sym]||[]);
     scanBars(twoDayBars,'2D',9);
+    scanBars(weeklyTailMap[sym],'2W',12);
     scanBars(weeklyTailMap[sym],'1W',8);
     scanBars(monthlyTailMap[sym],'Monthly',5);
   });
@@ -3939,6 +3951,8 @@ function renderCandle2View(){
       ?`<span style="font-size:10px;font-weight:700;color:#eab308;background:rgba(234,179,8,0.1);padding:2px 6px;border-radius:4px">7H</span>`
       :r.tf==='Monthly'
       ?`<span style="font-size:10px;font-weight:700;color:var(--orange,#f97316);background:rgba(249,115,22,0.08);padding:2px 6px;border-radius:4px">M</span>`
+      :r.tf==='2W'
+      ?`<span style="font-size:10px;font-weight:700;color:#0ea5e9;background:rgba(14,165,233,0.08);padding:2px 6px;border-radius:4px">2W</span>`
       :r.tf==='1W'
       ?`<span style="font-size:10px;font-weight:700;color:#10b981;background:rgba(16,185,129,0.08);padding:2px 6px;border-radius:4px">1W</span>`
       :r.tf==='2D'
