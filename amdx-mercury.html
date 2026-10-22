@@ -2685,19 +2685,31 @@ function build7HSessionBars(bars1H){
   return out;
 }
 
-// Build 8H bars by merging consecutive pairs of 4H bars
+// Build 8H bars from 4H extended-hours bars, grouped by calendar date.
+// With extended=true, FMP returns ~4 bars/day (4AM,8AM,12PM,4PM).
+// Pair within each day: bars[0]+bars[1] → 8H bar, bars[2]+bars[3] → 8H bar.
+// This prevents cross-day bleed when a day has an odd bar count.
 function build8HBars(h4bars){
+  const byDay={};
+  h4bars.forEach(b=>{
+    const dk=b.date.slice(0,10);
+    if(!byDay[dk]) byDay[dk]=[];
+    byDay[dk].push(b);
+  });
   const out=[];
-  for(let i=0;i<h4bars.length-1;i+=2){
-    const a=h4bars[i], b=h4bars[i+1];
-    out.push({
-      date:a.date,
-      open:+a.open,
-      high:Math.max(+a.high,+b.high),
-      low:Math.min(+a.low,+b.low),
-      close:+b.close
-    });
-  }
+  Object.keys(byDay).sort().forEach(dk=>{
+    const day=byDay[dk];
+    for(let i=0;i+1<day.length;i+=2){
+      const a=day[i], b=day[i+1];
+      out.push({
+        date:a.date,
+        open:+a.open,
+        high:Math.max(+a.high,+b.high),
+        low:Math.min(+a.low,+b.low),
+        close:+b.close
+      });
+    }
+  });
   return out;
 }
 
@@ -2977,7 +2989,7 @@ async function runScan(){
             // Store 4H tail for Candle 2 scanner (regular stocks only, not index ETFs/futures)
             if(!isIndex&&!isFut){
               const s4h=b=>({date:b.date,open:+b.open,high:+b.high,low:+b.low,close:+b.close});
-              fourHTailMap[sym]=bars.slice(-40).map(s4h);
+              fourHTailMap[sym]=bars.slice(-80).map(s4h);
             }
             // Store 7H session bars + raw 1H for Candle 2 scanner (futures only)
             if(isFut){
