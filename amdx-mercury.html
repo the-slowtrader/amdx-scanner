@@ -2685,6 +2685,22 @@ function build7HSessionBars(bars1H){
   return out;
 }
 
+// Build 8H bars by merging consecutive pairs of 4H bars
+function build8HBars(h4bars){
+  const out=[];
+  for(let i=0;i<h4bars.length-1;i+=2){
+    const a=h4bars[i], b=h4bars[i+1];
+    out.push({
+      date:a.date,
+      open:+a.open,
+      high:Math.max(+a.high,+b.high),
+      low:Math.min(+a.low,+b.low),
+      close:+b.close
+    });
+  }
+  return out;
+}
+
 function aggregateFutures6H(bars, targetDate){
   // Futures 24h: 18:00 prior day → 17:59 target day
   const td=new Date(targetDate+'T00:00:00');
@@ -3668,7 +3684,15 @@ function computeCandle2Results(){
         const end=new Date(d); end.setDate(d.getDate()+days);
         const eKey=end.toISOString().slice(0,10);
         ltf=h4bars.filter(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey;});
-      } else if(tf==='1W'||tf==='2W'){
+      } else if(tf==='2W'){
+        if(!h4bars.length) return null;
+        // 2W uses 8H bars (pairs of 4H) within the C2 week
+        const h8bars=build8HBars(h4bars);
+        if(!h8bars.length) return null;
+        const end=new Date(d); end.setDate(d.getDate()+5);
+        const eKey=end.toISOString().slice(0,10);
+        ltf=h8bars.filter(b=>{const bd=b.date.slice(0,10);return bd>=dk&&bd<=eKey;});
+      } else if(tf==='1W'){
         if(!h4bars.length) return null;
         // CISD window = the 5 trading days of the C2 week
         const end=new Date(d); end.setDate(d.getDate()+5);
