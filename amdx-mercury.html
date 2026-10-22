@@ -3789,13 +3789,7 @@ function computeCandle2Results(){
             const c2dt=new Date(c2.date.slice(0,10)+'T12:00:00');
             const maxAge=14*7*24*60*60*1000;
             if(Date.now()-c2dt.getTime()>maxAge) continue;
-            // Only skip if the C2 week's Friday hasn't closed yet
-            if(i===bars.length-1){
-              const barFri=new Date(c2.date.slice(0,10)+'T12:00:00');
-              barFri.setDate(barFri.getDate()+4); // Monday + 4 = Friday
-              const nowDay=new Date(); nowDay.setHours(0,0,0,0); barFri.setHours(0,0,0,0);
-              if(barFri>=nowDay) continue;
-            }
+            // Show forming C2 week (no Friday guard) — user watches for entry into Friday close
           }
           // Monthly: any month can be C2 vs prior month — no quarterly constraint
         }
