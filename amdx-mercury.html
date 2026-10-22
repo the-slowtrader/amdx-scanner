@@ -3782,6 +3782,10 @@ function computeCandle2Results(){
           }
           if(tf==='2W'){
             // 2W: any consecutive week pair qualifies — no monthly constraint
+            // Skip if C2 is older than 14 weeks (stale data from tickers with thin history)
+            const c2dt=new Date(c2.date.slice(0,10)+'T12:00:00');
+            const maxAge=14*7*24*60*60*1000;
+            if(Date.now()-c2dt.getTime()>maxAge) continue;
             // Only skip if the C2 week's Friday hasn't closed yet
             if(i===bars.length-1){
               const barFri=new Date(c2.date.slice(0,10)+'T12:00:00');
