@@ -3735,7 +3735,10 @@ function computeCandle2Results(){
           }
         } else {
           if(seqFirstOpen!==null&&inSweepZone){
-            const isCISD=dir==='bullish'?(bC>seqFirstOpen):(bC<seqFirstOpen);
+            // CISD: close past the first bearish bar's open AND back above/below the sweep level
+            const isCISD=dir==='bullish'
+              ?(bC>seqFirstOpen&&bC>sweepLevel)
+              :(bC<seqFirstOpen&&bC<sweepLevel);
             if(isCISD) return true;
           }
           seqFirstOpen=null; inSweepZone=false;
