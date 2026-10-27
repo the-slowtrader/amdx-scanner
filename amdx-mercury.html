@@ -1849,6 +1849,7 @@ let setupChainResults=[];
 let chainConvFilter='all'; // 'all'|'3'|'4'
 let amdxCycleTf='weekly';
 let amdxCycleFilter='all';
+let dailyInsideSortCol=null; // null | '12pm' | '4pm'
 let lastAMDXCycleRows=[];
 let candle2Results=[];
 let candle2TfFilter='all';
@@ -3387,6 +3388,10 @@ function filterAMDXCycle(f, btn){
   if(btn) btn.classList.add('active');
   renderAMDXCycleView();
 }
+function sortDailyInside(col){
+  dailyInsideSortCol=dailyInsideSortCol===col?null:col;
+  renderAMDXCycleView();
+}
 
 // Weekly (24H) AMDX Cycle: Monday's daily candle vs prior Friday's daily candle
 function classifyMondayVsFridayFromEOD(bars){
@@ -3484,10 +3489,15 @@ function renderAMDXCycleView(){
       const fmtD=d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});};
       dateRangeEl.textContent=`Prior day: ${fmtD(rows[0].prevStr)} · Today: ${fmtD(rows[0].todayStr)}`;
     }
+    // Sort by selected column (inside first)
+    if(dailyInsideSortCol==='12pm') insideRows.sort((a,b)=>(b.in12?1:0)-(a.in12?1:0));
+    else if(dailyInsideSortCol==='4pm') insideRows.sort((a,b)=>(b.in4pm?1:0)-(a.in4pm?1:0));
+    const arrow=col=>dailyInsideSortCol===col?' ▼':'';
+    const thStyle='cursor:pointer;user-select:none';
     thead.innerHTML=`<tr>
       <th>Ticker</th>
-      <th>Inside 12PM Bar?</th>
-      <th>Inside 4PM Bar?</th>
+      <th onclick="sortDailyInside('12pm')" style="${thStyle}">Inside 12PM Bar?${arrow('12pm')}</th>
+      <th onclick="sortDailyInside('4pm')" style="${thStyle}">Inside 4PM Bar?${arrow('4pm')}</th>
     </tr>`;
     const insideBadge=v=>v?`<span class="badge acc">✓ Inside</span>`:`<span style="color:var(--text-muted)">—</span>`;
     tbody.innerHTML=insideRows.map(r=>`<tr data-ticker="${r.sym}">
