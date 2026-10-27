@@ -3486,22 +3486,14 @@ function renderAMDXCycleView(){
     }
     thead.innerHTML=`<tr>
       <th>Ticker</th>
-      <th>4AM Open</th>
-      <th>4AM High</th>
-      <th>4AM Low</th>
-      <th>4AM Close</th>
       <th>Inside 12PM Bar?</th>
       <th>Inside 4PM Bar?</th>
     </tr>`;
-    const badge12=v=>v?`<span class="badge acc">✓ Inside</span>`:`<span style="color:var(--text-muted)">—</span>`;
+    const insideBadge=v=>v?`<span class="badge acc">✓ Inside</span>`:`<span style="color:var(--text-muted)">—</span>`;
     tbody.innerHTML=insideRows.map(r=>`<tr data-ticker="${r.sym}">
       <td><div class="ticker-cell">${tickerIcon(r.sym)}<div class="ticker-info"><div class="sym">${r.sym}</div></div></div></td>
-      <td class="sensitive">$${(+r.today4am.open).toFixed(2)}</td>
-      <td class="sensitive">$${(+r.today4am.high).toFixed(2)}</td>
-      <td class="sensitive">$${(+r.today4am.low).toFixed(2)}</td>
-      <td class="sensitive">$${(+r.today4am.close).toFixed(2)}</td>
-      <td>${badge12(r.in12)}${r.prev12pm?`<span style="font-size:10px;color:var(--text-muted);margin-left:6px">($${(+r.prev12pm.low).toFixed(2)}–$${(+r.prev12pm.high).toFixed(2)})</span>`:''}</td>
-      <td>${badge12(r.in4pm)}${r.prev4pm?`<span style="font-size:10px;color:var(--text-muted);margin-left:6px">($${(+r.prev4pm.low).toFixed(2)}–$${(+r.prev4pm.high).toFixed(2)})</span>`:''}</td>
+      <td>${insideBadge(r.in12)}</td>
+      <td>${insideBadge(r.in4pm)}</td>
     </tr>`).join('');
     if(!insideRows.length) tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No tickers with 4AM bar inside prior 12PM or 4PM candle</td></tr>`;
     return;
