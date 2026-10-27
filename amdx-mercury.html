@@ -595,6 +595,7 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
               <button class="filter-chip active" onclick="switchAMDXCycleTf('weekly',this)">Weekly (24H)</button>
               <button class="filter-chip" onclick="switchAMDXCycleTf('monthly',this)">Monthly (Weekly)</button>
               <button class="filter-chip" onclick="switchAMDXCycleTf('quarterly',this)">Quarterly</button>
+              <button class="filter-chip" onclick="switchAMDXCycleTf('daily',this)">Daily (4H)</button>
             </div>
             <div style="width:1px;height:24px;background:var(--card-border)"></div>
             <div class="filter-chips" id="amdxCycleFilterTabs">
@@ -710,13 +711,27 @@ body.privacy-mode .sensitive:hover{filter:blur(4px)}
       <div class="table-container">
         <div class="table-toolbar">
           <div class="table-toolbar-left">
-            <div class="filter-chips">
+            <div class="filter-chips" id="sweepTypeTabs">
               <button class="filter-chip active" onclick="filterSweep('all',this)">All Levels</button>
               <button class="filter-chip" onclick="filterSweep('ssl',this)">SSL (Sell Stops)</button>
               <button class="filter-chip" onclick="filterSweep('bsl',this)">BSL (Buy Stops)</button>
               <button class="filter-chip" onclick="filterSweep('reclaimed',this)">Reclaimed / Rejected</button>
               <button class="filter-chip" onclick="filterSweep('close',this)">Within 1%</button>
             </div>
+            <div style="width:1px;height:24px;background:var(--card-border)"></div>
+            <div class="filter-chips" id="sweepTfTabs">
+              <button class="filter-chip active" onclick="filterSweepTf('all',this)">All TF</button>
+              <button class="filter-chip" onclick="filterSweepTf('Daily',this)">24H</button>
+              <button class="filter-chip" onclick="filterSweepTf('Weekly',this)">Weekly</button>
+              <button class="filter-chip" onclick="filterSweepTf('Monthly',this)">Monthly</button>
+            </div>
+          </div>
+          <div class="table-toolbar-right" style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--text-muted)" id="sweepCount"></span>
+            <button class="topbar-btn" id="sweepCopyBtn" onclick="copySweepTickers()" style="padding:5px 10px;font-size:11px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Tickers
+            </button>
           </div>
         </div>
         <div class="table-wrap">
@@ -3438,6 +3453,60 @@ function renderAMDXCycleView(){
 
   const isWeekly=amdxCycleTf==='weekly';
   const isMonthly=amdxCycleTf==='monthly';
+  const isDaily=amdxCycleTf==='daily';
+
+  // Daily (4H): today's 4AM bar vs prior day's 12PM and 4PM bars
+  if(isDaily){
+    const rows=[];
+    WATCHLIST.filter(s=>!FUTURES.includes(s)).forEach(sym=>{
+      const bars=fourHTailMap[sym];
+      if(!bars||bars.length<4) return;
+      const dates=[...new Set(bars.map(b=>b.date.slice(0,10)))].sort();
+      if(dates.length<2) return;
+      const todayStr=dates[dates.length-1];
+      const prevStr=dates[dates.length-2];
+      const todayBars=bars.filter(b=>b.date.startsWith(todayStr));
+      const prevBars=bars.filter(b=>b.date.startsWith(prevStr));
+      const getH=h=>prevBars.find(b=>new Date(b.date).getHours()===h)||null;
+      const today4am=todayBars[0]||null; // first bar of today (earliest = 4AM with extended)
+      const prev12pm=getH(12);
+      const prev4pm=getH(16);
+      if(!today4am) return;
+      const inside=(bar,ref)=>ref&&+today4am.high<=+ref.high&&+today4am.low>=+ref.low;
+      rows.push({sym,today4am,prev12pm,prev4pm,in12:inside(today4am,prev12pm),in4pm:inside(today4am,prev4pm),todayStr,prevStr});
+    });
+    const insideRows=rows.filter(r=>r.in12||r.in4pm);
+    lastAMDXCycleRows=insideRows.map(r=>[r.sym,r]);
+    if(countEl) countEl.textContent=`${insideRows.length} inside · ${rows.length} total`;
+    if(badge) badge.textContent=insideRows.length||'—';
+    const dateRangeEl=document.getElementById('amdxCycleDateRange');
+    if(dateRangeEl&&rows.length){
+      const fmtD=d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});};
+      dateRangeEl.textContent=`Prior day: ${fmtD(rows[0].prevStr)} · Today: ${fmtD(rows[0].todayStr)}`;
+    }
+    thead.innerHTML=`<tr>
+      <th>Ticker</th>
+      <th>4AM Open</th>
+      <th>4AM High</th>
+      <th>4AM Low</th>
+      <th>4AM Close</th>
+      <th>Inside 12PM Bar?</th>
+      <th>Inside 4PM Bar?</th>
+    </tr>`;
+    const badge12=v=>v?`<span class="badge acc">✓ Inside</span>`:`<span style="color:var(--text-muted)">—</span>`;
+    tbody.innerHTML=insideRows.map(r=>`<tr data-ticker="${r.sym}">
+      <td><div class="ticker-cell">${tickerIcon(r.sym)}<div class="ticker-info"><div class="sym">${r.sym}</div></div></div></td>
+      <td class="sensitive">$${(+r.today4am.open).toFixed(2)}</td>
+      <td class="sensitive">$${(+r.today4am.high).toFixed(2)}</td>
+      <td class="sensitive">$${(+r.today4am.low).toFixed(2)}</td>
+      <td class="sensitive">$${(+r.today4am.close).toFixed(2)}</td>
+      <td>${badge12(r.in12)}${r.prev12pm?`<span style="font-size:10px;color:var(--text-muted);margin-left:6px">($${(+r.prev12pm.low).toFixed(2)}–$${(+r.prev12pm.high).toFixed(2)})</span>`:''}</td>
+      <td>${badge12(r.in4pm)}${r.prev4pm?`<span style="font-size:10px;color:var(--text-muted);margin-left:6px">($${(+r.prev4pm.low).toFixed(2)}–$${(+r.prev4pm.high).toFixed(2)})</span>`:''}</td>
+    </tr>`).join('');
+    if(!insideRows.length) tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No tickers with 4AM bar inside prior 12PM or 4PM candle</td></tr>`;
+    return;
+  }
+
   // Weekly (24H): Monday candle vs prior Friday candle — computed from EOD tail
   let res;
   if(isWeekly){
@@ -5346,18 +5415,12 @@ function renderSweepView(){
     if(!w) return;
     const px=curPrice(sym);
     if(w.sweptHigh){
-      // BSL: swept above prior high — reclaim status = did price come back below?
-      const reclaim = w.disagreedHigh ? 'rejected'    // swept above, closed back below → false breakout
-                    : w.agreedHigh   ? 'held'         // swept above, stayed above → breakout
-                    : 'swept';
+      const reclaim = w.disagreedHigh ? 'rejected' : w.agreedHigh ? 'held' : 'swept';
       const dist = px ? ((px-w.pmh)/w.pmh*100).toFixed(1) : '—';
       sweeps.push({sym,level:w.pmh,type:'BSL',timeframe:'Weekly',dist,phase:w.ax,reclaim});
     }
     if(w.sweptLow){
-      // SSL: swept below prior low — reclaim status = did price come back above?
-      const reclaim = w.disagreedLow ? 'reclaimed'   // swept below, closed back above → bullish reclaim
-                    : w.agreedLow    ? 'below'        // swept below, stayed below → bearish
-                    : 'swept';
+      const reclaim = w.disagreedLow ? 'reclaimed' : w.agreedLow ? 'below' : 'swept';
       const dist = px ? ((px-w.pml)/w.pml*100).toFixed(1) : '—';
       sweeps.push({sym,level:w.pml,type:'SSL',timeframe:'Weekly',dist,phase:w.ax,reclaim});
     }
@@ -5376,10 +5439,30 @@ function renderSweepView(){
       sweeps.push({sym,level:m.pml,type:'SSL',timeframe:'Monthly',dist,phase:m.ax,reclaim});
     }
   });
+  // Daily sweeps (PDH/PDL)
+  Object.entries(pdhPdlResults).forEach(([sym,d])=>{
+    if(!d||d.indecisive) return;
+    const px=curPrice(sym);
+    if(d.sweptPDH){
+      const reclaim = d.disagreedPDH ? 'rejected' : d.agreedPDH ? 'held' : 'swept';
+      const dist = px ? ((px-d.pdh)/d.pdh*100).toFixed(1) : '—';
+      sweeps.push({sym,level:d.pdh,type:'BSL',timeframe:'Daily',dist,phase:dailyResults[sym]?.phase||'—',reclaim});
+    }
+    if(d.sweptPDL){
+      const reclaim = d.disagreedPDL ? 'reclaimed' : d.agreedPDL ? 'below' : 'swept';
+      const dist = px ? ((px-d.pdl)/d.pdl*100).toFixed(1) : '—';
+      sweeps.push({sym,level:d.pdl,type:'SSL',timeframe:'Daily',dist,phase:dailyResults[sym]?.phase||'—',reclaim});
+    }
+  });
 
-  sweeps.sort((a,b)=>Math.abs(parseFloat(a.dist)||99)-Math.abs(parseFloat(b.dist)||99));
+  // Apply TF filter
+  const visibleSweeps = sweepTfFilter==='all' ? sweeps : sweeps.filter(s=>s.timeframe===sweepTfFilter);
+  visibleSweeps.sort((a,b)=>Math.abs(parseFloat(a.dist)||99)-Math.abs(parseFloat(b.dist)||99));
+  lastSweepRows=visibleSweeps;
+  const countEl=document.getElementById('sweepCount');
+  if(countEl) countEl.textContent=visibleSweeps.length+' sweeps';
 
-  tbody.innerHTML=sweeps.map(s=>{
+  tbody.innerHTML=visibleSweeps.map(s=>{
     const distNum=parseFloat(s.dist);
     const absDist=isNaN(distNum)?99:Math.abs(distNum);
     const distCls=absDist<1?'close':absDist<3?'mid':'far';
@@ -5392,33 +5475,48 @@ function renderSweepView(){
                  : s.reclaim==='held'      ? `<span class="badge acc">Held ↑</span>`
                  :                          `<span class="badge">Swept</span>`;
 
-    return `<tr data-ticker="${s.sym}">
+    return `<tr data-ticker="${s.sym}" data-tf="${s.timeframe}">
       <td><div class="ticker-cell">${tickerIcon(s.sym)}<div class="ticker-info"><div class="sym">${s.sym}</div></div></div></td>
       <td class="sensitive">$${s.level?.toFixed(2)||'—'}</td>
       <td><span class="badge ${s.type==='SSL'?'dist':'swept'}">${s.type}</span></td>
       <td><span class="sweep-dist ${distCls}" style="font-size:14px">${distSign}</span></td>
       <td>${s.timeframe}</td>
-      <td><span class="badge ${s.phase==='A'?'acc':'exp'}">${s.phase}</span></td>
+      <td><span class="badge ${s.phase==='A'?'acc':s.phase==='X'?'exp':'neutral'}">${s.phase}</span></td>
       <td>${rBadge}</td>
     </tr>`;
   }).join('');
 }
 
 function filterSweep(key, btn){
-  document.querySelectorAll('#view-sweep .filter-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('#sweepTypeTabs .filter-chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
-  // Simple filter on visible rows
   document.querySelectorAll('#sweepTbody tr').forEach(tr=>{
-    if(key==='all'){tr.style.display='';return;}
+    const tfMatch=sweepTfFilter==='all'||tr.dataset.tf===sweepTfFilter;
+    if(key==='all'){tr.style.display=tfMatch?'':'none';return;}
     const badges=tr.querySelectorAll('.badge');
     const text=Array.from(badges).map(b=>b.textContent).join(' ');
-    if(key==='ssl') tr.style.display=text.includes('SSL')?'':'none';
-    else if(key==='bsl') tr.style.display=text.includes('BSL')?'':'none';
-    else if(key==='reclaimed') tr.style.display=(text.includes('Reclaimed')||text.includes('Rejected'))?'':'none';
-    else if(key==='close'){
-      const dist=tr.querySelector('.sweep-dist');
-      tr.style.display=(dist&&Math.abs(parseFloat(dist.textContent))<1)?'':'none';
-    }
+    let typeMatch=false;
+    if(key==='ssl') typeMatch=text.includes('SSL');
+    else if(key==='bsl') typeMatch=text.includes('BSL');
+    else if(key==='reclaimed') typeMatch=text.includes('Reclaimed')||text.includes('Rejected');
+    else if(key==='close'){const dist=tr.querySelector('.sweep-dist');typeMatch=!!(dist&&Math.abs(parseFloat(dist.textContent))<1);}
+    tr.style.display=(tfMatch&&typeMatch)?'':'none';
+  });
+}
+function filterSweepTf(tf, btn){
+  sweepTfFilter=tf;
+  document.querySelectorAll('#sweepTfTabs .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderSweepView();
+}
+function copySweepTickers(){
+  const syms=[...new Set(lastSweepRows.map(s=>s.sym))].join(',');
+  navigator.clipboard.writeText(syms).then(()=>{
+    const btn=document.getElementById('sweepCopyBtn');
+    if(!btn) return;
+    const orig=btn.innerHTML;
+    btn.innerHTML='✓ Copied';btn.style.color='var(--green)';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';},2000);
   });
 }
 
@@ -5537,6 +5635,8 @@ function removeCustomTicker(sym){
 // ══════════════════════════════════════════════════════
 // PDH/PDL Sweep Scanner
 // ══════════════════════════════════════════════════════
+let sweepTfFilter='all';
+let lastSweepRows=[];
 let pdhPdlFilter='disagree';
 let pdhPdlPage=1;
 const SWEEPS_PER_PAGE=15;
